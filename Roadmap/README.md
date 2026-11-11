@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-11 – Task_13 erledigt.
+Stand: 2026-11-11 – Task_14 erledigt.
 
 | Task | Titel | Status |
 |---|---|---|
@@ -31,7 +31,7 @@ Stand: 2026-11-11 – Task_13 erledigt.
 | 11 | Spracheingabe Push-to-talk | erledigt |
 | 12 | Video-Studie: Import & Markieren | erledigt |
 | 13 | Video-Zeitleiste flüssig & Marker ziehen | erledigt |
-| 14 | Modus "Einfach" | offen |
+| 14 | Modus "Einfach" | erledigt |
 | 15 | Modus "Schritt-Timer" | offen |
 | 16 | Export CSV + Excel | offen |
 | 17 | Export PDF-Bericht | offen |
