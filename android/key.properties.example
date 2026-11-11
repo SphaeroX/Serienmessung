@@ -1,0 +1,7 @@
+# Release signing (copy to android/key.properties – never commit the real file).
+# Without android/key.properties, release builds fall back to the debug key.
+# In CI the file is written from the GitHub secrets (see docs/architecture.md).
+storeFile=../release-keystore.jks
+storePassword=CHANGE_ME
+keyAlias=cyclescope
+keyPassword=CHANGE_ME
