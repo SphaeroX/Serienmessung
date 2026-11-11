@@ -469,4 +469,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get version => 'Version';
+
+  @override
+  String get holdToDictate => 'Hold to dictate, release to stop';
+
+  @override
+  String get listening => 'Listening…';
+
+  @override
+  String get dictationUnavailable =>
+      'Speech recognition is not available or microphone access was denied.';
 }

@@ -8,6 +8,7 @@ import '../../settings/presentation/settings_controller.dart';
 import '../../l10n/app_localizations.dart';
 import '../domain/step_parser.dart';
 import '../domain/study.dart';
+import 'dictation_button.dart';
 import 'mode_texts.dart';
 
 /// Form to create a new study. Pops with the new study id.
@@ -164,21 +165,34 @@ class _CreateStudyScreenState extends ConsumerState<CreateStudyScreen> {
               ),
               if (_mode.usesSteps) ...[
                 const SizedBox(height: 8),
-                TextFormField(
-                  key: const Key('stepsField'),
-                  controller: _steps,
-                  minLines: 5,
-                  maxLines: 12,
-                  keyboardType: TextInputType.multiline,
-                  onChanged: (_) => setState(() {}),
-                  decoration: InputDecoration(
-                    labelText: l.stepsLabel,
-                    alignLabelWithHint: true,
-                    border: const OutlineInputBorder(),
-                    helperText: l.stepsCount(stepCount),
-                  ),
-                  validator: (v) =>
-                      parseSteps(v ?? '').isEmpty ? l.stepsRequired : null,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        key: const Key('stepsField'),
+                        controller: _steps,
+                        minLines: 5,
+                        maxLines: 12,
+                        keyboardType: TextInputType.multiline,
+                        onChanged: (_) => setState(() {}),
+                        decoration: InputDecoration(
+                          labelText: l.stepsLabel,
+                          alignLabelWithHint: true,
+                          border: const OutlineInputBorder(),
+                          helperText: l.stepsCount(stepCount),
+                        ),
+                        validator: (v) => parseSteps(v ?? '').isEmpty
+                            ? l.stepsRequired
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    DictationButton(
+                      controller: _steps,
+                      onInserted: () => setState(() {}),
+                    ),
+                  ],
                 ),
               ],
               const SizedBox(height: 24),

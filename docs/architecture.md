@@ -9,7 +9,9 @@
 - State management: **Riverpod** (`flutter_riverpod`) – chosen because providers can be overridden with fakes (clock, keys, speech, video) in unit and widget tests without a widget tree.
 - Persistence: local SQLite via **sqflite** with hand-written SQL. Schema migrations are an append-only list in `lib/core/database.dart` (`migrations[n]` creates version n+1). Chosen over drift to avoid code generation/build_runner; tests use `sqflite_common_ffi` with an in-memory DB.
 - Localization: Flutter `gen-l10n` with ARB files in `lib/l10n/` (`l10n.yaml`); **English is the template/fallback**, German is the translation. Generated `app_localizations*.dart` are committed; after editing ARB files run `flutter gen-l10n`.
-- Further libraries (video player, speech recognition, foreground service, export) are chosen in their roadmap tasks and recorded here with the reason.
+- `speech_to_text` – push-to-talk dictation of steps (platform recognizer, no own model).
+- `wakelock_plus` – keep the screen on while recording.
+- Further libraries (video player, export) are chosen in their roadmap tasks and recorded here with the reason.
 
 ## Architecture
 

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../domain/study.dart';
+import 'dictation_button.dart';
 
 /// Edits name, description and step definitions of a study.
 ///
@@ -246,6 +247,10 @@ class _EditStudyScreenState extends ConsumerState<EditStudyScreen> {
                               ),
                               onSubmitted: (_) => _add(),
                             ),
+                          ),
+                          DictationButton(
+                            controller: _newStep,
+                            multiline: false,
                           ),
                           IconButton(
                             key: const Key('addStepButton'),

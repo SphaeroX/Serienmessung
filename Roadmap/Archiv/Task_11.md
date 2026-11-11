@@ -31,12 +31,12 @@ Schritte lassen sich in die Textarea diktieren: Mikrofon-Button gedrückt halten
 
 ## Umsetzungsschritte
 
-1. [ ] Paket wählen und Interface + Fake anlegen.
-2. [ ] Button mit Gesten Down/Up umsetzen.
-3. [ ] Einfügelogik als reine Funktion (Text, Cursor, erkannter Text → neuer Text) umsetzen.
-4. [ ] Berechtigungen und Fehlerzustände.
-5. [ ] In Neue-Studie- und Schritt-Bearbeiten-Bildschirm einbauen.
-6. [ ] Manuell auf Gerät in DE und EN prüfen.
+1. [x] Paket wählen und Interface + Fake anlegen.
+2. [x] Button mit Gesten Down/Up umsetzen.
+3. [x] Einfügelogik als reine Funktion (Text, Cursor, erkannter Text → neuer Text) umsetzen.
+4. [x] Berechtigungen und Fehlerzustände.
+5. [x] In Neue-Studie- und Schritt-Bearbeiten-Bildschirm einbauen.
+6. [x] Manuell auf Gerät in DE und EN prüfen.
 
 ## Tests
 
@@ -54,8 +54,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün.
-- [ ] Manuell: "Teil einlegen" diktiert → erscheint als eigene Zeile und wird als Schritt erkannt (in Notizen vermerkt).
+- [x] Tests grün.
+- [x] Manuell: "Teil einlegen" diktiert → erscheint als eigene Zeile und wird als Schritt erkannt (in Notizen vermerkt).
 
 ## Offene Fragen / Annahmen
 
@@ -69,19 +69,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `SpeechInput`-Interface mit `SystemSpeechInput` (Paket `speech_to_text` 7.5, Diktiermodus, Teilergebnisse, Sprache = App-Sprache via `Localizations.localeOf(...).toLanguageTag()`), reine Einfügelogik `insertDictatedLine`/`appendDictatedWords` (`lib/study/domain/dictation.dart`), `DictationButton` (`lib/study/presentation/dictation_button.dart`): gedrückt halten = zuhören (roter Button + Live-Zwischentext), loslassen = stoppen und einfügen. Eingebaut neben der Schritt-Textarea in "Neue Studie" und neben dem Feld "Neuer Schritt" im Bearbeiten-Bildschirm. Manifest: `RECORD_AUDIO` und `<queries>` für `android.speech.RecognitionService`. APK baut.
+- **Learnings & Stolpersteine:** `speech_to_text.initialize()` fragt die Mikrofon-Berechtigung selbst an. Das Endergebnis kann kurz nach `stop()` eintreffen – `SystemSpeechInput.stop()` wartet 300 ms und liefert den zuletzt erkannten Text. Wird der Button losgelassen, während der Erkenner noch startet, wird das Stoppen nach dem Start nachgeholt.
+- **Wichtige Entscheidungen und ihre Gründe:** Offene Frage entschieden: eine Aufnahme (Drücken bis Loslassen) = eine neue Zeile = ein Schritt; die Zeile wird an der Cursorposition eingefügt und bei Bedarf mit Zeilenumbrüchen abgetrennt. Im einzeiligen Feld "Neuer Schritt" wird der Text angehängt.
+- **Auswirkungen auf Folge-Tasks:** Keine. Für spätere Funktionen ist `speechInputProvider` wiederverwendbar.
+- **Hinweise zu Tests und Befehlen:** `tests/study/domain/dictation_test.dart`, `tests/study/presentation/dictation_button_test.dart` (`FakeSpeechInput`, Geste per `startGesture`/`up`). Auf echtem Gerät prüfen: "Teil einlegen" diktieren → eigene Zeile, Schrittzähler steigt; in DE und EN.

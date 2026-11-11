@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-11 – Task_10 erledigt.
+Stand: 2026-11-11 – Task_11 erledigt.
 
 | Task | Titel | Status |
 |---|---|---|
@@ -28,7 +28,7 @@ Stand: 2026-11-11 – Task_10 erledigt.
 | 08 | Schrittdefinition nachträglich bearbeiten | erledigt |
 | 09 | Auswertung & reale Taktzeit | erledigt |
 | 10 | Einstellungen | erledigt |
-| 11 | Spracheingabe Push-to-talk | offen |
+| 11 | Spracheingabe Push-to-talk | erledigt |
 | 12 | Video-Studie: Import & Markieren | offen |
 | 13 | Video-Zeitleiste flüssig & Marker ziehen | offen |
 | 14 | Modus "Einfach" | offen |
@@ -72,6 +72,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_08] Schritte bearbeiten:** nur im Ruhezustand (Stift-Symbol im Messbildschirm). Schritt löschen entfernt auch dessen Zeiten (mit Warnung). Nach dem Bearbeiten `RecordingController.load()`.
 - **[Task_09] Auswertung:** `StudyAnalysis.compute()` (reines Dart) ist die einzige Quelle für Kennzahlen – Export und PDF verwenden sie mit. Quartile wie Excel `QUARTILE.INC`, Standardabweichung n−1, IQR-Filter erst ab 4 Werten. Methode pro Studie in `study.cycle_time_method` (Migration v4), Standard Median.
 - **[Task_10] Einstellungen:** in SQLite-Tabelle `settings` (Migration v5), geladen in `main()` → `initialSettingsProvider`, live über `settingsProvider`. Kein shared_preferences mehr. Tests setzen Einstellungen per `initialSettingsProvider.overrideWithValue`.
+- **[Task_11] Diktat:** `DictationButton` + `speechInputProvider` (speech_to_text); eine Aufnahme = eine Zeile/ein Schritt.
 
 ## Auffälligkeiten & Details
 

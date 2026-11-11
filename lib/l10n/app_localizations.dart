@@ -883,6 +883,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Version'**
   String get version;
+
+  /// No description provided for @holdToDictate.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to dictate, release to stop'**
+  String get holdToDictate;
+
+  /// No description provided for @listening.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening…'**
+  String get listening;
+
+  /// No description provided for @dictationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech recognition is not available or microphone access was denied.'**
+  String get dictationUnavailable;
 }
 
 class _AppLocalizationsDelegate

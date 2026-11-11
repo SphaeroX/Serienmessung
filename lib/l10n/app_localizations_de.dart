@@ -475,4 +475,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get version => 'Version';
+
+  @override
+  String get holdToDictate =>
+      'Gedrückt halten zum Diktieren, loslassen zum Beenden';
+
+  @override
+  String get listening => 'Höre zu…';
+
+  @override
+  String get dictationUnavailable =>
+      'Spracherkennung ist nicht verfügbar oder der Mikrofonzugriff wurde verweigert.';
 }

@@ -130,5 +130,8 @@
   "notifications": "Benachrichtigungen",
   "notificationsHint": "Laufenden Schritt anzeigen, wenn die App im Hintergrund ist",
   "about": "Über",
-  "version": "Version"
+  "version": "Version",
+  "holdToDictate": "Gedrückt halten zum Diktieren, loslassen zum Beenden",
+  "listening": "Höre zu…",
+  "dictationUnavailable": "Spracherkennung ist nicht verfügbar oder der Mikrofonzugriff wurde verweigert."
 }
