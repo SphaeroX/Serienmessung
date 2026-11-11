@@ -248,5 +248,6 @@
   "markStart": "START MARK",
   "mark": "MARK",
   "markerBeforeLast": "This position is before the last marker. Move the video forward first.",
-  "markerCannotMove": "A marker cannot be moved past its neighbours."
+  "markerCannotMove": "A marker cannot be moved past its neighbours.",
+  "tabTimes": "Times"
 }

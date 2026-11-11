@@ -17,9 +17,9 @@ class RecordingSession {
 
   /// Starts a new run. Time studies continue after the last stored cycle;
   /// step-timer studies always use cycle 0.
-  Future<void> start({int? at}) async {
+  Future<void> start({int? at, int? stepId}) async {
     final cycle = engine.freeOrder ? 0 : await measurements.nextCycle(studyId);
-    engine.start(cycle: cycle, at: at);
+    engine.start(cycle: cycle, at: at, stepId: stepId);
   }
 
   Future<List<Measurement>> next({int? at, int? stepId}) =>

@@ -523,4 +523,7 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get markerCannotMove =>
       'Ein Marker kann nicht über seine Nachbarn hinaus verschoben werden.';
+
+  @override
+  String get tabTimes => 'Zeiten';
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/time_format.dart';
 import '../../l10n/app_localizations.dart';
 import '../domain/cycles.dart';
+import '../../study/domain/study.dart';
 import '../domain/measurement.dart';
 import 'recording_controller.dart';
 import 'recording_screen.dart' show editSpecialNote;
@@ -45,6 +46,20 @@ class CyclesView extends StatelessWidget {
     );
     if (groups.isEmpty) {
       return Center(child: Text(l.noTimesYet, textAlign: TextAlign.center));
+    }
+    if (c.study?.mode == StudyMode.stepTimer) {
+      // No cycles: a flat list of times, newest first.
+      final items = c.measurements.reversed.toList();
+      return ListView.builder(
+        padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+        itemCount: items.length,
+        itemBuilder: (context, i) => _MeasurementRow(
+          controller: c,
+          m: items[i],
+          onDelete: () =>
+              _delete(context, () => c.deleteMeasurement(items[i].id)),
+        ),
+      );
     }
     String fmt(int us) => formatTime(us, TimeUnit.stopwatch);
     String hm(int us) =>

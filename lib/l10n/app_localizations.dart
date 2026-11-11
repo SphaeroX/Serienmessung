@@ -967,6 +967,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A marker cannot be moved past its neighbours.'**
   String get markerCannotMove;
+
+  /// No description provided for @tabTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Times'**
+  String get tabTimes;
 }
 
 class _AppLocalizationsDelegate

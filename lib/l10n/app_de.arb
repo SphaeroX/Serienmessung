@@ -144,5 +144,6 @@
   "markStart": "START-MARKER",
   "mark": "MARKIEREN",
   "markerBeforeLast": "Diese Position liegt vor dem letzten Marker. Video erst weiter vorspulen.",
-  "markerCannotMove": "Ein Marker kann nicht über seine Nachbarn hinaus verschoben werden."
+  "markerCannotMove": "Ein Marker kann nicht über seine Nachbarn hinaus verschoben werden.",
+  "tabTimes": "Zeiten"
 }

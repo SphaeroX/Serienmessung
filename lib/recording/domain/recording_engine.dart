@@ -128,12 +128,15 @@ class RecordingEngine {
       : 0;
 
   /// Starts timing with the first step of [cycle] active.
-  void start({required int cycle, int? at}) {
+  ///
+  /// In free order mode [stepId] selects the first step.
+  void start({required int cycle, int? at, int? stepId}) {
     if (_status != EngineStatus.idle || sequence.isEmpty) return;
     final now = at ?? clock.nowMicros();
     _cycle = cycle;
-    _stepIndex = 0;
-    _currentStepId = sequence.first;
+    final idx = freeOrder && stepId != null ? sequence.indexOf(stepId) : 0;
+    _stepIndex = idx < 0 ? 0 : idx;
+    _currentStepId = sequence[_stepIndex];
     _openStep(now);
     _status = EngineStatus.running;
   }

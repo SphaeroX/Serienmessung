@@ -30,10 +30,10 @@ Im Modus Schritt-Timer tippt man die Schritte in beliebiger Reihenfolge an; die 
 
 ## Umsetzungsschritte
 
-1. [ ] Engine-Variante bzw. Strategie "freie Reihenfolge" umsetzen.
-2. [ ] Messbildschirm mit Schritt-Kacheln (auch bei vielen Schritten bedienbar, scrollbar).
-3. [ ] Messungen- und Auswertungsansicht anpassen.
-4. [ ] Texte DE/EN.
+1. [x] Engine-Variante bzw. Strategie "freie Reihenfolge" umsetzen.
+2. [x] Messbildschirm mit Schritt-Kacheln (auch bei vielen Schritten bedienbar, scrollbar).
+3. [x] Messungen- und Auswertungsansicht anpassen.
+4. [x] Texte DE/EN.
 
 ## Tests
 
@@ -51,7 +51,7 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün; vorhandene Tests bleiben grün.
+- [x] Tests grün; vorhandene Tests bleiben grün.
 
 ## Offene Fragen / Annahmen
 
@@ -65,19 +65,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Schritt-Timer über die gemeinsame Engine (`freeOrder: true`, Zyklus 0). Neu: `RecordingEngine.start(stepId:)` (Start mit beliebigem Schritt), `RecordingController.selectStep` (Ruhe → mit diesem Schritt starten; läuft → wechseln bzw. bei erneutem Tippen auf den aktiven Schritt neue Zeit desselben Schritts; pausiert → fortsetzen und wechseln), `StepGrid` (eine Kachel je Schritt, aktiver Schritt hervorgehoben, scrollbar bis 30 % der Höhe). Im Schritt-Timer entfällt der NÄCHSTER-Button; Start/Stopp und Sonderzeit bleiben. Zweiter Tab heißt "Zeiten" und zeigt eine flache Liste (neueste oben) mit Löschen/Rückgängig statt Zyklen. Auswertung zeigt pro Schritt Anzahl, Ø, Median, Spanne und Anteil an der Gesamtzeit (seit Task_09).
+- **Learnings & Stolpersteine:** Mehrstufige Patch-Skripte können mittendrin abbrechen – danach den Teilzustand prüfen, bevor man weitermacht.
+- **Wichtige Entscheidungen und ihre Gründe:** Offene Frage entschieden: Der Start beginnt mit dem angetippten Schritt (Kachel), bzw. mit dem ersten Schritt, wenn über START/Lautstärke runter gestartet wird. Lautstärke hoch schaltet zum nächsten Schritt der Liste weiter.
+- **Auswirkungen auf Folge-Tasks:** Task_16/17: Im Schritt-Timer gibt es keine Zyklen – Export braucht hier keine Zyklus-Matrix, sondern die chronologische Liste plus Schrittstatistik.
+- **Hinweise zu Tests und Befehlen:** `tests/recording/presentation/step_timer_test.dart` (Start mit beliebigem Schritt, S2→S1→S2, erneutes Tippen, flache Liste mit Löschen). Anteil = 100 % belegt `tests/analysis/domain/analysis_test.dart`.

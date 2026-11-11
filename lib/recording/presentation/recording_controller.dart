@@ -165,10 +165,27 @@ class RecordingController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Step timer: tapping a step tile starts it, switches to it, or (when
+  /// tapped again) records a new time for the same step.
+  Future<void> selectStep(int stepId, {int? at}) async {
+    final t = at ?? clock.nowMicros();
+    switch (status) {
+      case EngineStatus.idle:
+        await startStop(at: t, stepId: stepId);
+      case EngineStatus.paused:
+        await startStop(at: t);
+        await next(at: t, stepId: stepId);
+      case EngineStatus.running:
+        await next(at: t, stepId: stepId);
+      case EngineStatus.special:
+        break;
+    }
+  }
+
   /// Start/stop button and volume-down key.
-  Future<void> startStop({int? at}) => _run(() async {
+  Future<void> startStop({int? at, int? stepId}) => _run(() async {
     if (status == EngineStatus.idle) {
-      await _session!.start(at: at);
+      await _session!.start(at: at, stepId: stepId);
       displayCycle = engine.cycle;
       await feedback.setKeepScreenOn(true);
       await feedback.stepChanged();

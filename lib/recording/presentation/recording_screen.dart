@@ -212,7 +212,11 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
                       Tab(key: const Key('liveTab'), text: l.tabLive),
                       Tab(
                         key: const Key('cyclesTab'),
-                        text: c.hasSteps ? l.tabCycles : l.tabLaps,
+                        text: switch (c.study?.mode) {
+                          StudyMode.stepTimer => l.tabTimes,
+                          StudyMode.simple => l.tabLaps,
+                          _ => l.tabCycles,
+                        },
                       ),
                       Tab(key: const Key('analysisTab'), text: l.tabAnalysis),
                     ],
@@ -226,6 +230,8 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
                       ],
                     ),
                   ),
+                  if (c.study?.mode == StudyMode.stepTimer)
+                    StepGrid(controller: c),
                   ControlBar(controller: c),
                 ],
               ),
@@ -565,6 +571,64 @@ Future<void> editSpecialNote(
   if (note != null) await c.updateNote(m.id, note.trim());
 }
 
+/// Step timer: one tile per step; tap to time that step.
+class StepGrid extends StatelessWidget {
+  const StepGrid({super.key, required this.controller});
+
+  final RecordingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final c = controller;
+    final active = c.status == EngineStatus.idle
+        ? null
+        : c.engine.currentStepId;
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.3;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      child: GridView.builder(
+        shrinkWrap: true,
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 180,
+          mainAxisExtent: 64,
+          crossAxisSpacing: 8,
+          mainAxisSpacing: 8,
+        ),
+        itemCount: c.steps.length,
+        itemBuilder: (context, i) {
+          final step = c.steps[i];
+          final isActive = step.id == active;
+          return FilledButton(
+            key: Key('stepTile-$i'),
+            style: FilledButton.styleFrom(
+              backgroundColor: isActive
+                  ? scheme.primary
+                  : scheme.surfaceContainerHighest,
+              foregroundColor: isActive ? scheme.onPrimary : scheme.onSurface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+            ),
+            onPressed: c.status == EngineStatus.special
+                ? null
+                : () => c.selectStep(step.id),
+            child: Text(
+              step.name,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 /// Large buttons for one-handed operation.
 class ControlBar extends StatelessWidget {
   const ControlBar({super.key, required this.controller});
@@ -612,20 +676,22 @@ class ControlBar extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Expanded(child: _SpecialButton(controller: c)),
-            const SizedBox(width: 8),
-            Expanded(
-              flex: 2,
-              child: _BigButton(
-                key: const Key('nextButton'),
-                label: nextLabel,
-                icon: Icons.skip_next,
-                background: scheme.tertiary,
-                foreground: scheme.onTertiary,
-                onPressed: status == EngineStatus.running
-                    ? () => c.next()
-                    : null,
+            if (c.study?.mode != StudyMode.stepTimer) ...[
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: _BigButton(
+                  key: const Key('nextButton'),
+                  label: nextLabel,
+                  icon: Icons.skip_next,
+                  background: scheme.tertiary,
+                  foreground: scheme.onTertiary,
+                  onPressed: status == EngineStatus.running
+                      ? () => c.next()
+                      : null,
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
