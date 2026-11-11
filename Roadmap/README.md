@@ -14,12 +14,12 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-11 – Task_01 erledigt.
+Stand: 2026-11-11 – Task_02 erledigt.
 
 | Task | Titel | Status |
 |---|---|---|
 | 01 | Durchstich: Studie anlegen & Liste | erledigt |
-| 02 | Mess-Engine Zeitstudie | offen |
+| 02 | Mess-Engine Zeitstudie | erledigt |
 | 03 | Live-Messbildschirm mit Schritt-Overlay | offen |
 | 04 | Hardware-Tasten (Android) | offen |
 | 05 | Sonderzeit | offen |
@@ -59,6 +59,8 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_01] Datenbank:** sqflite mit handgeschriebenem SQL statt drift (keine Codegenerierung). Migrationen: append-only-Liste in `lib/core/database.dart`. Tests nutzen `sqflite_common_ffi` in-memory über `openTestDatabase()`.
 - **[Task_01] Navigation:** `StudyListScreen` bekommt Callbacks (`onOpenStudy`, `onOpenSettings`) aus `app.dart`, damit spätere Bildschirme ohne Zirkelimporte angebunden werden.
 - **[Task_01] l10n:** generierte Dateien liegen versioniert in `lib/l10n/`; nach ARB-Änderungen `flutter gen-l10n` ausführen.
+- **[Task_02] Mess-Semantik:** `RecordingEngine` (reines Dart) mit Zuständen idle/running/paused/special. Start/Stopp = Pause/Fortsetzen; der offene Schritt läuft nach dem Fortsetzen weiter, Pausenzeit zählt nicht. "Zurücksetzen/Beenden" (`discard`) verwirft den unvollendeten Schritt (nur abgeschlossene Schritte sind gültige Zeiten). Ein neuer Lauf beginnt bei `MAX(cycle)+1` mit Schritt 1. Einfach-Modus = `sequence: [null]` (jede Runde ein Zyklus), Schritt-Timer = `freeOrder: true`, Zyklus 0.
+- **[Task_02] Zeiten:** Messungen speichern `start_us`/`end_us` in der Zeitbasis der Quelle (monotone Uhr bzw. Videoposition) und `duration_us` explizit (Pausen/Sonderzeiten herausgerechnet). Alle Engine-Aktionen akzeptieren einen Zeitstempel `at` (für Tastendrücke). `EngineSnapshot` (toJson/fromJson) ist für die Persistenz in Task_06 vorbereitet.
 
 ## Auffälligkeiten & Details
 

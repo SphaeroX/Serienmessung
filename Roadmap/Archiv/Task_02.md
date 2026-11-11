@@ -34,13 +34,13 @@ Eine reine Dart-Mess-Engine für den Modus Zeitstudie (feste Abfolge) existiert 
 
 ## Umsetzungsschritte
 
-1. [ ] Uhr-Interface und Fake-Uhr anlegen.
-2. [ ] Zustandsautomat der Engine umsetzen, ungültige Übergänge (z. B. weiter im gestoppten Zustand) definiert behandeln.
-3. [ ] Messung-Tabelle und Repository ergänzen (DB-Migration von Schema 1 auf 2).
-4. [ ] Engine schreibt jede abgeschlossene Messung sofort ins Repository.
-5. [ ] Fortsetzen einer bestehenden Studie: Engine setzt beim nächsten Zyklus nach dem letzten gespeicherten an (Entscheidung dokumentieren).
-6. [ ] Beobachtbaren Zustand für die UI bereitstellen.
-7. [ ] Entscheidungen (Zeiteinheit intern, Verhalten bei Fortsetzen) in README festhalten.
+1. [x] Uhr-Interface und Fake-Uhr anlegen.
+2. [x] Zustandsautomat der Engine umsetzen, ungültige Übergänge (z. B. weiter im gestoppten Zustand) definiert behandeln.
+3. [x] Messung-Tabelle und Repository ergänzen (DB-Migration von Schema 1 auf 2).
+4. [x] Engine schreibt jede abgeschlossene Messung sofort ins Repository.
+5. [x] Fortsetzen einer bestehenden Studie: Engine setzt beim nächsten Zyklus nach dem letzten gespeicherten an (Entscheidung dokumentieren).
+6. [x] Beobachtbaren Zustand für die UI bereitstellen.
+7. [x] Entscheidungen (Zeiteinheit intern, Verhalten bei Fortsetzen) in README festhalten.
 
 ## Tests
 
@@ -61,9 +61,9 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Alle oben genannten Tests liegen in `tests/` und laufen grün.
-- [ ] Die Engine hat keine Abhängigkeit zu Flutter-Widgets (reines Dart, per Import-Prüfung oder Code-Review belegt).
-- [ ] Die Dauer eines Schritts entspricht exakt der Differenz der Fake-Uhr-Zeitpunkte (Test).
+- [x] Alle oben genannten Tests liegen in `tests/` und laufen grün.
+- [x] Die Engine hat keine Abhängigkeit zu Flutter-Widgets (reines Dart, per Import-Prüfung oder Code-Review belegt).
+- [x] Die Dauer eines Schritts entspricht exakt der Differenz der Fake-Uhr-Zeitpunkte (Test).
 
 ## Offene Fragen / Annahmen
 
@@ -77,19 +77,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `Clock`/`MonotonicClock` (`lib/core/clock.dart`), `Measurement`/`MeasurementDraft`, `RecordingEngine` (Zeitstudie, Einfach über `[null]`, freie Reihenfolge, Pause, Sonderzeit-Grundlage `beginSpecial`/`endSpecial`, `discard`, Snapshot), `RecordingSession` (Engine + sofortige Speicherung), `MeasurementRepository`, DB-Migration v2 (Tabelle `measurement`). Sonderzeit-Logik liegt schon in der Engine, weil sie den Zustandsautomaten betrifft; Task_05 braucht nur noch Tasten-/UI-Anbindung und Notizen.
+- **Learnings & Stolpersteine:** In-Memory-DBs lassen sich nicht neu öffnen – der Migrationstest nutzt eine temporäre Datei (`Directory.systemTemp`).
+- **Wichtige Entscheidungen und ihre Gründe:** Offene Frage "Stopp mitten im Zyklus" entschieden: Stopp = Pause (Schritt bleibt offen). Zurücksetzen verwirft den unvollendeten Schritt, damit keine Teilzeiten die Statistik verfälschen. Zeitstempel vor dem Segmentbeginn werden geklemmt (`_clamp`).
+- **Auswirkungen auf Folge-Tasks:** Task_03: Buttons Start/Pause (toggle), Weiter, Zurücksetzen (`discard`); Startzyklus kommt aus `RecordingSession.start()`. Task_05: Engine-API für Sonderzeit existiert. Task_06: `EngineSnapshot` speichern/wiederherstellen; `MonotonicClock(offsetMicros:)` mit Android `elapsedRealtime` füttern. Task_14/15 nutzen `sequence: [null]` bzw. `freeOrder: true`.
+- **Hinweise zu Tests und Befehlen:** `FakeClock` in `tests/fakes/fake_clock.dart`. Engine-Tests: `tests/recording/domain/recording_engine_test.dart`; Persistenz + Migration: `tests/recording/data/measurement_repository_test.dart`.

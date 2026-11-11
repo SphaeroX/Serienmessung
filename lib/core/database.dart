@@ -29,6 +29,24 @@ final List<Migration> migrations = [
       'CREATE INDEX idx_step_study ON step_definition(study_id, position)',
     );
   },
+  // v2: measurements.
+  (db) async {
+    await db.execute('''
+      CREATE TABLE measurement (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        study_id INTEGER NOT NULL REFERENCES study(id) ON DELETE CASCADE,
+        cycle INTEGER NOT NULL,
+        step_id INTEGER,
+        kind TEXT NOT NULL,
+        start_us INTEGER NOT NULL,
+        end_us INTEGER NOT NULL,
+        duration_us INTEGER NOT NULL,
+        note TEXT NOT NULL DEFAULT ''
+      )''');
+    await db.execute(
+      'CREATE INDEX idx_measurement_study ON measurement(study_id, cycle)',
+    );
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.
