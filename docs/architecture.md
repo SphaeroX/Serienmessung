@@ -7,8 +7,8 @@
 - Language/runtime: Dart 3.13 / Flutter 3.47 (stable). SDK constraint in `pubspec.yaml`.
 - Target: Android first (minSdk see open decisions). Code must stay iOS-capable; iOS-specific features are out of scope.
 - State management: **Riverpod** (`flutter_riverpod`) – chosen because providers can be overridden with fakes (clock, keys, speech, video) in unit and widget tests without a widget tree.
-- Persistence: local SQLite. Proposed library: **drift** (typed queries, migrations, in-memory DB for tests) – to be confirmed in Task_01.
-- Localization: Flutter `gen-l10n` with ARB files; **English is the template/fallback**, German is the translation.
+- Persistence: local SQLite via **sqflite** with hand-written SQL. Schema migrations are an append-only list in `lib/core/database.dart` (`migrations[n]` creates version n+1). Chosen over drift to avoid code generation/build_runner; tests use `sqflite_common_ffi` with an in-memory DB.
+- Localization: Flutter `gen-l10n` with ARB files in `lib/l10n/` (`l10n.yaml`); **English is the template/fallback**, German is the translation. Generated `app_localizations*.dart` are committed; after editing ARB files run `flutter gen-l10n`.
 - Further libraries (video player, speech recognition, foreground service, export) are chosen in their roadmap tasks and recorded here with the reason.
 
 ## Architecture
@@ -20,6 +20,12 @@
 - **Data model (core)**: Study (name, description, mode) → StepDefinition (position, name) → Measurement (cycle number, step id, start, end, type `normal | special`, note). Measurements reference steps by id, never by position.
 - **Crash safety**: every completed measurement and every engine state change is persisted immediately.
 
+## App wiring
+
+- `main()` opens the database and overrides `databaseProvider`; all other providers live in `lib/core/providers.dart` or the feature's `presentation/` folder.
+- Lists are `FutureProvider`s that are invalidated after writes (sqflite has no change streams).
+- Wall-clock timestamps (created/active) come from `wallClockProvider`, never directly from `DateTime.now()` in widgets.
+
 ## Environment
 
 - Dependencies only via `flutter pub add` / `flutter pub get`. No `.env` needed (no external services).
@@ -27,7 +33,7 @@
 
 ## Open decisions
 
-- Minimum Android version: assumption API 26 (Android 8), not yet confirmed. Currently `flutter.minSdkVersion` in `android/app/build.gradle.kts`.
+- Minimum Android version: API 26 (Android 8) set in `android/app/build.gradle.kts` – assumption, not yet confirmed by the user.
 - Final app display name (working title "CycleScope").
 
 ---

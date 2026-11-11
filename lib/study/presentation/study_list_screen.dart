@@ -1,0 +1,236 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+
+import '../../core/providers.dart';
+import '../../l10n/app_localizations.dart';
+import '../domain/study.dart';
+import 'create_study_screen.dart';
+import 'mode_texts.dart';
+
+/// Opens a study by id. Replaced by the study screen once it exists.
+typedef OpenStudy = Future<void> Function(BuildContext context, int studyId);
+
+/// Home screen: list of all studies.
+class StudyListScreen extends ConsumerWidget {
+  const StudyListScreen({super.key, this.onOpenStudy, this.onOpenSettings});
+
+  final OpenStudy? onOpenStudy;
+  final VoidCallback? onOpenSettings;
+
+  Future<void> _create(BuildContext context) async {
+    final id = await Navigator.of(
+      context,
+    ).push<int>(MaterialPageRoute(builder: (_) => const CreateStudyScreen()));
+    if (id != null && context.mounted && onOpenStudy != null) {
+      await onOpenStudy!(context, id);
+    }
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    Study study,
+  ) async {
+    final l = AppLocalizations.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.deleteStudy),
+        content: Text(l.deleteStudyConfirm(study.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.delete),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await ref.read(studyRepositoryProvider).deleteStudy(study.id);
+      ref.invalidate(studyListProvider);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final studies = ref.watch(studyListProvider);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l.appTitle),
+        actions: [
+          if (onOpenSettings != null)
+            IconButton(
+              key: const Key('settingsButton'),
+              icon: const Icon(Icons.settings),
+              onPressed: onOpenSettings,
+            ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        key: const Key('newStudyFab'),
+        onPressed: () => _create(context),
+        icon: const Icon(Icons.add),
+        label: Text(l.createStudy),
+      ),
+      body: studies.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('$e')),
+        data: (list) => list.isEmpty
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Text(l.emptyStudies, textAlign: TextAlign.center),
+                ),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
+                itemCount: list.length,
+                itemBuilder: (context, i) => _StudyCard(
+                  summary: list[i],
+                  onTap: onOpenStudy == null
+                      ? null
+                      : () => onOpenStudy!(context, list[i].study.id),
+                  onLongPress: () =>
+                      _confirmDelete(context, ref, list[i].study),
+                ),
+              ),
+      ),
+    );
+  }
+}
+
+class _StudyCard extends StatelessWidget {
+  const _StudyCard({required this.summary, this.onTap, this.onLongPress});
+
+  final StudySummary summary;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final study = summary.study;
+    final fmt = DateFormat.yMd(Localizations.localeOf(context).toString())
+        .add_Hm();
+    final countLabel = switch (study.mode) {
+      StudyMode.simple => l.lapsLabel,
+      StudyMode.stepTimer => l.measurementsLabel,
+      _ => l.cyclesLabel,
+    };
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 26,
+                    backgroundColor: theme.colorScheme.primaryContainer,
+                    child: Icon(
+                      study.mode.icon,
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          study.name,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            study.mode.badge(l),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSecondaryContainer,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: DefaultTextStyle(
+                      style: theme.textTheme.bodySmall!,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${l.createdLabel}  ${fmt.format(study.createdAt)}',
+                          ),
+                          Text(
+                            '${l.activeLabel}  ${fmt.format(study.lastActiveAt)}',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '${summary.cycleCount} ',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextSpan(
+                            text: countLabel,
+                            style: theme.textTheme.labelSmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

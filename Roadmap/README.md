@@ -14,11 +14,11 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-11 – Roadmap angelegt, Projekt-Setup erledigt, noch kein Task begonnen.
+Stand: 2026-11-11 – Task_01 erledigt.
 
 | Task | Titel | Status |
 |---|---|---|
-| 01 | Durchstich: Studie anlegen & Liste | offen |
+| 01 | Durchstich: Studie anlegen & Liste | erledigt |
 | 02 | Mess-Engine Zeitstudie | offen |
 | 03 | Live-Messbildschirm mit Schritt-Overlay | offen |
 | 04 | Hardware-Tasten (Android) | offen |
@@ -56,10 +56,14 @@ Im Interview festgelegt (vor Task_01):
 - **Tastenbelegung (Messung):** Lautstärke hoch kurz = nächster Schritt; Lautstärke hoch gehalten = Sonderzeit läuft, solange gehalten; Lautstärke runter = Start/Stopp.
 - **Reale Taktzeit:** Methode einstellbar: Mittelwert, Median, IQR-bereinigt (Ausreißer über Q3 + 1,5 × IQR verworfen). Sonderzeiten sind immer herausgerechnet.
 
+- **[Task_01] Datenbank:** sqflite mit handgeschriebenem SQL statt drift (keine Codegenerierung). Migrationen: append-only-Liste in `lib/core/database.dart`. Tests nutzen `sqflite_common_ffi` in-memory über `openTestDatabase()`.
+- **[Task_01] Navigation:** `StudyListScreen` bekommt Callbacks (`onOpenStudy`, `onOpenSettings`) aus `app.dart`, damit spätere Bildschirme ohne Zirkelimporte angebunden werden.
+- **[Task_01] l10n:** generierte Dateien liegen versioniert in `lib/l10n/`; nach ARB-Änderungen `flutter gen-l10n` ausführen.
+
 ## Auffälligkeiten & Details
 
 Dinge, die global noch zu beachten sind: Besonderheiten, bekannte Einschränkungen, kleinere Details. Wird laufend ergänzt.
 
 - Fachbegriffe im Code (siehe `docs/conventions.md`): Studie = `Study`, Schritt = `StepDefinition`, Zyklus = `Cycle`, Messung = `Measurement`, Sonderzeit = `SpecialTime`, Taktzeit = `CycleTime`.
-- Mindest-Android-Version ist noch nicht festgelegt (Annahme: API 26 / Android 8), siehe Task_01.
+- Mindest-Android-Version: API 26 gesetzt (Annahme, vom Nutzer nicht bestätigt).
 - Hardware-nahe Funktionen (Lautstärketasten, Mikrofon, Video, Hintergrunddienst) lassen sich nur teilweise automatisiert testen. Logik mit Fakes testen, zusätzlich eine kurze manuelle Geräteprüfung in den Task-Notizen protokollieren.
