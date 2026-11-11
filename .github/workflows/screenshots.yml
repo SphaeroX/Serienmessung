@@ -1,0 +1,55 @@
+name: Screenshots
+
+# Runs the test suite, renders the app screenshots (EN + DE) with
+# tests/screenshots and commits them to screenshots/ when they changed.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'screenshots/**'
+      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+
+      # sqflite_common_ffi needs the native SQLite library.
+      - name: Install SQLite
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+
+      - run: flutter pub get
+
+      - name: Tests
+        run: flutter test tests/
+
+      - name: Render screenshots
+        run: flutter test tests/screenshots --dart-define=SCREENSHOTS=true
+
+      - name: Commit screenshots
+        run: |
+          git add screenshots
+          if git diff --cached --quiet; then
+            echo "Screenshots unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(screenshots): update app screenshots"
+          git push

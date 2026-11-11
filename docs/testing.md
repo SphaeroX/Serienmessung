@@ -57,5 +57,12 @@ A change is done when all of these hold:
 - Forms must not use lazy `ListView`s: off-screen fields would not be validated (found in Task_01).
 - Hardware behaviour that cannot be automated is checked manually on a device and logged in the task notes.
 
+## Screenshots
+
+- `tests/screenshots/app_screenshots_test.dart` renders the main screens (EN + DE) with seeded sample data into `screenshots/<lang>/`. It is skipped in normal runs and enabled with `flutter test tests/screenshots --dart-define=SCREENSHOTS=true`.
+- Real fonts (Roboto, Material Icons) are loaded from `$FLUTTER_ROOT/bin/cache/artifacts/material_fonts`; shadows are switched on per test (`debugDisableShadows`) and switched off again before the test ends.
+- CI: `.github/workflows/screenshots.yml` runs the full suite and the generator on every push to `main` (Ubuntu, Flutter pinned to the local version) and commits changed images. Do not commit locally rendered screenshots; CI is the single source.
+- New screens or major UI changes: add a scene to the generator.
+
 ---
 Maintenance: update this file immediately when the test suite or strategy changes.
