@@ -250,4 +250,33 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get recBadge => 'REC';
+
+  @override
+  String get tabLive => 'Live';
+
+  @override
+  String get tabCycles => 'Zyklen';
+
+  @override
+  String get tabLaps => 'Runden';
+
+  @override
+  String get incomplete => 'unvollständig';
+
+  @override
+  String get deleteCycle => 'Zyklus löschen';
+
+  @override
+  String get undo => 'Rückgängig';
+
+  @override
+  String deletedTimes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Zeiten gelöscht',
+      one: '1 Zeit gelöscht',
+    );
+    return '$_temp0';
+  }
 }

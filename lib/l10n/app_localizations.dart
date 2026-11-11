@@ -517,6 +517,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'REC'**
   String get recBadge;
+
+  /// No description provided for @tabLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get tabLive;
+
+  /// No description provided for @tabCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycles'**
+  String get tabCycles;
+
+  /// No description provided for @tabLaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Laps'**
+  String get tabLaps;
+
+  /// No description provided for @incomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'incomplete'**
+  String get incomplete;
+
+  /// No description provided for @deleteCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete cycle'**
+  String get deleteCycle;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @deletedTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 time deleted} other{{count} times deleted}}'**
+  String deletedTimes(int count);
 }
 
 class _AppLocalizationsDelegate

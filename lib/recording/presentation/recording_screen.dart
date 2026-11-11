@@ -13,6 +13,7 @@ import '../domain/measurement.dart';
 import '../platform/hardware_keys.dart';
 import '../platform/recording_notifier.dart';
 import '../domain/recording_engine.dart';
+import 'cycles_view.dart';
 import 'recording_controller.dart';
 
 /// Live recording screen with the always-visible current-step overlay.
@@ -169,13 +170,32 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
       ),
       body: !c.loaded
           ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                _TimerTiles(controller: c, now: _now),
-                StepOverlay(controller: c, now: _now),
-                Expanded(child: LiveList(controller: c)),
-                ControlBar(controller: c),
-              ],
+          : DefaultTabController(
+              length: 2,
+              child: Column(
+                children: [
+                  _TimerTiles(controller: c, now: _now),
+                  StepOverlay(controller: c, now: _now),
+                  TabBar(
+                    tabs: [
+                      Tab(key: const Key('liveTab'), text: l.tabLive),
+                      Tab(
+                        key: const Key('cyclesTab'),
+                        text: c.hasSteps ? l.tabCycles : l.tabLaps,
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        LiveList(controller: c),
+                        CyclesView(controller: c),
+                      ],
+                    ),
+                  ),
+                  ControlBar(controller: c),
+                ],
+              ),
             ),
     );
   }
@@ -641,6 +661,7 @@ class _BigButton extends StatelessWidget {
         style: FilledButton.styleFrom(
           backgroundColor: background,
           foregroundColor: foreground,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(28),
           ),
@@ -650,12 +671,17 @@ class _BigButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, size: 36),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
+            // Narrow phones: shrink the label instead of wrapping it.
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                maxLines: 1,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
               ),
             ),
           ],

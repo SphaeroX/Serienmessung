@@ -128,5 +128,19 @@
   },
   "open": "Open",
   "discard": "Discard",
-  "recBadge": "REC"
+  "recBadge": "REC",
+  "tabLive": "Live",
+  "tabCycles": "Cycles",
+  "tabLaps": "Laps",
+  "incomplete": "incomplete",
+  "deleteCycle": "Delete cycle",
+  "undo": "Undo",
+  "deletedTimes": "{count, plural, =1{1 time deleted} other{{count} times deleted}}",
+  "@deletedTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

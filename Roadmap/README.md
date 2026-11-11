@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-11 – Task_06 erledigt.
+Stand: 2026-11-11 – Task_07 erledigt.
 
 | Task | Titel | Status |
 |---|---|---|
@@ -24,7 +24,7 @@ Stand: 2026-11-11 – Task_06 erledigt.
 | 04 | Hardware-Tasten (Android) | erledigt |
 | 05 | Sonderzeit | erledigt |
 | 06 | Hintergrundbetrieb & Wiederherstellung | erledigt |
-| 07 | Zyklen ansehen & löschen | offen |
+| 07 | Zyklen ansehen & löschen | erledigt |
 | 08 | Schrittdefinition nachträglich bearbeiten | offen |
 | 09 | Auswertung & reale Taktzeit | offen |
 | 10 | Einstellungen | offen |
@@ -68,6 +68,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_04] Hardware-Tasten:** eigener Platform Channel in `MainActivity.kt` (`dev.cyclescope/platform` Methoden, `dev.cyclescope/keys` Events). `KeyInterpreter` (reines Dart) setzt kurz/lang um. Erfassung nur auf dem Messbildschirm.
 - **[Task_05] Sonderzeit:** Taste halten (rückwirkend ab Key-Down) oder Bildschirm-Button "HALTEN SONDERZEIT". Eigene Zeile `kind = 'special'` mit `cycle`/`step_id` des unterbrochenen Schritts und optionaler Notiz.
 - **[Task_06] Wiederherstellung:** `run_state`-Tabelle (Migration v3) hält den Engine-Snapshot jeder laufenden Studie; Uhr-Offset = Android `elapsedRealtime`. Gerätereboot (Uhr kleiner als gespeichert) → Laufzustand verwerfen. Hintergrund: dauerhafte Benachrichtigung mit Chronometer und Aktionen statt Foreground-Service.
+- **[Task_07] Zyklen:** `groupCycles()` in `lib/recording/domain/cycles.dart` ist die gemeinsame Grundlage für Zyklen-Ansicht und Auswertung (vollständig = jeder aktuelle Schritt hat eine normale Zeit). Löschen hart + Rückgängig per Wiedereinfügen; Zyklusnummern bleiben stabil.
 
 ## Auffälligkeiten & Details
 

@@ -198,6 +198,23 @@ class RecordingController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<List<Measurement>> deleteCycle(int cycle) async {
+    final removed = await measurementRepo.deleteCycle(studyId, cycle);
+    await reloadMeasurements();
+    return removed;
+  }
+
+  Future<List<Measurement>> deleteMeasurement(int id) async {
+    final removed = await measurementRepo.deleteById(id);
+    await reloadMeasurements();
+    return removed;
+  }
+
+  Future<void> restoreMeasurements(List<Measurement> items) async {
+    await measurementRepo.restore(items);
+    await reloadMeasurements();
+  }
+
   Future<void> reloadMeasurements() async {
     measurements = await measurementRepo.listForStudy(studyId);
     notifyListeners();

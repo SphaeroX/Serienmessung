@@ -56,3 +56,19 @@ Future<void> tapVisible(WidgetTester tester, Finder finder) async {
   await tester.pump();
   await tester.tap(finder);
 }
+
+/// Uses a phone-sized test surface (392×872 logical pixels).
+void usePhoneSize(WidgetTester tester) {
+  tester.view.physicalSize = const Size(1078, 2398);
+  tester.view.devicePixelRatio = 2.75;
+  addTearDown(tester.view.reset);
+}
+
+/// Pumps [count] frames of 100 ms so animations (tabs, snack bars,
+/// expansion tiles) can finish. Use instead of `pumpAndSettle` on screens
+/// with an endless ticker.
+Future<void> pumpFrames(WidgetTester tester, {int count = 10}) async {
+  for (var i = 0; i < count; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}

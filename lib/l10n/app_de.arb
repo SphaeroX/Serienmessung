@@ -69,5 +69,12 @@
   "recordingInProgressText": "„{name}“ wird noch aufgenommen. Fortsetzen?",
   "open": "Öffnen",
   "discard": "Verwerfen",
-  "recBadge": "REC"
+  "recBadge": "REC",
+  "tabLive": "Live",
+  "tabCycles": "Zyklen",
+  "tabLaps": "Runden",
+  "incomplete": "unvollständig",
+  "deleteCycle": "Zyklus löschen",
+  "undo": "Rückgängig",
+  "deletedTimes": "{count, plural, =1{1 Zeit gelöscht} other{{count} Zeiten gelöscht}}"
 }

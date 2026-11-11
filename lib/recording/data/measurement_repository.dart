@@ -26,6 +26,51 @@ class MeasurementRepository {
     whereArgs: [id],
   );
 
+  /// Deletes all times of [cycle]; returns them for undo.
+  Future<List<Measurement>> deleteCycle(int studyId, int cycle) async {
+    final rows = await _db.db.query(
+      'measurement',
+      where: 'study_id = ? AND cycle = ?',
+      whereArgs: [studyId, cycle],
+    );
+    await _db.db.delete(
+      'measurement',
+      where: 'study_id = ? AND cycle = ?',
+      whereArgs: [studyId, cycle],
+    );
+    return rows.map(fromRow).toList();
+  }
+
+  /// Deletes one time; returns it for undo (empty if not found).
+  Future<List<Measurement>> deleteById(int id) async {
+    final rows = await _db.db.query(
+      'measurement',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    await _db.db.delete('measurement', where: 'id = ?', whereArgs: [id]);
+    return rows.map(fromRow).toList();
+  }
+
+  /// Re-inserts deleted measurements with their original ids (undo).
+  Future<void> restore(List<Measurement> items) async {
+    await _db.db.transaction((txn) async {
+      for (final m in items) {
+        await txn.insert('measurement', {
+          'id': m.id,
+          'study_id': m.studyId,
+          'cycle': m.cycle,
+          'step_id': m.stepId,
+          'kind': m.kind.name,
+          'start_us': m.startMicros,
+          'end_us': m.endMicros,
+          'duration_us': m.durationMicros,
+          'note': m.note,
+        });
+      }
+    });
+  }
+
   /// All measurements of a study in chronological order.
   Future<List<Measurement>> listForStudy(int studyId) async {
     final rows = await _db.db.query(

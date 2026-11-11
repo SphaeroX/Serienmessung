@@ -33,12 +33,12 @@ Nach (oder zwischen) Aufnahmen sieht man die Messungen nach Zyklen gruppiert und
 
 ## Umsetzungsschritte
 
-1. [ ] Abfragen für gruppierte Darstellung im Repository ergänzen.
-2. [ ] Zyklen-Ansicht umsetzen (Tab oder eigener Bildschirm in der Studie).
-3. [ ] Löschen mit Rückgängig (Soft-Delete oder Zwischenspeicher) umsetzen.
-4. [ ] Notiz bearbeiten.
-5. [ ] Gelöschte Messungen in Zählern der Studienliste berücksichtigen.
-6. [ ] Texte DE/EN.
+1. [x] Abfragen für gruppierte Darstellung im Repository ergänzen.
+2. [x] Zyklen-Ansicht umsetzen (Tab oder eigener Bildschirm in der Studie).
+3. [x] Löschen mit Rückgängig (Soft-Delete oder Zwischenspeicher) umsetzen.
+4. [x] Notiz bearbeiten.
+5. [x] Gelöschte Messungen in Zählern der Studienliste berücksichtigen.
+6. [x] Texte DE/EN.
 
 ## Tests
 
@@ -57,8 +57,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün.
-- [ ] Nach dem Löschen eines Zyklus stimmen die Zyklenzahl auf der Studienkarte und in der Ansicht überein (Test).
+- [x] Tests grün.
+- [x] Nach dem Löschen eines Zyklus stimmen die Zyklenzahl auf der Studienkarte und in der Ansicht überein (Test).
 
 ## Offene Fragen / Annahmen
 
@@ -72,19 +72,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Tabs "Live" und "Zyklen" (im Einfach-Modus "Runden") im Messbildschirm. `CyclesView` zeigt aufklappbare Zyklen (neueste oben) mit Zykluszeit ohne Sonderzeit, Sonderzeit-Summe und Kennzeichnung "unvollständig"; darin Schrittzeiten und Sonderzeiten (Notiz per Tipp bearbeitbar). Löschen eines ganzen Zyklus oder einer einzelnen Zeit mit "Rückgängig"-Snackbar. Domänenfunktion `groupCycles` (`lib/recording/domain/cycles.dart`) mit `normalTotal`, `specialTotal`, `isComplete`. Weitermessen geht direkt über den Start-Button im selben Bildschirm.
+- **Learnings & Stolpersteine:** Der Phone-Größen-Test deckte einen echten Layout-Fehler auf: Button-Beschriftungen brachen auf schmalen Geräten um und überliefen – jetzt `FittedBox`. In Widget-Tests mit Dauer-Ticker brauchen Tab-Wechsel, Snackbars und ExpansionTiles echte Frame-Zeit: `pumpFrames()`; Bildschirmgröße mit `usePhoneSize()` realistisch setzen.
+- **Wichtige Entscheidungen und ihre Gründe:** Hartes Löschen + Rückgängig durch Wiedereinfügen mit Original-IDs (kein Soft-Delete, keine Migration nötig). Zyklusnummern bleiben nach dem Löschen stabil (keine Neunummerierung), damit Notizen/Video-Bezüge stimmen. Ein Zyklus ist vollständig, wenn jeder aktuell definierte Schritt eine normale Zeit hat; unvollständige Zyklen zählen nicht zur Zyklus-Statistik (Task_09).
+- **Auswirkungen auf Folge-Tasks:** Task_08: nach Schrittänderungen `RecordingController.load()` neu ausführen (Sequenz + Vollständigkeit hängen an den aktuellen Schritt-IDs). Task_09: `groupCycles(...).where((g) => g.isComplete)` für die Zyklus-Statistik verwenden; dritter Tab "Auswertung" an `DefaultTabController(length: 2)` anhängen.
+- **Hinweise zu Tests und Befehlen:** `tests/recording/domain/cycles_test.dart`, `tests/recording/presentation/cycles_view_test.dart`. Neue Helfer in `tests/helpers.dart`: `usePhoneSize`, `pumpFrames`.

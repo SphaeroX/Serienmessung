@@ -53,6 +53,7 @@ A change is done when all of these hold:
 - Platform interfaces (keys, speech, video, foreground service) are replaced by fakes in `tests/fakes/`.
 - Database tests use an in-memory database: `openTestDatabase()` from `tests/helpers.dart`.
 - Widget tests: wrap with `ProviderScope(overrides: [databaseProvider.overrideWithValue(db)])` and `localizedApp(...)`; use `settle(tester)` after actions that hit the database (sqflite ffi needs real async via `runAsync`) and `tapVisible(tester, finder)` for widgets that may be scrolled out of the 800×600 test view.
+- Screens with an endless ticker (recording screen): never `pumpAndSettle`; use `pumpFrames(tester)` for animations (tabs, snack bars, expansion tiles) and `usePhoneSize(tester)` for a realistic 392×872 surface.
 - Forms must not use lazy `ListView`s: off-screen fields would not be validated (found in Task_01).
 - Hardware behaviour that cannot be automated is checked manually on a device and logged in the task notes.
 
