@@ -71,7 +71,8 @@ void main() {
     );
     await pump(tester);
     await tapVisible(tester, find.byKey(const Key('createBackupTile')));
-    await settle(tester);
+    // Writing the backup file takes longer on slow machines (CI).
+    await settleUntil(tester, () => sharer.shared.isNotEmpty);
     expect(
       sharer.shared.single.$1,
       endsWith('cyclescope_backup_2026-11-11.json'),

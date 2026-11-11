@@ -41,6 +41,24 @@ Future<void> settle(WidgetTester tester) async {
   }
 }
 
+/// Like [settle], but keeps letting real async work (files, database) run
+/// until [done] is true or [timeout] passed. For slow work such as PDF or
+/// backup files, whose duration depends on the machine (CI runners).
+Future<void> settleUntil(
+  WidgetTester tester,
+  bool Function() done, {
+  Duration timeout = const Duration(seconds: 10),
+}) async {
+  final watch = Stopwatch()..start();
+  await settle(tester);
+  while (!done() && watch.elapsed < timeout) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pump();
+  }
+}
+
 /// Scrolls [finder] into view and taps it.
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
   // A focused text field scrolls itself back into view; release focus first.

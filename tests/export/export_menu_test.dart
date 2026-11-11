@@ -121,6 +121,8 @@ void main() {
 
   testWidgets('exports a PDF report', (tester) async {
     await exportAs(tester, 'exportPdf');
+    // Rendering the PDF takes longer on slow machines (CI).
+    await settleUntil(tester, () => sharer.shared.isNotEmpty);
     expect(sharer.shared.single.$1, endsWith('.pdf'));
     expect(sharer.shared.single.$2, 'application/pdf');
   });
