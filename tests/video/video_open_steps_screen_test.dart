@@ -126,4 +126,54 @@ void main() {
     expect(await stepNames(tester, live.id), ['Step 1', 'Step 2']);
     expect(find.byType(RecordingScreen), findsOneWidget);
   });
+
+  testWidgets('the name dialog closes cleanly (save and cancel)', (
+    tester,
+  ) async {
+    await pump(tester);
+    await markTwoStepsAndClose(tester);
+    await tester.enterText(find.byKey(const Key('stepNameField-0')), 'Pick');
+    // Keyboard open while editing ...
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('saveStepNames')));
+    await tester.pump();
+    // ... and closing while the dialog animates out (rebuilds the dialog).
+    tester.view.viewInsets = FakeViewPadding.zero;
+    await pumpFrames(tester);
+    await settle(tester);
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const Key('stepNameField-0')), findsNothing);
+    expect(step(tester), 'Pick');
+  });
+
+  testWidgets('saving the suggested names unchanged does not crash', (
+    tester,
+  ) async {
+    await pump(tester);
+    await markAt(tester, 1 * s);
+    await markAt(tester, 2 * s);
+    await markAt(tester, 3 * s);
+    video.moveTo(4 * s);
+    await tapVisible(tester, find.byKey(const Key('closeCycleButton')));
+    await settle(tester);
+    await pumpFrames(tester);
+    expect(find.byKey(const Key('stepNameField-2')), findsOneWidget);
+    // The first field has focus, so the keyboard is open.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pump();
+
+    await tester.tap(find.byKey(const Key('saveStepNames')));
+    await tester.pump();
+    // The keyboard closes while the dialog animates out.
+    tester.view.viewInsets = FakeViewPadding.zero;
+    await pumpFrames(tester);
+    await settle(tester);
+
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const Key('stepNameField-0')), findsNothing);
+    expect(await stepNames(tester, studyId), ['Step 1', 'Step 2', 'Step 3']);
+  });
 }

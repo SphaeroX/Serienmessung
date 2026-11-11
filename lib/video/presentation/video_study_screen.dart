@@ -24,6 +24,7 @@ import '../domain/position_interpolator.dart';
 import '../domain/video_clock.dart';
 import '../platform/video_picker.dart';
 import '../platform/video_playback.dart';
+import 'step_names_dialog.dart';
 import 'video_timeline.dart';
 
 /// Creates a player per screen; overridden in tests.
@@ -231,62 +232,19 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
   Future<void> _nameSteps() async {
     if (playback.playing) await playback.pause();
     if (!mounted) return;
-    final l = AppLocalizations.of(context);
     final steps = controller.steps;
-    final fields = [for (final s in steps) TextEditingController(text: s.name)];
-    final save = await showDialog<bool>(
+    final names = await showDialog<List<String>>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l.nameStepsTitle),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (var i = 0; i < fields.length; i++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: TextField(
-                    key: Key('stepNameField-$i'),
-                    controller: fields[i],
-                    autofocus: i == 0,
-                    textInputAction: i == fields.length - 1
-                        ? TextInputAction.done
-                        : TextInputAction.next,
-                    decoration: InputDecoration(
-                      labelText: l.stepOf(i + 1, fields.length),
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l.cancel),
-          ),
-          FilledButton(
-            key: const Key('saveStepNames'),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l.save),
-          ),
-        ],
-      ),
+      builder: (_) => StepNamesDialog(names: [for (final s in steps) s.name]),
     );
-    if (save == true) {
-      final repo = ref.read(studyRepositoryProvider);
-      for (var i = 0; i < steps.length; i++) {
-        final name = fields[i].text.trim();
-        if (name.isNotEmpty && name != steps[i].name) {
-          await repo.renameStep(steps[i].id, name);
-        }
+    if (names == null) return;
+    final repo = ref.read(studyRepositoryProvider);
+    for (var i = 0; i < steps.length; i++) {
+      if (names[i] != steps[i].name) {
+        await repo.renameStep(steps[i].id, names[i]);
       }
-      await controller.reloadSteps();
     }
-    for (final f in fields) {
-      f.dispose();
-    }
+    await controller.reloadSteps();
   }
 
   /// Creates a live time study with this study's steps and opens it.
