@@ -118,4 +118,10 @@ void main() {
       'study_2026-01-01.pdf',
     );
   });
+
+  testWidgets('exports a PDF report', (tester) async {
+    await exportAs(tester, 'exportPdf');
+    expect(sharer.shared.single.$1, endsWith('.pdf'));
+    expect(sharer.shared.single.$2, 'application/pdf');
+  });
 }

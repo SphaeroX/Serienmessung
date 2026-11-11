@@ -284,5 +284,21 @@
   "exportNo": "no",
   "exportRealTime": "Real time",
   "exportShare": "Share",
-  "exportOutliers": "Outliers removed"
+  "exportOutliers": "Outliers removed",
+  "exportPdf": "PDF report",
+  "exportPdfHint": "Printable analysis with key figures and cycles",
+  "reportTitle": "Time study report",
+  "reportKeyFigures": "Key figures",
+  "reportPageOf": "Page {page} of {pages}",
+  "@reportPageOf": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
+  },
+  "reportNoData": "No times recorded."
 }

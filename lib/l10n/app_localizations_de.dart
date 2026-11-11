@@ -612,4 +612,25 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get exportOutliers => 'Entfernte Ausreißer';
+
+  @override
+  String get exportPdf => 'PDF-Bericht';
+
+  @override
+  String get exportPdfHint =>
+      'Druckfertige Auswertung mit Kennzahlen und Zyklen';
+
+  @override
+  String get reportTitle => 'Zeitstudien-Bericht';
+
+  @override
+  String get reportKeyFigures => 'Kennzahlen';
+
+  @override
+  String reportPageOf(int page, int pages) {
+    return 'Seite $page von $pages';
+  }
+
+  @override
+  String get reportNoData => 'Keine Zeiten erfasst.';
 }

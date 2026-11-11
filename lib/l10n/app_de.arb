@@ -173,5 +173,11 @@
   "exportNo": "nein",
   "exportRealTime": "Reale Zeit",
   "exportShare": "Anteil",
-  "exportOutliers": "Entfernte Ausreißer"
+  "exportOutliers": "Entfernte Ausreißer",
+  "exportPdf": "PDF-Bericht",
+  "exportPdfHint": "Druckfertige Auswertung mit Kennzahlen und Zyklen",
+  "reportTitle": "Zeitstudien-Bericht",
+  "reportKeyFigures": "Kennzahlen",
+  "reportPageOf": "Seite {page} von {pages}",
+  "reportNoData": "Keine Zeiten erfasst."
 }

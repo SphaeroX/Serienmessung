@@ -13,7 +13,7 @@
 - `wakelock_plus` – keep the screen on while recording.
 - `video_player` – video playback (ExoPlayer) for video studies; `file_picker` – choosing videos (and backup files).
 - `excel` – .xlsx export; `share_plus` – system share sheet for export/backup files.
-- Further libraries (PDF) are chosen in their roadmap tasks and recorded here with the reason.
+- `pdf` – PDF report (pure Dart, built-in Latin-1 fonts; shared via the share sheet instead of the `printing` plugin).
 
 ## Architecture
 

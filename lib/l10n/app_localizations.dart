@@ -1141,6 +1141,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Outliers removed'**
   String get exportOutliers;
+
+  /// No description provided for @exportPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF report'**
+  String get exportPdf;
+
+  /// No description provided for @exportPdfHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Printable analysis with key figures and cycles'**
+  String get exportPdfHint;
+
+  /// No description provided for @reportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Time study report'**
+  String get reportTitle;
+
+  /// No description provided for @reportKeyFigures.
+  ///
+  /// In en, this message translates to:
+  /// **'Key figures'**
+  String get reportKeyFigures;
+
+  /// No description provided for @reportPageOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {pages}'**
+  String reportPageOf(int page, int pages);
+
+  /// No description provided for @reportNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'No times recorded.'**
+  String get reportNoData;
 }
 
 class _AppLocalizationsDelegate

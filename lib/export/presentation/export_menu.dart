@@ -15,11 +15,12 @@ import '../../study/domain/study.dart';
 import '../../study/presentation/mode_texts.dart';
 import '../domain/csv_export.dart';
 import '../domain/export_data.dart';
+import '../domain/pdf_report.dart';
 import '../domain/xlsx_export.dart';
 import '../platform/file_sharer.dart';
 
 /// Export file formats.
-enum ExportFormat { csv, xlsx }
+enum ExportFormat { csv, xlsx, pdf }
 
 final fileSharerProvider = Provider<FileSharer>((ref) => SystemFileSharer());
 
@@ -70,6 +71,17 @@ ExportLabels exportLabels(AppLocalizations l, Study study, String method) =>
       outliersRemoved: l.exportOutliers,
     );
 
+/// PDF report texts in the current language.
+PdfLabels pdfLabels(AppLocalizations l, Study study) => PdfLabels(
+  title: l.reportTitle,
+  keyFigures: l.reportKeyFigures,
+  steps: l.stepsSection,
+  cycles: study.mode == StudyMode.simple ? l.tabLaps : l.tabCycles,
+  specialTimes: l.specialTimesTotal,
+  pageOf: l.reportPageOf,
+  noData: l.reportNoData,
+);
+
 /// Safe file name: study name plus date.
 String exportFileName(String studyName, DateTime when, String extension) {
   final base = studyName
@@ -110,8 +122,13 @@ class ExportButton extends ConsumerWidget {
     );
     try {
       final dir = await ref.read(exportDirectoryProvider)();
-      final (bytes, ext, mime) = switch (format) {
+      final (List<int> bytes, ext, mime) = switch (format) {
         ExportFormat.csv => (utf8.encode(buildCsv(input)), 'csv', 'text/csv'),
+        ExportFormat.pdf => (
+          await buildPdfReport(input, pdfLabels(l, study)),
+          'pdf',
+          'application/pdf',
+        ),
         ExportFormat.xlsx => (
           buildXlsx(input),
           'xlsx',
@@ -151,6 +168,16 @@ class ExportButton extends ConsumerWidget {
                       onTap: () {
                         Navigator.pop(sheet);
                         _export(context, ref, ExportFormat.csv);
+                      },
+                    ),
+                    ListTile(
+                      key: const Key('exportPdf'),
+                      leading: const Icon(Icons.picture_as_pdf_outlined),
+                      title: Text(l.exportPdf),
+                      subtitle: Text(l.exportPdfHint),
+                      onTap: () {
+                        Navigator.pop(sheet);
+                        _export(context, ref, ExportFormat.pdf);
                       },
                     ),
                     ListTile(

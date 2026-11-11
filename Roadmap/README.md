@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-11 – Task_16 erledigt.
+Stand: 2026-11-11 – Task_17 erledigt.
 
 | Task | Titel | Status |
 |---|---|---|
@@ -34,7 +34,7 @@ Stand: 2026-11-11 – Task_16 erledigt.
 | 14 | Modus "Einfach" | erledigt |
 | 15 | Modus "Schritt-Timer" | erledigt |
 | 16 | Export CSV + Excel | erledigt |
-| 17 | Export PDF-Bericht | offen |
+| 17 | Export PDF-Bericht | erledigt |
 | 18 | Backup & Wiederherstellen | offen |
 
 Status ist `offen`, `läuft` (Datei trägt das Präfix `RUN_`) oder `erledigt` (Datei liegt in `Archiv/`). Die Tabelle wird beim Archivieren eines Tasks aktualisiert.
@@ -77,6 +77,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_13] Zeitleiste:** `PositionInterpolator` liefert die flüssige Videoposition (auch Zeitbasis für Marker). `VideoTimeline` zeichnet per `CustomPainter(repaint: ValueNotifier)`. Nur innere Marker sind verschiebbar.
 - **[Task_15] Schritt-Timer:** `StepGrid` + `RecordingController.selectStep`; Zeiten-Tab als flache Liste. Keine Zyklen (Zyklus 0).
 - **[Task_16] Export:** Flutter-freie Builder `buildCsv`/`buildXlsx` auf Basis von `ExportInput` (+ `StudyAnalysis`); UI `ExportButton`, Teilen über `FileSharer` (share_plus). Zeiten relativ zum ersten Start (Video: Videoposition).
+- **[Task_17] PDF:** `buildPdfReport` mit eingebauten Latin-1-Schriften (Sonderzeichen werden ersetzt); Teilen statt `printing`.
 
 ## Auffälligkeiten & Details
 
@@ -85,5 +86,6 @@ Dinge, die global noch zu beachten sind: Besonderheiten, bekannte Einschränkung
 - Fachbegriffe im Code (siehe `docs/conventions.md`): Studie = `Study`, Schritt = `StepDefinition`, Zyklus = `Cycle`, Messung = `Measurement`, Sonderzeit = `SpecialTime`, Taktzeit = `CycleTime`.
 - Mindest-Android-Version: API 26 gesetzt (Annahme, vom Nutzer nicht bestätigt).
 - **Sandbox-Hinweis (nur für die KI-Umgebung, in der die Tasks bisher liefen):** `flutter gen-l10n`/Build-Zeit-Generierung hatte dort keine Schreibrechte auf `lib/l10n`; die Agenten generierten in einem Temp-Ordner und kopierten. Auf normalen Rechnern funktioniert `flutter gen-l10n` direkt.
+- PDF-Bericht: nur Latin-1-Zeichen (eingebaute Schriften), Layout noch nicht visuell geprüft (Task_17).
 - Lautstärketasten funktionieren nur bei eingeschaltetem Bildschirm mit geöffnetem Messbildschirm (Task_06).
 - Hardware-nahe Funktionen (Lautstärketasten, Mikrofon, Video, Hintergrunddienst) lassen sich nur teilweise automatisiert testen. Logik mit Fakes testen, zusätzlich eine kurze manuelle Geräteprüfung in den Task-Notizen protokollieren.

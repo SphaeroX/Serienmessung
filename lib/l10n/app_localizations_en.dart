@@ -605,4 +605,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exportOutliers => 'Outliers removed';
+
+  @override
+  String get exportPdf => 'PDF report';
+
+  @override
+  String get exportPdfHint => 'Printable analysis with key figures and cycles';
+
+  @override
+  String get reportTitle => 'Time study report';
+
+  @override
+  String get reportKeyFigures => 'Key figures';
+
+  @override
+  String reportPageOf(int page, int pages) {
+    return 'Page $page of $pages';
+  }
+
+  @override
+  String get reportNoData => 'No times recorded.';
 }
