@@ -88,12 +88,15 @@ class AppDatabase {
     required DatabaseFactory factory,
     required String path,
     int? version,
+    bool singleInstance = true,
   }) async {
     final target = version ?? latestVersion;
     final db = await factory.openDatabase(
       path,
       options: OpenDatabaseOptions(
         version: target,
+        // Tests open several independent in-memory databases.
+        singleInstance: singleInstance,
         onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
         onCreate: (db, v) => _migrate(db, 0, v),
         onUpgrade: (db, from, to) => _migrate(db, from, to),

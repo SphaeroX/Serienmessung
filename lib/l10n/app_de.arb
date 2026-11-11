@@ -179,5 +179,18 @@
   "reportTitle": "Zeitstudien-Bericht",
   "reportKeyFigures": "Kennzahlen",
   "reportPageOf": "Seite {page} von {pages}",
-  "reportNoData": "Keine Zeiten erfasst."
+  "reportNoData": "Keine Zeiten erfasst.",
+  "data": "Daten",
+  "createBackup": "Backup erstellen",
+  "createBackupHint": "Alle Studien in eine Datei sichern (ohne Videos)",
+  "restoreBackup": "Backup wiederherstellen",
+  "restoreBackupHint": "Studien aus einer Backup-Datei importieren",
+  "restoreChoice": "Studien aus der Datei zu den vorhandenen hinzufügen oder alles ersetzen?",
+  "restoreMerge": "Hinzufügen",
+  "restoreReplace": "Alles ersetzen",
+  "restoreReplaceWarning": "Alle Studien auf diesem Gerät werden gelöscht und durch das Backup ersetzt. Das kann nicht rückgängig gemacht werden.",
+  "restoreResult": "{imported} importiert, {skipped} bereits vorhanden.",
+  "restoreVideoHint": "Video-Studien: Video auf diesem Gerät erneut auswählen.",
+  "restoreInvalid": "Das ist keine gültige Backup-Datei. Es wurde nichts geändert.",
+  "restoreTooNew": "Dieses Backup stammt aus einer neueren App-Version. Bitte die App aktualisieren."
 }

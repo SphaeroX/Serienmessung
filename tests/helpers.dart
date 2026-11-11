@@ -12,6 +12,7 @@ Future<AppDatabase> openTestDatabase({int? version}) async {
     factory: databaseFactoryFfi,
     path: inMemoryDatabasePath,
     version: version,
+    singleInstance: false,
   );
 }
 

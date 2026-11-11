@@ -633,4 +633,51 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get reportNoData => 'Keine Zeiten erfasst.';
+
+  @override
+  String get data => 'Daten';
+
+  @override
+  String get createBackup => 'Backup erstellen';
+
+  @override
+  String get createBackupHint =>
+      'Alle Studien in eine Datei sichern (ohne Videos)';
+
+  @override
+  String get restoreBackup => 'Backup wiederherstellen';
+
+  @override
+  String get restoreBackupHint => 'Studien aus einer Backup-Datei importieren';
+
+  @override
+  String get restoreChoice =>
+      'Studien aus der Datei zu den vorhandenen hinzufügen oder alles ersetzen?';
+
+  @override
+  String get restoreMerge => 'Hinzufügen';
+
+  @override
+  String get restoreReplace => 'Alles ersetzen';
+
+  @override
+  String get restoreReplaceWarning =>
+      'Alle Studien auf diesem Gerät werden gelöscht und durch das Backup ersetzt. Das kann nicht rückgängig gemacht werden.';
+
+  @override
+  String restoreResult(int imported, int skipped) {
+    return '$imported importiert, $skipped bereits vorhanden.';
+  }
+
+  @override
+  String get restoreVideoHint =>
+      'Video-Studien: Video auf diesem Gerät erneut auswählen.';
+
+  @override
+  String get restoreInvalid =>
+      'Das ist keine gültige Backup-Datei. Es wurde nichts geändert.';
+
+  @override
+  String get restoreTooNew =>
+      'Dieses Backup stammt aus einer neueren App-Version. Bitte die App aktualisieren.';
 }

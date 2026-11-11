@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../analysis/domain/statistics.dart';
+import '../../backup/presentation/backup_tiles.dart';
 import '../../analysis/presentation/analysis_view.dart' show methodLabel;
 import '../../core/time_format.dart';
 import '../../l10n/app_localizations.dart';
@@ -197,6 +198,8 @@ class SettingsScreen extends ConsumerWidget {
             value: s.notifications,
             onChanged: (v) => ctrl.update((x) => x.copyWith(notifications: v)),
           ),
+          header(l.data),
+          const BackupTiles(),
           header(l.about),
           ListTile(
             leading: const Icon(Icons.info_outline),

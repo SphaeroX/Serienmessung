@@ -300,5 +300,28 @@
       }
     }
   },
-  "reportNoData": "No times recorded."
+  "reportNoData": "No times recorded.",
+  "data": "Data",
+  "createBackup": "Create backup",
+  "createBackupHint": "Save all studies to a file (videos are not included)",
+  "restoreBackup": "Restore backup",
+  "restoreBackupHint": "Import studies from a backup file",
+  "restoreChoice": "Add the studies from the file to your existing studies, or replace everything?",
+  "restoreMerge": "Add",
+  "restoreReplace": "Replace all",
+  "restoreReplaceWarning": "All studies on this device will be deleted and replaced by the backup. This cannot be undone.",
+  "restoreResult": "{imported} imported, {skipped} already present.",
+  "@restoreResult": {
+    "placeholders": {
+      "imported": {
+        "type": "int"
+      },
+      "skipped": {
+        "type": "int"
+      }
+    }
+  },
+  "restoreVideoHint": "Video studies: choose the video again on this device.",
+  "restoreInvalid": "This is not a valid backup file. Nothing was changed.",
+  "restoreTooNew": "This backup was created by a newer app version. Please update the app."
 }

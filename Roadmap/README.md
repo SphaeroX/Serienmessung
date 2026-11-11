@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-11 – Task_17 erledigt.
+Stand: 2026-11-11 – **Roadmap abgeschlossen**: alle 18 Tasks erledigt. 169 Tests grün, `flutter analyze` ohne Befunde, Debug-APK baut. Offen sind nur manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
 
 | Task | Titel | Status |
 |---|---|---|
@@ -35,7 +35,7 @@ Stand: 2026-11-11 – Task_17 erledigt.
 | 15 | Modus "Schritt-Timer" | erledigt |
 | 16 | Export CSV + Excel | erledigt |
 | 17 | Export PDF-Bericht | erledigt |
-| 18 | Backup & Wiederherstellen | offen |
+| 18 | Backup & Wiederherstellen | erledigt |
 
 Status ist `offen`, `läuft` (Datei trägt das Präfix `RUN_`) oder `erledigt` (Datei liegt in `Archiv/`). Die Tabelle wird beim Archivieren eines Tasks aktualisiert.
 
@@ -78,6 +78,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_15] Schritt-Timer:** `StepGrid` + `RecordingController.selectStep`; Zeiten-Tab als flache Liste. Keine Zyklen (Zyklus 0).
 - **[Task_16] Export:** Flutter-freie Builder `buildCsv`/`buildXlsx` auf Basis von `ExportInput` (+ `StudyAnalysis`); UI `ExportButton`, Teilen über `FileSharer` (share_plus). Zeiten relativ zum ersten Start (Video: Videoposition).
 - **[Task_17] PDF:** `buildPdfReport` mit eingebauten Latin-1-Schriften (Sonderzeichen werden ersetzt); Teilen statt `printing`.
+- **[Task_18] Backup:** JSON-Format `cyclescope-backup` v1 ohne run_state/Einstellungen/Videodateien; Import validiert vollständig und läuft in einer Transaktion.
 
 ## Auffälligkeiten & Details
 

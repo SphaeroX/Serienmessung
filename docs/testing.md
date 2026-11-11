@@ -51,7 +51,7 @@ A change is done when all of these hold:
 - Unit tests for all domain logic (engine, statistics, formatters, parsers, export builders). Widget tests for screens with Riverpod `ProviderScope(overrides: [...])`.
 - Time is always faked: inject a `FakeClock`; never use real delays or `sleep` in tests.
 - Platform interfaces (keys, speech, video, foreground service) are replaced by fakes in `tests/fakes/`.
-- Database tests use an in-memory database: `openTestDatabase()` from `tests/helpers.dart`.
+- Database tests use an in-memory database: `openTestDatabase()` from `tests/helpers.dart` (independent instance per call, `singleInstance: false`).
 - Widget tests: wrap with `ProviderScope(overrides: [databaseProvider.overrideWithValue(db)])` and `localizedApp(...)`; use `settle(tester)` after actions that hit the database (sqflite ffi needs real async via `runAsync`) and `tapVisible(tester, finder)` for widgets that may be scrolled out of the 800×600 test view.
 - Screens with an endless ticker (recording screen): never `pumpAndSettle`; use `pumpFrames(tester)` for animations (tabs, snack bars, expansion tiles) and `usePhoneSize(tester)` for a realistic 392×872 surface.
 - Forms must not use lazy `ListView`s: off-screen fields would not be validated (found in Task_01).

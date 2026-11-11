@@ -1177,6 +1177,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No times recorded.'**
   String get reportNoData;
+
+  /// No description provided for @data.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get data;
+
+  /// No description provided for @createBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create backup'**
+  String get createBackup;
+
+  /// No description provided for @createBackupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Save all studies to a file (videos are not included)'**
+  String get createBackupHint;
+
+  /// No description provided for @restoreBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore backup'**
+  String get restoreBackup;
+
+  /// No description provided for @restoreBackupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Import studies from a backup file'**
+  String get restoreBackupHint;
+
+  /// No description provided for @restoreChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the studies from the file to your existing studies, or replace everything?'**
+  String get restoreChoice;
+
+  /// No description provided for @restoreMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get restoreMerge;
+
+  /// No description provided for @restoreReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace all'**
+  String get restoreReplace;
+
+  /// No description provided for @restoreReplaceWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'All studies on this device will be deleted and replaced by the backup. This cannot be undone.'**
+  String get restoreReplaceWarning;
+
+  /// No description provided for @restoreResult.
+  ///
+  /// In en, this message translates to:
+  /// **'{imported} imported, {skipped} already present.'**
+  String restoreResult(int imported, int skipped);
+
+  /// No description provided for @restoreVideoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Video studies: choose the video again on this device.'**
+  String get restoreVideoHint;
+
+  /// No description provided for @restoreInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This is not a valid backup file. Nothing was changed.'**
+  String get restoreInvalid;
+
+  /// No description provided for @restoreTooNew.
+  ///
+  /// In en, this message translates to:
+  /// **'This backup was created by a newer app version. Please update the app.'**
+  String get restoreTooNew;
 }
 
 class _AppLocalizationsDelegate
