@@ -1,0 +1,32 @@
+# Naming conventions and practices
+
+> When to read: when naming things, organising files, committing or adding components.
+
+## Naming
+
+- Files and folders: `snake_case.dart`.
+- Classes, enums, typedefs: `UpperCamelCase`; members and variables: `lowerCamelCase`.
+- Riverpod providers: suffix `Provider` (e.g. `recordingEngineProvider`).
+- Interfaces for platform features: plain noun (`HardwareKeys`, `SpeechInput`), implementations prefixed by platform (`AndroidHardwareKeys`), fakes prefixed `Fake` (`FakeHardwareKeys`).
+- Domain vocabulary (use consistently in code and UI keys): `Study`, `StudyMode` (`simple`, `timeStudy`, `stepTimer`, `video`), `StepDefinition`, `Cycle`, `Measurement`, `SpecialTime` (unforeseen interruption, excluded from cycle time), `CycleTime`.
+- Tests: `<file>_test.dart`, see `docs/testing.md`.
+
+## Structure
+
+- New feature → new folder `lib/<feature>/` with `domain/`, `data/`, `presentation/`; tests in `tests/<feature>/`.
+- Code used by several features goes to `lib/core/`.
+- Platform-specific Kotlin code lives in `android/app/src/main/kotlin/...` and is reached only through a Dart interface.
+
+## Practices
+
+- DB schema changes always via a versioned migration plus a migration test.
+- Never lose measurement data: persist before updating UI state.
+- Deletions in the UI offer undo or a confirmation.
+
+## Git
+
+- Branch: `main`.
+- Commit messages: Conventional Commits in English (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `refactor:`), referencing the roadmap task when relevant (e.g. `feat(recording): first step active on start (Task_02)`).
+
+---
+Maintenance: update this file immediately when conventions change or new components appear.
