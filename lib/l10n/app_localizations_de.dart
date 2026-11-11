@@ -510,10 +510,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get undoMarker => 'Letzten Marker entfernen';
 
   @override
-  String get markStart => 'START-MARKER';
+  String get markStart => 'START';
 
   @override
-  String get mark => 'MARKIEREN';
+  String get mark => 'SCHRITT';
 
   @override
   String get markerBeforeLast =>
@@ -686,11 +686,17 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get resetZoom => 'Ganzes Bild zeigen';
+
+  @override
+  String get cycleMark => 'ZYKLUS';
+
+  @override
   String get closeCycle => 'Zyklus fertig';
 
   @override
   String get definingSteps =>
-      'Jeder Marker legt einen Schritt an. Am Ende des Zyklus „Zyklus fertig“ tippen.';
+      'Jeder SCHRITT-Marker legt einen Schritt an. Am Ende des Zyklus auf ZYKLUS tippen.';
 
   @override
   String get firstMarkerHint =>

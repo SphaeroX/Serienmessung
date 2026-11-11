@@ -245,8 +245,8 @@
   "frameForward": "Next frame",
   "playbackSpeed": "Playback speed",
   "undoMarker": "Undo last marker",
-  "markStart": "START MARK",
-  "mark": "MARK",
+  "markStart": "START",
+  "mark": "STEP",
   "markerBeforeLast": "This position is before the last marker. Move the video forward first.",
   "markerCannotMove": "A marker cannot be moved past its neighbours.",
   "tabTimes": "Times",
@@ -332,8 +332,10 @@
       }
     }
   },
+  "resetZoom": "Show the whole picture",
+  "cycleMark": "CYCLE",
   "closeCycle": "Cycle complete",
-  "definingSteps": "Every marker adds a step. Tap “Cycle complete” at the end of the cycle.",
+  "definingSteps": "Every STEP marker adds a step. Tap CYCLE at the end of the cycle.",
   "firstMarkerHint": "Set the first marker where the first step begins",
   "nameStepsTitle": "Name the steps",
   "useAsTimeStudy": "Use steps for a live time study",

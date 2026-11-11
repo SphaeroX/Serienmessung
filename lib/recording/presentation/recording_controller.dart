@@ -290,18 +290,27 @@ class RecordingController extends ChangeNotifier {
     return true;
   }
 
-  /// Ends the first cycle of a video study with open steps: closes the
-  /// current (last) step, fixes the steps as the sequence and starts the
-  /// next cycle at step 1. Returns false if not possible.
+  /// Ends the current cycle of a video study at [at].
+  ///
+  /// While [stepsOpen] (first cycle) this needs the last step to be active:
+  /// it closes that step, fixes the steps as the sequence and starts the
+  /// next cycle. Afterwards it ends the cycle early, skipping its remaining
+  /// steps, and starts the next cycle at step 1. Returns false if rejected.
   Future<bool> closeCycle({int? at}) async {
     final pos = at ?? clock.nowMicros();
-    if (!loaded ||
-        !stepsOpen ||
-        status != EngineStatus.running ||
-        !canMarkAt(pos) ||
-        engine.stepIndex != steps.length - 1) {
+    if (!loaded || status != EngineStatus.running || !canMarkAt(pos)) {
       return false;
     }
+    if (!stepsOpen) {
+      await _run(() async {
+        _append(await _session!.endCycle(at: pos));
+        displayCycle = engine.cycle;
+        await feedback.cycleChanged();
+        await _touch();
+      });
+      return true;
+    }
+    if (engine.stepIndex != steps.length - 1) return false;
     await next(at: pos);
     await studies.closeSteps(studyId);
     study = await studies.getStudy(studyId);

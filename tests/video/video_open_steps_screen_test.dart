@@ -55,6 +55,10 @@ void main() {
     await settle(tester);
   }
 
+  bool cycleEnabled(WidgetTester tester) => tester
+      .widget<ButtonStyleButton>(find.byKey(const Key('closeCycleButton')))
+      .enabled;
+
   String step(WidgetTester tester) =>
       tester.widget<Text>(find.byKey(const Key('currentStepName'))).data!;
 
@@ -79,7 +83,8 @@ void main() {
 
   testWidgets('markers create the steps of the first cycle', (tester) async {
     await pump(tester);
-    expect(find.byKey(const Key('closeCycleButton')), findsNothing);
+    // The cycle button is always shown, but only usable while running.
+    expect(cycleEnabled(tester), isFalse);
     await markAt(tester, 1 * s);
     expect(step(tester), 'Step 1');
     await markAt(tester, 3 * s);
@@ -100,7 +105,8 @@ void main() {
     await settle(tester);
 
     expect(await stepNames(tester, studyId), ['Pick', 'Place']);
-    expect(find.byKey(const Key('closeCycleButton')), findsNothing);
+    // Later cycles can be ended with the same button.
+    expect(cycleEnabled(tester), isTrue);
     // Cycle 2 starts with the first step.
     expect(step(tester), 'Pick');
   });

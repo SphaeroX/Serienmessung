@@ -505,10 +505,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get undoMarker => 'Undo last marker';
 
   @override
-  String get markStart => 'START MARK';
+  String get markStart => 'START';
 
   @override
-  String get mark => 'MARK';
+  String get mark => 'STEP';
 
   @override
   String get markerBeforeLast =>
@@ -680,11 +680,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get resetZoom => 'Show the whole picture';
+
+  @override
+  String get cycleMark => 'CYCLE';
+
+  @override
   String get closeCycle => 'Cycle complete';
 
   @override
   String get definingSteps =>
-      'Every marker adds a step. Tap “Cycle complete” at the end of the cycle.';
+      'Every STEP marker adds a step. Tap CYCLE at the end of the cycle.';
 
   @override
   String get firstMarkerHint =>

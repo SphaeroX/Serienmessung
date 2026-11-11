@@ -53,6 +53,29 @@ void main() {
     expect(engine.currentStepId, 12);
   });
 
+  test('endCycle closes the step and starts the next cycle at step 1', () {
+    engine.start(cycle: 1);
+    clock.advanceSeconds(2);
+    engine.next();
+    clock.advanceSeconds(3);
+    final done = engine.endCycle();
+    expect(done.map((m) => (m.cycle, m.stepId, m.durationMicros)).toList(), [
+      (1, 12, 3 * s),
+    ]);
+    expect(engine.cycle, 2);
+    expect(engine.stepIndex, 0);
+    expect(engine.currentStepId, 11);
+    expect(engine.stepStartMicros, clock.nowMicros());
+  });
+
+  test('endCycle is ignored when not running', () {
+    expect(engine.endCycle(), isEmpty);
+    engine.start(cycle: 1);
+    engine.beginSpecial();
+    expect(engine.endCycle(), isEmpty);
+    expect(engine.cycle, 1);
+  });
+
   test('duration equals the difference of the clock timestamps', () {
     engine.start(cycle: 1);
     final start = clock.micros;

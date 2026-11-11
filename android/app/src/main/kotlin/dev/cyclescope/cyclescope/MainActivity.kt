@@ -23,6 +23,7 @@ class MainActivity : FlutterActivity() {
     private var captureKeys = false
     private var keySink: EventChannel.EventSink? = null
     private var actionSink: EventChannel.EventSink? = null
+    private var frameDecoder: FrameDecoder? = null
 
     private val actionReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -49,6 +50,7 @@ class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         unregisterReceiver(actionReceiver)
+        frameDecoder?.dispose()
         super.onDestroy()
     }
 
@@ -75,6 +77,10 @@ class MainActivity : FlutterActivity() {
                 }
                 else -> result.notImplemented()
             }
+        }
+
+        frameDecoder = FrameDecoder().also {
+            MethodChannel(messenger, "dev.cyclescope/frames").setMethodCallHandler(it)
         }
 
         EventChannel(messenger, "dev.cyclescope/keys").setStreamHandler(
@@ -159,7 +165,7 @@ class MainActivity : FlutterActivity() {
             this, code, Intent(name).setPackage(packageName), flags,
         )
         val builder = Notification.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(args["title"] as? String ?: "")
             .setContentText(args["text"] as? String ?: "")
             .setOngoing(true)

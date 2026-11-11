@@ -947,13 +947,13 @@ abstract class AppLocalizations {
   /// No description provided for @markStart.
   ///
   /// In en, this message translates to:
-  /// **'START MARK'**
+  /// **'START'**
   String get markStart;
 
   /// No description provided for @mark.
   ///
   /// In en, this message translates to:
-  /// **'MARK'**
+  /// **'STEP'**
   String get mark;
 
   /// No description provided for @markerBeforeLast.
@@ -1262,6 +1262,18 @@ abstract class AppLocalizations {
   /// **'Step {number}'**
   String newStepName(int number);
 
+  /// No description provided for @resetZoom.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the whole picture'**
+  String get resetZoom;
+
+  /// No description provided for @cycleMark.
+  ///
+  /// In en, this message translates to:
+  /// **'CYCLE'**
+  String get cycleMark;
+
   /// No description provided for @closeCycle.
   ///
   /// In en, this message translates to:
@@ -1271,7 +1283,7 @@ abstract class AppLocalizations {
   /// No description provided for @definingSteps.
   ///
   /// In en, this message translates to:
-  /// **'Every marker adds a step. Tap “Cycle complete” at the end of the cycle.'**
+  /// **'Every STEP marker adds a step. Tap CYCLE at the end of the cycle.'**
   String get definingSteps;
 
   /// No description provided for @firstMarkerHint.

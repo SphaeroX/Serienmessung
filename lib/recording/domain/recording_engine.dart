@@ -163,6 +163,19 @@ class RecordingEngine {
     return [done];
   }
 
+  /// Closes the current step and starts the next cycle at step 1, skipping
+  /// the remaining steps of this cycle (fixed sequence only).
+  List<MeasurementDraft> endCycle({int? at}) {
+    if (_status != EngineStatus.running || freeOrder) return const [];
+    final now = _clamp(at ?? clock.nowMicros());
+    final done = _closeStep(now);
+    _stepIndex = 0;
+    _cycle++;
+    _currentStepId = sequence[_stepIndex];
+    _openStep(now);
+    return [done];
+  }
+
   /// Start/stop toggle: idle → [start] is not handled here (needs a cycle),
   /// running → paused, paused → running.
   void toggleStartStop({int? at}) {

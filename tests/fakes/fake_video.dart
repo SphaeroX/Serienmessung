@@ -1,3 +1,7 @@
+import 'dart:typed_data';
+
+import 'package:cyclescope/video/domain/frame_cache.dart';
+import 'package:cyclescope/video/platform/frame_source.dart';
 import 'package:cyclescope/video/platform/video_picker.dart';
 import 'package:cyclescope/video/platform/video_playback.dart';
 import 'package:flutter/widgets.dart';
@@ -77,4 +81,100 @@ class FakeVideoPicker implements VideoPicker {
 
   @override
   Future<String?> pickAndCopy({required int studyId}) async => path;
+}
+
+/// 1x1 transparent PNG used as a decoded frame.
+final onePixelPng = Uint8List.fromList(const [
+  0x89,
+  0x50,
+  0x4E,
+  0x47,
+  0x0D,
+  0x0A,
+  0x1A,
+  0x0A,
+  0x00,
+  0x00,
+  0x00,
+  0x0D,
+  0x49,
+  0x48,
+  0x44,
+  0x52,
+  0x00,
+  0x00,
+  0x00,
+  0x01,
+  0x00,
+  0x00,
+  0x00,
+  0x01,
+  0x08,
+  0x06,
+  0x00,
+  0x00,
+  0x00,
+  0x1F,
+  0x15,
+  0xC4,
+  0x89,
+  0x00,
+  0x00,
+  0x00,
+  0x0D,
+  0x49,
+  0x44,
+  0x41,
+  0x54,
+  0x78,
+  0x9C,
+  0x63,
+  0x60,
+  0x60,
+  0x60,
+  0x60,
+  0x00,
+  0x00,
+  0x00,
+  0x05,
+  0x00,
+  0x01,
+  0xA5,
+  0xF6,
+  0x45,
+  0x40,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x49,
+  0x45,
+  0x4E,
+  0x44,
+  0xAE,
+  0x42,
+  0x60,
+  0x82,
+]);
+
+/// Frame decoder with a fixed frame rate; records the requested frames.
+class FakeFrameSource implements FrameSource {
+  FakeFrameSource({this.timing});
+
+  /// Null = decoding not supported.
+  final FrameTiming? timing;
+  final requests = <(int, int)>[];
+  bool closed = false;
+
+  @override
+  Future<FrameTiming?> open(String path) async => timing;
+
+  @override
+  Future<List<Uint8List>> frames(int first, int count) async {
+    requests.add((first, count));
+    return List.filled(count, onePixelPng);
+  }
+
+  @override
+  Future<void> close() async => closed = true;
 }

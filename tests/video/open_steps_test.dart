@@ -107,6 +107,29 @@ void main() {
     expect(c.engine.cycle, 3);
   });
 
+  test('after the first cycle a cycle can be ended early', () async {
+    final c = build();
+    await c.load();
+    await markAt(c, 1 * s);
+    await markAt(c, 2 * s);
+    await markAt(c, 3 * s);
+    position = 4 * s;
+    await c.closeCycle();
+    expect(c.engine.cycle, 2);
+
+    // Cycle 2: only step 1 is done, then the cycle is ended.
+    await markAt(c, 6 * s);
+    expect(c.currentStep!.name, 'Step 2');
+    position = 9 * s;
+    expect(await c.closeCycle(), isTrue);
+    expect(c.engine.cycle, 3);
+    expect(c.currentStep!.name, 'Step 1');
+    expect(c.steps.length, 3);
+    expect(c.stepsOpen, isFalse);
+    final cycle2 = c.measurements.where((m) => m.cycle == 2).toList();
+    expect(cycle2.map((m) => m.durationMicros), [2 * s, 3 * s]);
+  });
+
   test('closing the cycle needs a running first cycle', () async {
     final c = build();
     await c.load();

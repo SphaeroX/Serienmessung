@@ -25,6 +25,9 @@ class RecordingSession {
   Future<List<Measurement>> next({int? at, int? stepId}) =>
       _store(engine.next(at: at, stepId: stepId));
 
+  Future<List<Measurement>> endCycle({int? at}) =>
+      _store(engine.endCycle(at: at));
+
   void toggleStartStop({int? at}) => engine.toggleStartStop(at: at);
 
   void beginSpecial({int? at}) => engine.beginSpecial(at: at);

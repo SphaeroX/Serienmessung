@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -20,8 +21,10 @@ import '../../recording/presentation/recording_screen.dart'
 import '../../settings/presentation/settings_controller.dart';
 import '../../study/presentation/edit_study_screen.dart';
 import '../domain/boundary.dart';
+import '../domain/frame_cache.dart';
 import '../domain/position_interpolator.dart';
 import '../domain/video_clock.dart';
+import '../platform/frame_source.dart';
 import '../platform/video_picker.dart';
 import '../platform/video_playback.dart';
 import 'step_names_dialog.dart';
@@ -32,9 +35,14 @@ final videoPlaybackFactoryProvider = Provider<VideoPlayback Function()>(
   (ref) => PluginVideoPlayback.new,
 );
 
+/// Creates a frame decoder per screen; overridden in tests.
+final frameSourceFactoryProvider = Provider<FrameSource Function()>(
+  (ref) => ChannelFrameSource.new,
+);
+
 final videoPickerProvider = Provider<VideoPicker>((ref) => FileVideoPicker());
 
-/// Assumed frame duration for frame stepping (30 fps).
+/// Frame duration used when the video's frame rate is unknown (30 fps).
 const frameMicros = 33333;
 
 /// Playback speeds offered in the speed menu.
@@ -63,6 +71,15 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
   bool _videoMissing = false;
   late final Clock _mono;
   final _interpolator = PositionInterpolator();
+  late final FrameSource _frameSource;
+  FrameTiming _timing = const FrameTiming.fallback(durationMicros: 0);
+  FrameCache<Uint8List>? _cache;
+
+  /// Frame shown after frame stepping (decoded in advance), above the video.
+  int? _frameIndex;
+  Uint8List? _frame;
+  Timer? _prefetchTimer;
+  bool _wasPlaying = false;
 
   /// Smooth video position used as the time base and for the timeline.
   int get position => _interpolator.estimate(_mono.nowMicros());
@@ -76,7 +93,11 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
   );
 
   /// Seeks and moves the timeline there immediately.
-  Future<void> _seek(int micros) async {
+  Future<void> _seek(int micros, {bool keepFrame = false}) async {
+    if (!keepFrame) {
+      _hideFrame();
+      _schedulePrefetch();
+    }
     final target = micros.clamp(0, playback.durationMicros);
     _interpolator.snap(target, _mono.nowMicros());
     _now.value = target;
@@ -88,6 +109,7 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
     super.initState();
     final settings = ref.read(settingsProvider);
     _mono = ref.read(clockProvider);
+    _frameSource = ref.read(frameSourceFactoryProvider)();
     playback = ref.read(videoPlaybackFactoryProvider)()
       ..addListener(_report)
       ..addListener(_onChanged);
@@ -147,12 +169,53 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
       if (mounted) setState(() => _videoMissing = true);
       return;
     }
+    await _openFrames(path);
     // Continue where the last marker was set.
     _report();
     if (controller.status != EngineStatus.idle) {
       await _seek(controller.markerPosition);
     }
     if (mounted) setState(() => _videoMissing = false);
+  }
+
+  Future<void> _openFrames(String path) async {
+    _cache?.clear();
+    _cache = null;
+    _hideFrame();
+    FrameTiming? timing;
+    try {
+      timing = await _frameSource.open(path);
+    } on Object {
+      timing = null;
+    }
+    _timing =
+        timing ?? FrameTiming.fallback(durationMicros: playback.durationMicros);
+    if (timing != null) {
+      _cache = FrameCache<Uint8List>(
+        frameCount: timing.frameCount,
+        fetch: _frameSource.frames,
+      );
+      unawaited(_cache!.prefetchAround(_timing.indexAt(position)));
+    }
+  }
+
+  /// Decodes the frames around the position once it rests for a moment.
+  void _schedulePrefetch() {
+    final cache = _cache;
+    if (cache == null) return;
+    _prefetchTimer?.cancel();
+    _prefetchTimer = Timer(const Duration(milliseconds: 250), () {
+      if (mounted && !playback.playing) {
+        unawaited(cache.prefetchAround(_timing.indexAt(position)));
+      }
+    });
+  }
+
+  void _hideFrame() {
+    if (_frameIndex == null && _frame == null) return;
+    _frameIndex = null;
+    _frame = null;
+    if (mounted) setState(() {});
   }
 
   Future<void> _chooseVideo() async {
@@ -166,6 +229,10 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
   }
 
   void _onChanged() {
+    final playing = playback.playing;
+    if (playing) _hideFrame();
+    if (_wasPlaying && !playing) _schedulePrefetch();
+    _wasPlaying = playing;
     _now.value = position;
     if (mounted) setState(() {});
   }
@@ -176,6 +243,9 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
     _keySub?.cancel();
     _interpreter.dispose();
     _ticker.dispose();
+    _prefetchTimer?.cancel();
+    _cache?.clear();
+    unawaited(_frameSource.close());
     controller.feedback.setKeepScreenOn(false);
     controller.removeListener(_onChanged);
     controller.dispose();
@@ -199,9 +269,23 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
   Future<void> _togglePlay() =>
       playback.playing ? playback.pause() : playback.play();
 
+  /// Steps [frames] frames; shows the decoded frame at once if available
+  /// while the player seeks.
   Future<void> _step(int frames) async {
     if (playback.playing) await playback.pause();
-    await _seek(playback.positionMicros + frames * frameMicros);
+    final from = _frameIndex ?? _timing.indexAt(position);
+    final index = _timing.clampIndex(from + frames);
+    final cache = _cache;
+    setState(() {
+      _frameIndex = index;
+      _frame = cache?[index];
+    });
+    await _seek(_timing.timeOf(index), keepFrame: true);
+    if (cache == null) return;
+    await cache.prefetchAround(index);
+    if (mounted && _frameIndex == index && _frame == null) {
+      setState(() => _frame = cache[index]);
+    }
   }
 
   Future<void> _moveMarker(Boundary b, int to) async {
@@ -214,8 +298,10 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
     }
   }
 
-  /// Ends the first cycle of a study that defines its steps by markers.
+  /// Ends the current cycle; the first cycle of a study that defines its
+  /// steps by markers then asks for the step names.
   Future<void> _closeCycle() async {
+    final definingSteps = controller.stepsOpen;
     final ok = await controller.closeCycle(at: position);
     if (!mounted) return;
     if (!ok) {
@@ -225,7 +311,7 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
         ..showSnackBar(SnackBar(content: Text(l.closeCycleRejected)));
       return;
     }
-    await _nameSteps();
+    if (definingSteps) await _nameSteps();
   }
 
   /// Lets the user name the steps created by the markers.
@@ -319,7 +405,7 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
               length: 2,
               child: Column(
                 children: [
-                  _VideoArea(playback: playback),
+                  _VideoArea(playback: playback, frame: _frame),
                   _Transport(
                     playback: playback,
                     now: _now,
@@ -404,23 +490,96 @@ class _NoVideo extends StatelessWidget {
   }
 }
 
-class _VideoArea extends StatelessWidget {
-  const _VideoArea({required this.playback});
+/// Video view that can be zoomed (pinch) and panned while zoomed, e.g. to
+/// see a small hand movement. Double tap or the reset button returns to the
+/// full picture.
+class _VideoArea extends StatefulWidget {
+  const _VideoArea({required this.playback, this.frame});
 
   final VideoPlayback playback;
 
+  /// Decoded frame shown instead of the player picture (frame stepping).
+  final Uint8List? frame;
+
+  @override
+  State<_VideoArea> createState() => _VideoAreaState();
+}
+
+class _VideoAreaState extends State<_VideoArea> {
+  final _zoom = TransformationController();
+  bool _zoomed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _zoom.addListener(_onZoom);
+  }
+
+  void _onZoom() {
+    final zoomed = _zoom.value.getMaxScaleOnAxis() > 1.01;
+    if (zoomed != _zoomed) setState(() => _zoomed = zoomed);
+  }
+
+  void _reset() => _zoom.value = Matrix4.identity();
+
+  @override
+  void dispose() {
+    _zoom.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final maxHeight = MediaQuery.sizeOf(context).height * 0.32;
     return Container(
       color: Colors.black,
       constraints: BoxConstraints(maxHeight: maxHeight),
       width: double.infinity,
-      child: Center(
-        child: AspectRatio(
-          aspectRatio: playback.aspectRatio,
-          child: playback.buildView(),
-        ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              onDoubleTap: _reset,
+              child: InteractiveViewer(
+                key: const Key('videoZoom'),
+                transformationController: _zoom,
+                minScale: 1,
+                maxScale: 8,
+                child: Center(
+                  child: AspectRatio(
+                    aspectRatio: widget.playback.aspectRatio,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        widget.playback.buildView(),
+                        if (widget.frame case final frame?)
+                          Image.memory(
+                            frame,
+                            key: const Key('cachedFrame'),
+                            fit: BoxFit.fill,
+                            gaplessPlayback: true,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (_zoomed)
+            Positioned(
+              right: 4,
+              top: 4,
+              child: IconButton.filledTonal(
+                key: const Key('resetZoom'),
+                tooltip: l.resetZoom,
+                visualDensity: VisualDensity.compact,
+                icon: const Icon(Icons.zoom_out_map),
+                onPressed: _reset,
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -536,100 +695,143 @@ class _MarkBar extends StatelessWidget {
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
           children: [
-            if (c.stepsOpen && running)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: FilledButton.tonalIcon(
-                    key: const Key('closeCycleButton'),
-                    onPressed: onCloseCycle,
-                    icon: const Icon(Icons.done_all),
-                    label: Text(l.closeCycle),
+            IconButton.outlined(
+              key: const Key('undoMarker'),
+              tooltip: l.undoMarker,
+              icon: const Icon(Icons.undo),
+              onPressed: c.status == EngineStatus.idle && c.measurements.isEmpty
+                  ? null
+                  : c.undoLastMarker,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 2,
+              child: Listener(
+                key: const Key('specialButton'),
+                onPointerDown: running ? (_) => onSpecialDown() : null,
+                onPointerUp: (running || special) ? (_) => onSpecialUp() : null,
+                child: Container(
+                  height: _height,
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: special ? scheme.error : scheme.errorContainer,
+                    borderRadius: BorderRadius.circular(_radius),
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      l.specialShort,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: special
+                            ? scheme.onError
+                            : scheme.onErrorContainer,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            _row(context, l, scheme, c, running, special),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 3,
+              child: _MarkButton(
+                buttonKey: const Key('markButton'),
+                icon: Icons.flag,
+                label: c.status == EngineStatus.idle ? l.markStart : l.mark,
+                onPressed: special ? null : onMark,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              flex: 3,
+              child: _MarkButton(
+                buttonKey: const Key('closeCycleButton'),
+                icon: Icons.replay,
+                label: l.cycleMark,
+                tooltip: l.closeCycle,
+                tonal: true,
+                onPressed: running ? onCloseCycle : null,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _row(
-    BuildContext context,
-    AppLocalizations l,
-    ColorScheme scheme,
-    RecordingController c,
-    bool running,
-    bool special,
-  ) {
-    return Row(
+const _height = 72.0;
+const _radius = 24.0;
+
+/// Tall button with an icon above a short label.
+class _MarkButton extends StatelessWidget {
+  const _MarkButton({
+    required this.buttonKey,
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.tooltip,
+    this.tonal = false,
+  });
+
+  final Key buttonKey;
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final String? tooltip;
+  final bool tonal;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = FilledButton.styleFrom(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      minimumSize: const Size(0, _height),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(_radius),
+      ),
+    );
+    final child = Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton.outlined(
-          key: const Key('undoMarker'),
-          tooltip: l.undoMarker,
-          icon: const Icon(Icons.undo),
-          onPressed: c.status == EngineStatus.idle && c.measurements.isEmpty
-              ? null
-              : c.undoLastMarker,
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Listener(
-            key: const Key('specialButton'),
-            onPointerDown: running ? (_) => onSpecialDown() : null,
-            onPointerUp: (running || special) ? (_) => onSpecialUp() : null,
-            child: Container(
-              height: 72,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: special ? scheme.error : scheme.errorContainer,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Text(
-                l.specialShort,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: special ? scheme.onError : scheme.onErrorContainer,
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          flex: 2,
-          child: SizedBox(
-            height: 72,
-            child: FilledButton.icon(
-              key: const Key('markButton'),
-              style: FilledButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-              ),
-              onPressed: special ? null : onMark,
-              icon: const Icon(Icons.flag),
-              label: FittedBox(
-                child: Text(
-                  c.status == EngineStatus.idle ? l.markStart : l.mark,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ),
+        Icon(icon),
+        const SizedBox(height: 4),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            maxLines: 1,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
             ),
           ),
         ),
       ],
+    );
+    final button = tonal
+        ? FilledButton.tonal(
+            key: buttonKey,
+            style: style,
+            onPressed: onPressed,
+            child: child,
+          )
+        : FilledButton(
+            key: buttonKey,
+            style: style,
+            onPressed: onPressed,
+            child: child,
+          );
+    return SizedBox(
+      height: _height,
+      child: tooltip == null
+          ? button
+          : Tooltip(message: tooltip, child: button),
     );
   }
 }

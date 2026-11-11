@@ -20,7 +20,8 @@
 - **Feature-first structure** under `lib/`: each feature (e.g. `study`, `recording`, `analysis`, `video`, `export`, `settings`) has `domain/` (pure Dart), `data/` (repositories, DB), `presentation/` (widgets, providers).
 - **Domain is pure Dart**: measurement engine, statistics and export table building have no Flutter imports, so they are fully unit-testable.
 - **Time source**: the engine reads time through a `Clock` interface (monotonic, e.g. `Stopwatch`-based). Video studies plug in a video-position time source. Durations are stored as integer microseconds; unit conversion (HM, s, mm:ss.SSS, TMU) happens only in formatters.
-- **Platform abstractions**: hardware volume keys (Android platform channel), speech recognition, video playback and the foreground service each sit behind a Dart interface with a fake in tests.
+- **Platform abstractions**: hardware volume keys (Android platform channel), speech recognition, video playback, video frame decoding and the foreground service each sit behind a Dart interface with a fake in tests.
+- **Frame decoding** (`video/platform/frame_source.dart` → `FrameDecoder.kt`, channel `dev.cyclescope/frames`): `MediaMetadataRetriever.getFramesAtIndex` (API 28+) decodes JPEG frames (longest side 1280 px) on a worker thread. `FrameCache` (pure Dart, `video/domain/frame_cache.dart`) keeps the frames within 8 of the position (forward first) and evicts far ones; `FrameTiming` converts time ↔ frame index with the real frame rate (frame count / duration). Frame stepping shows the cached frame above the player while it seeks; play or any other seek hides it. Without decoder support stepping falls back to 30 fps player seeks.
 - **Data model (core)**: Study (name, description, mode) → StepDefinition (position, name) → Measurement (cycle number, step id, start, end, type `normal | special`, note). Measurements reference steps by id, never by position.
 - **Crash safety**: every completed measurement and every engine state change is persisted immediately.
 
@@ -32,7 +33,7 @@
 - Platform side effects (haptics, wake lock, later keys/notifications) go through interfaces in `lib/core/platform.dart`, provided via `deviceFeedbackProvider` etc.
 - Settings: `settingsProvider` (Riverpod `Notifier`) backed by the `settings` table; loaded in `main()` and injected via `initialSettingsProvider`. Providers that depend on settings (`deviceFeedbackProvider`, `recordingNotifierProvider`) watch it.
 - Wall-clock timestamps (created/active) come from `wallClockProvider`, never directly from `DateTime.now()` in widgets.
-- Video studies without steps have `study.steps_open = 1` (migration v7): `RecordingController.mark()` appends a step (and rebuilds the engine from its snapshot) while on the last step; `closeCycle()` wraps to the next cycle and clears the flag (`StudyRepository.closeSteps`). `StudyMode.definesStepsUpfront` says which modes ask for steps on creation.
+- Video studies without steps have `study.steps_open = 1` (migration v7): `RecordingController.mark()` appends a step (and rebuilds the engine from its snapshot) while on the last step; `closeCycle()` wraps to the next cycle and clears the flag (`StudyRepository.closeSteps`). With fixed steps `closeCycle()` ends the cycle early via `RecordingEngine.endCycle()` (closes the current step, next cycle starts at step 1). `StudyMode.definesStepsUpfront` says which modes ask for steps on creation.
 - Dictation (`DictationButton`) queues recognizer calls: a release during start stops once started, a new press waits for the previous session's result. `SystemSpeechInput.stop()` waits (bounded) for the recognizer's "done" status, because Android's recognizer is busy until then.
 
 ## Environment
