@@ -144,4 +144,73 @@ class AppLocalizationsEn extends AppLocalizations {
   String deleteStudyConfirm(String name) {
     return 'Delete \"$name\" including all measurements?';
   }
+
+  @override
+  String get totalLabel => 'TOTAL';
+
+  @override
+  String get stepLabel => 'STEP';
+
+  @override
+  String get lapLabel => 'LAP';
+
+  @override
+  String lapNumber(int number) {
+    return 'Lap $number';
+  }
+
+  @override
+  String cycleNumber(int number) {
+    return 'Cycle $number';
+  }
+
+  @override
+  String stepOf(int index, int count) {
+    return 'Step $index of $count';
+  }
+
+  @override
+  String nextStep(String name) {
+    return 'Next: $name';
+  }
+
+  @override
+  String get ready => 'Ready';
+
+  @override
+  String get paused => 'PAUSED';
+
+  @override
+  String get recording => 'RECORDING';
+
+  @override
+  String get specialTimeRunning => 'SPECIAL TIME';
+
+  @override
+  String get specialTime => 'Special time';
+
+  @override
+  String get noTimesYet =>
+      'No times yet. Press start – step 1 begins immediately.';
+
+  @override
+  String get start => 'START';
+
+  @override
+  String get stop => 'STOP';
+
+  @override
+  String get resume => 'CONTINUE';
+
+  @override
+  String get next => 'NEXT';
+
+  @override
+  String get lap => 'LAP';
+
+  @override
+  String get reset => 'Reset';
+
+  @override
+  String get resetConfirm => 'Stop recording and discard the unfinished step?';
 }

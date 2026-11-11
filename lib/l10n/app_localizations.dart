@@ -337,6 +337,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete \"{name}\" including all measurements?'**
   String deleteStudyConfirm(String name);
+
+  /// No description provided for @totalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'TOTAL'**
+  String get totalLabel;
+
+  /// No description provided for @stepLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'STEP'**
+  String get stepLabel;
+
+  /// No description provided for @lapLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'LAP'**
+  String get lapLabel;
+
+  /// No description provided for @lapNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Lap {number}'**
+  String lapNumber(int number);
+
+  /// No description provided for @cycleNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle {number}'**
+  String cycleNumber(int number);
+
+  /// No description provided for @stepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {index} of {count}'**
+  String stepOf(int index, int count);
+
+  /// No description provided for @nextStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {name}'**
+  String nextStep(String name);
+
+  /// No description provided for @ready.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get ready;
+
+  /// No description provided for @paused.
+  ///
+  /// In en, this message translates to:
+  /// **'PAUSED'**
+  String get paused;
+
+  /// No description provided for @recording.
+  ///
+  /// In en, this message translates to:
+  /// **'RECORDING'**
+  String get recording;
+
+  /// No description provided for @specialTimeRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'SPECIAL TIME'**
+  String get specialTimeRunning;
+
+  /// No description provided for @specialTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Special time'**
+  String get specialTime;
+
+  /// No description provided for @noTimesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No times yet. Press start – step 1 begins immediately.'**
+  String get noTimesYet;
+
+  /// No description provided for @start.
+  ///
+  /// In en, this message translates to:
+  /// **'START'**
+  String get start;
+
+  /// No description provided for @stop.
+  ///
+  /// In en, this message translates to:
+  /// **'STOP'**
+  String get stop;
+
+  /// No description provided for @resume.
+  ///
+  /// In en, this message translates to:
+  /// **'CONTINUE'**
+  String get resume;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'NEXT'**
+  String get next;
+
+  /// No description provided for @lap.
+  ///
+  /// In en, this message translates to:
+  /// **'LAP'**
+  String get lap;
+
+  /// No description provided for @reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
+  /// No description provided for @resetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop recording and discard the unfinished step?'**
+  String get resetConfirm;
 }
 
 class _AppLocalizationsDelegate

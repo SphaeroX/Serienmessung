@@ -24,6 +24,8 @@
 
 - `main()` opens the database and overrides `databaseProvider`; all other providers live in `lib/core/providers.dart` or the feature's `presentation/` folder.
 - Lists are `FutureProvider`s that are invalidated after writes (sqflite has no change streams).
+- Screens with live state use a `ChangeNotifier` controller (e.g. `RecordingController`) that reads its dependencies from providers once; Riverpod is the DI/override mechanism. Never use `ref` in `dispose()`.
+- Platform side effects (haptics, wake lock, later keys/notifications) go through interfaces in `lib/core/platform.dart`, provided via `deviceFeedbackProvider` etc.
 - Wall-clock timestamps (created/active) come from `wallClockProvider`, never directly from `DateTime.now()` in widgets.
 
 ## Environment

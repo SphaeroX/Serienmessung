@@ -14,13 +14,13 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-11 – Task_02 erledigt.
+Stand: 2026-11-11 – Task_03 erledigt.
 
 | Task | Titel | Status |
 |---|---|---|
 | 01 | Durchstich: Studie anlegen & Liste | erledigt |
 | 02 | Mess-Engine Zeitstudie | erledigt |
-| 03 | Live-Messbildschirm mit Schritt-Overlay | offen |
+| 03 | Live-Messbildschirm mit Schritt-Overlay | erledigt |
 | 04 | Hardware-Tasten (Android) | offen |
 | 05 | Sonderzeit | offen |
 | 06 | Hintergrundbetrieb & Wiederherstellung | offen |
@@ -61,6 +61,9 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_01] l10n:** generierte Dateien liegen versioniert in `lib/l10n/`; nach ARB-Änderungen `flutter gen-l10n` ausführen.
 - **[Task_02] Mess-Semantik:** `RecordingEngine` (reines Dart) mit Zuständen idle/running/paused/special. Start/Stopp = Pause/Fortsetzen; der offene Schritt läuft nach dem Fortsetzen weiter, Pausenzeit zählt nicht. "Zurücksetzen/Beenden" (`discard`) verwirft den unvollendeten Schritt (nur abgeschlossene Schritte sind gültige Zeiten). Ein neuer Lauf beginnt bei `MAX(cycle)+1` mit Schritt 1. Einfach-Modus = `sequence: [null]` (jede Runde ein Zyklus), Schritt-Timer = `freeOrder: true`, Zyklus 0.
 - **[Task_02] Zeiten:** Messungen speichern `start_us`/`end_us` in der Zeitbasis der Quelle (monotone Uhr bzw. Videoposition) und `duration_us` explizit (Pausen/Sonderzeiten herausgerechnet). Alle Engine-Aktionen akzeptieren einen Zeitstempel `at` (für Tastendrücke). `EngineSnapshot` (toJson/fromJson) ist für die Persistenz in Task_06 vorbereitet.
+- **[Task_03] Bildschirm-Controller:** Pro Bildschirm ein `ChangeNotifier`-Controller (z. B. `RecordingController`), der seine Abhängigkeiten einmalig aus Providern liest (`clockProvider`, `deviceFeedbackProvider`, Repositories). Riverpod dient nur als DI/Override-Mechanismus. `ref` darf nicht in `dispose()` benutzt werden – Listen-Invalidierung passiert nach `Navigator.push` in `openStudy` (`lib/app.dart`).
+- **[Task_03] Zeitformat:** `formatTime(micros, TimeUnit, decimals:, locale:)` in `lib/core/time_format.dart` kann bereits HM, s, mm:ss.SSS und TMU (Task_09 muss das nicht mehr bauen). Live-Anzeige: Stoppuhr groß + HM.
+- **[Task_03] Plattform:** Haptik und Wakelock hinter `DeviceFeedback` (`lib/core/platform.dart`); Tests nutzen `fakePlatformOverrides()` aus `tests/fakes/fake_platform.dart`.
 
 ## Auffälligkeiten & Details
 

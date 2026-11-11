@@ -147,4 +147,74 @@ class AppLocalizationsDe extends AppLocalizations {
   String deleteStudyConfirm(String name) {
     return '„$name“ inklusive aller Messungen löschen?';
   }
+
+  @override
+  String get totalLabel => 'GESAMT';
+
+  @override
+  String get stepLabel => 'SCHRITT';
+
+  @override
+  String get lapLabel => 'RUNDE';
+
+  @override
+  String lapNumber(int number) {
+    return 'Runde $number';
+  }
+
+  @override
+  String cycleNumber(int number) {
+    return 'Zyklus $number';
+  }
+
+  @override
+  String stepOf(int index, int count) {
+    return 'Schritt $index von $count';
+  }
+
+  @override
+  String nextStep(String name) {
+    return 'Nächster: $name';
+  }
+
+  @override
+  String get ready => 'Bereit';
+
+  @override
+  String get paused => 'PAUSIERT';
+
+  @override
+  String get recording => 'AUFNAHME';
+
+  @override
+  String get specialTimeRunning => 'SONDERZEIT';
+
+  @override
+  String get specialTime => 'Sonderzeit';
+
+  @override
+  String get noTimesYet =>
+      'Noch keine Zeiten. Start drücken – Schritt 1 beginnt sofort.';
+
+  @override
+  String get start => 'START';
+
+  @override
+  String get stop => 'STOPP';
+
+  @override
+  String get resume => 'WEITER';
+
+  @override
+  String get next => 'NÄCHSTER';
+
+  @override
+  String get lap => 'RUNDE';
+
+  @override
+  String get reset => 'Zurücksetzen';
+
+  @override
+  String get resetConfirm =>
+      'Aufnahme beenden und den unvollendeten Schritt verwerfen?';
 }

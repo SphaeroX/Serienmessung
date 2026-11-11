@@ -63,8 +63,18 @@ class StudyRepository {
     return result;
   }
 
-  /// Number of cycles shown on the list card. Overridden once measurements exist.
-  Future<int> countCycles(Study study) async => 0;
+  /// Number shown on the list card: laps/times for simple and step-timer
+  /// studies, distinct cycles otherwise. Special times are not counted.
+  Future<int> countCycles(Study study) async {
+    final countsTimes =
+        study.mode == StudyMode.simple || study.mode == StudyMode.stepTimer;
+    final expr = countsTimes ? 'COUNT(*)' : 'COUNT(DISTINCT cycle)';
+    final r = await _db.db.rawQuery(
+      "SELECT $expr AS n FROM measurement WHERE study_id = ? AND kind = 'normal'",
+      [study.id],
+    );
+    return r.first['n'] as int;
+  }
 
   Future<void> deleteStudy(int id) async {
     await _db.db.delete('study', where: 'id = ?', whereArgs: [id]);

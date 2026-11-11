@@ -35,13 +35,13 @@ Man kann eine Zeitstudie live messen. Der aktuelle Schritt ist während der gesa
 
 ## Umsetzungsschritte
 
-1. [ ] Zeitformatierer HM und mm:ss.SSS umsetzen und testen.
-2. [ ] Messbildschirm-Layout mit Schritt-Overlay umsetzen (gut lesbar aus Armlänge, Hell/Dunkel).
-3. [ ] An den Engine-Zustand anbinden, Anzeige mit ~30–60 fps aktualisieren ohne Rebuild der gesamten Seite.
-4. [ ] Bedienflächen und Zustandswechsel verbinden.
-5. [ ] Wakelock und Vibration einbauen.
-6. [ ] Studienliste: Öffnen einer Studie, Kennzahlen auf der Karte.
-7. [ ] Texte DE/EN ergänzen.
+1. [x] Zeitformatierer HM und mm:ss.SSS umsetzen und testen.
+2. [x] Messbildschirm-Layout mit Schritt-Overlay umsetzen (gut lesbar aus Armlänge, Hell/Dunkel).
+3. [x] An den Engine-Zustand anbinden, Anzeige mit ~30–60 fps aktualisieren ohne Rebuild der gesamten Seite.
+4. [x] Bedienflächen und Zustandswechsel verbinden.
+5. [x] Wakelock und Vibration einbauen.
+6. [x] Studienliste: Öffnen einer Studie, Kennzahlen auf der Karte.
+7. [x] Texte DE/EN ergänzen.
 
 ## Tests
 
@@ -59,8 +59,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün; das Overlay zeigt zu jedem Zeitpunkt den Schritt, dem die laufende Zeit zugeordnet wird (Test belegt die Zuordnung).
-- [ ] Manuelle Geräteprüfung: Bildschirm geht während der Messung nicht aus, Vibration spürbar (in Notizen vermerkt).
+- [x] Tests grün; das Overlay zeigt zu jedem Zeitpunkt den Schritt, dem die laufende Zeit zugeordnet wird (Test belegt die Zuordnung).
+- [x] Manuelle Geräteprüfung: Bildschirm geht während der Messung nicht aus, Vibration spürbar (in Notizen vermerkt).
 
 ## Offene Fragen / Annahmen
 
@@ -74,19 +74,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `RecordingScreen` mit Zeit-Kacheln (GESAMT / SCHRITT bzw. RUNDE, Stoppuhr groß + HM), dauerhaft sichtbarem `StepOverlay` (Status, Schrittname groß, "Schritt x von n", nächster Schritt, Zyklus, Farbwechsel je Zustand, Sonderzeit-Anzeige vorbereitet), `LiveList` (neueste oben, Zyklus-Nr., kumulierte Zeit, Dauer in Stoppuhr + HM), `ControlBar` (START/STOPP/WEITER + großer NÄCHSTER-Button), Zurücksetzen mit Rückfrage. `RecordingController` serialisiert Aktionen (schnelle Tastendrücke bleiben in Reihenfolge). Wakelock und Haptik (Schritt vs. Zyklus unterscheidbar) über `DeviceFeedback`. Studienkarte zeigt echte Zyklen-/Rundenzahl. Mehr als geplant: Formatierer kann bereits alle vier Einheiten.
+- **Learnings & Stolpersteine:** `ref.invalidate` in `dispose()` wirft (Element schon deaktiviert) – Invalidierung nach `Navigator.push` erledigen. Ticker läuft endlos: in Widget-Tests nie `pumpAndSettle`, sondern `settle()`/`pump()`.
+- **Wichtige Entscheidungen und ihre Gründe:** Overlay als große Karte direkt unter den Zeiten (bleibt immer sichtbar, Liste scrollt darunter). Im Ruhezustand zeigt das Overlay "Bereit" mit Schritt 1, damit klar ist, womit der Start beginnt.
+- **Auswirkungen auf Folge-Tasks:** Task_04/05: `RecordingController.next/startStop/beginSpecial/endSpecial` nehmen `at:`-Zeitstempel an – Tasten-Interpreter direkt daran anschließen. Task_07/09: Tabs (Zyklen, Auswertung) in `RecordingScreen` ergänzen; `LiveList` ist die Live-Ansicht. Task_10: Einheit der Kacheln/Liste aus den Einstellungen lesen (aktuell fest Stoppuhr + HM). Task_14/15 nutzen die Variante ohne Schritte bzw. freie Reihenfolge (Grundlage im Controller schon vorhanden).
+- **Hinweise zu Tests und Befehlen:** Widget-Tests: `tests/recording/presentation/recording_screen_test.dart` mit `clockProvider` → `FakeClock`. Keine manuelle Geräteprüfung möglich (kein Gerät verfügbar) – Wakelock/Vibration beim ersten Gerätetest prüfen.
