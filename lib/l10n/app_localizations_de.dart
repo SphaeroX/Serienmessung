@@ -317,4 +317,87 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get addStep => 'Schritt hinzufügen';
+
+  @override
+  String get tabAnalysis => 'Auswertung';
+
+  @override
+  String get realCycleTime => 'Reale Taktzeit';
+
+  @override
+  String get realLapTime => 'Reale Rundenzeit';
+
+  @override
+  String get methodMean => 'Mittelwert';
+
+  @override
+  String get methodMedian => 'Median';
+
+  @override
+  String get methodIqr => 'IQR';
+
+  @override
+  String get methodHint =>
+      'Mittelwert: alle Zyklen · Median: robust · IQR: Mittelwert ohne Ausreißer (1,5 × IQR)';
+
+  @override
+  String completeCycles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count vollständige Zyklen',
+      one: '1 vollständiger Zyklus',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String incompleteCycles(int count) {
+    return '$count unvollständig';
+  }
+
+  @override
+  String outliersRemoved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Ausreißer entfernt',
+      one: '1 Ausreißer entfernt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get mean => 'Mittelwert';
+
+  @override
+  String get median => 'Median';
+
+  @override
+  String get minimum => 'Min';
+
+  @override
+  String get maximum => 'Max';
+
+  @override
+  String get stdDev => 'Std.-abw.';
+
+  @override
+  String get cv => 'VarK';
+
+  @override
+  String get meanShort => 'Ø';
+
+  @override
+  String get medianShort => 'Md';
+
+  @override
+  String get specialTimesTotal => 'Sonderzeiten';
+
+  @override
+  String get specialTimesExcluded =>
+      'Nicht in Schritt- oder Taktzeiten enthalten';
+
+  @override
+  String get noTimesShort => 'Keine Zeiten';
 }

@@ -313,4 +313,86 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addStep => 'Add step';
+
+  @override
+  String get tabAnalysis => 'Analysis';
+
+  @override
+  String get realCycleTime => 'Real cycle time';
+
+  @override
+  String get realLapTime => 'Real lap time';
+
+  @override
+  String get methodMean => 'Mean';
+
+  @override
+  String get methodMedian => 'Median';
+
+  @override
+  String get methodIqr => 'IQR';
+
+  @override
+  String get methodHint =>
+      'Mean: all cycles · Median: robust · IQR: mean without outliers (1.5 × IQR)';
+
+  @override
+  String completeCycles(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count complete cycles',
+      one: '1 complete cycle',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String incompleteCycles(int count) {
+    return '$count incomplete';
+  }
+
+  @override
+  String outliersRemoved(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count outliers removed',
+      one: '1 outlier removed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get mean => 'Mean';
+
+  @override
+  String get median => 'Median';
+
+  @override
+  String get minimum => 'Min';
+
+  @override
+  String get maximum => 'Max';
+
+  @override
+  String get stdDev => 'Std. dev.';
+
+  @override
+  String get cv => 'CV';
+
+  @override
+  String get meanShort => 'Ø';
+
+  @override
+  String get medianShort => 'Md';
+
+  @override
+  String get specialTimesTotal => 'Special times';
+
+  @override
+  String get specialTimesExcluded => 'Not included in step or cycle times';
+
+  @override
+  String get noTimesShort => 'No times';
 }

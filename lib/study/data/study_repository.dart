@@ -169,6 +169,13 @@ class StudyRepository {
     }
   });
 
+  Future<void> setCycleTimeMethod(int id, String method) => _db.db.update(
+    'study',
+    {'cycle_time_method': method},
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+
   Future<void> touch(int id, DateTime now) async {
     await _db.db.update(
       'study',

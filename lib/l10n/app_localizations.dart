@@ -613,6 +613,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add step'**
   String get addStep;
+
+  /// No description provided for @tabAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis'**
+  String get tabAnalysis;
+
+  /// No description provided for @realCycleTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Real cycle time'**
+  String get realCycleTime;
+
+  /// No description provided for @realLapTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Real lap time'**
+  String get realLapTime;
+
+  /// No description provided for @methodMean.
+  ///
+  /// In en, this message translates to:
+  /// **'Mean'**
+  String get methodMean;
+
+  /// No description provided for @methodMedian.
+  ///
+  /// In en, this message translates to:
+  /// **'Median'**
+  String get methodMedian;
+
+  /// No description provided for @methodIqr.
+  ///
+  /// In en, this message translates to:
+  /// **'IQR'**
+  String get methodIqr;
+
+  /// No description provided for @methodHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Mean: all cycles · Median: robust · IQR: mean without outliers (1.5 × IQR)'**
+  String get methodHint;
+
+  /// No description provided for @completeCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 complete cycle} other{{count} complete cycles}}'**
+  String completeCycles(int count);
+
+  /// No description provided for @incompleteCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} incomplete'**
+  String incompleteCycles(int count);
+
+  /// No description provided for @outliersRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 outlier removed} other{{count} outliers removed}}'**
+  String outliersRemoved(int count);
+
+  /// No description provided for @mean.
+  ///
+  /// In en, this message translates to:
+  /// **'Mean'**
+  String get mean;
+
+  /// No description provided for @median.
+  ///
+  /// In en, this message translates to:
+  /// **'Median'**
+  String get median;
+
+  /// No description provided for @minimum.
+  ///
+  /// In en, this message translates to:
+  /// **'Min'**
+  String get minimum;
+
+  /// No description provided for @maximum.
+  ///
+  /// In en, this message translates to:
+  /// **'Max'**
+  String get maximum;
+
+  /// No description provided for @stdDev.
+  ///
+  /// In en, this message translates to:
+  /// **'Std. dev.'**
+  String get stdDev;
+
+  /// No description provided for @cv.
+  ///
+  /// In en, this message translates to:
+  /// **'CV'**
+  String get cv;
+
+  /// No description provided for @meanShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Ø'**
+  String get meanShort;
+
+  /// No description provided for @medianShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Md'**
+  String get medianShort;
+
+  /// No description provided for @specialTimesTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Special times'**
+  String get specialTimesTotal;
+
+  /// No description provided for @specialTimesExcluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not included in step or cycle times'**
+  String get specialTimesExcluded;
+
+  /// No description provided for @noTimesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'No times'**
+  String get noTimesShort;
 }
 
 class _AppLocalizationsDelegate

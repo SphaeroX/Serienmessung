@@ -57,6 +57,10 @@ final List<Migration> migrations = [
         saved_at INTEGER NOT NULL
       )''');
   },
+  // v4: cycle time method per study.
+  (db) async {
+    await db.execute('ALTER TABLE study ADD COLUMN cycle_time_method TEXT');
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.

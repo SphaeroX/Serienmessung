@@ -14,6 +14,7 @@ import '../domain/measurement.dart';
 import '../platform/hardware_keys.dart';
 import '../platform/recording_notifier.dart';
 import '../domain/recording_engine.dart';
+import '../../analysis/presentation/analysis_view.dart';
 import 'cycles_view.dart';
 import 'recording_controller.dart';
 
@@ -190,7 +191,7 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
       body: !c.loaded
           ? const Center(child: CircularProgressIndicator())
           : DefaultTabController(
-              length: 2,
+              length: 3,
               child: Column(
                 children: [
                   _TimerTiles(controller: c, now: _now),
@@ -202,6 +203,7 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
                         key: const Key('cyclesTab'),
                         text: c.hasSteps ? l.tabCycles : l.tabLaps,
                       ),
+                      Tab(key: const Key('analysisTab'), text: l.tabAnalysis),
                     ],
                   ),
                   Expanded(
@@ -209,6 +211,7 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
                       children: [
                         LiveList(controller: c),
                         CyclesView(controller: c),
+                        AnalysisView(controller: c),
                       ],
                     ),
                   ),

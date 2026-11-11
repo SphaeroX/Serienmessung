@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 
+import '../../analysis/domain/statistics.dart';
+import '../../core/time_format.dart';
+
 import '../../core/clock.dart';
 import '../../core/platform.dart';
 import '../../study/data/study_repository.dart';
@@ -73,6 +76,26 @@ class RecordingController extends ChangeNotifier {
   /// Index (0-based) of the current step in the definition list.
   int get currentStepIndex => loaded ? engine.stepIndex : 0;
 
+  /// Method for the real cycle time (saved per study).
+  CycleTimeMethod cycleTimeMethod = CycleTimeMethod.median;
+
+  /// Default method for studies without their own choice (from settings).
+  CycleTimeMethod defaultMethod = CycleTimeMethod.median;
+
+  /// Unit used in the analysis tab.
+  TimeUnit analysisUnit = TimeUnit.hm;
+
+  Future<void> setCycleTimeMethod(CycleTimeMethod m) async {
+    cycleTimeMethod = m;
+    notifyListeners();
+    await studies.setCycleTimeMethod(studyId, m.name);
+  }
+
+  void setAnalysisUnit(TimeUnit u) {
+    analysisUnit = u;
+    notifyListeners();
+  }
+
   /// Cycle shown in the overlay: the running one, or the one a start would use.
   int displayCycle = 1;
 
@@ -92,6 +115,10 @@ class RecordingController extends ChangeNotifier {
     study = await studies.getStudy(studyId);
     steps = await studies.getSteps(studyId);
     measurements = await measurementRepo.listForStudy(studyId);
+    final savedMethod = study?.cycleTimeMethod;
+    cycleTimeMethod = savedMethod == null
+        ? defaultMethod
+        : CycleTimeMethod.parse(savedMethod);
     final mode = study?.mode ?? StudyMode.timeStudy;
     final sequence = mode.usesSteps
         ? steps.map<int?>((s) => s.id).toList()

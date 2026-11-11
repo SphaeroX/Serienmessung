@@ -34,13 +34,13 @@ Nach der Aufnahme sieht man pro Schritt und für den gesamten Zyklus Summe, Mitt
 
 ## Umsetzungsschritte
 
-1. [ ] Statistikfunktionen umsetzen, inkl. Randfälle (n = 0, 1, 2).
-2. [ ] Quartil-Berechnungsmethode festlegen und in README dokumentieren (z. B. lineare Interpolation wie Excel QUARTILE.INC).
-3. [ ] Formatierer um Sekunden und TMU erweitern.
-4. [ ] Auswertungs-Service: Messungen → Kennzahlen je Schritt/Zyklus, Sonderzeiten ausschließen, unvollständige Zyklen ausschließen.
-5. [ ] Übersicht-UI mit Umschaltern für Methode und Einheit.
-6. [ ] Methode pro Studie speichern (DB-Migration).
-7. [ ] Texte DE/EN.
+1. [x] Statistikfunktionen umsetzen, inkl. Randfälle (n = 0, 1, 2).
+2. [x] Quartil-Berechnungsmethode festlegen und in README dokumentieren (z. B. lineare Interpolation wie Excel QUARTILE.INC).
+3. [x] Formatierer um Sekunden und TMU erweitern.
+4. [x] Auswertungs-Service: Messungen → Kennzahlen je Schritt/Zyklus, Sonderzeiten ausschließen, unvollständige Zyklen ausschließen.
+5. [x] Übersicht-UI mit Umschaltern für Methode und Einheit.
+6. [x] Methode pro Studie speichern (DB-Migration).
+7. [x] Texte DE/EN.
 
 ## Tests
 
@@ -60,8 +60,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün.
-- [ ] Für einen festen Testdatensatz stimmen Mittelwert, Median und IQR-bereinigte Taktzeit mit vorab von Hand berechneten Werten überein (Test).
+- [x] Tests grün.
+- [x] Für einen festen Testdatensatz stimmen Mittelwert, Median und IQR-bereinigte Taktzeit mit vorab von Hand berechneten Werten überein (Test).
 
 ## Offene Fragen / Annahmen
 
@@ -75,19 +75,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `lib/analysis/domain/statistics.dart` (`Stats.of`: n, Summe, Mittelwert, Median, Min, Max, Stichproben-Standardabweichung, VarK, Q1/Q3/IQR; `iqrFilter`; `CycleTimeMethod` mean/median/iqr) und `lib/analysis/domain/analysis.dart` (`StudyAnalysis.compute`: Zyklus-Statistik nur aus vollständigen Zyklen, reale Taktzeit nach Methode, Ausreißerzahl, Statistik + reale Zeit pro Schritt, Anteil pro Schritt, Sonderzeiten separat). Dritter Tab "Auswertung" mit Einheiten-Chips (HM/s/mm:ss.SSS/TMU), großer realer Taktzeit, Methodenwahl (SegmentedButton), Kennzahlen, Sonderzeiten-Summe und Schrittliste. Methode wird pro Studie gespeichert (Migration v4, Spalte `study.cycle_time_method`). Formatierer gab es schon seit Task_03.
+- **Learnings & Stolpersteine:** `expect((a, b), (x, closeTo(...)))` funktioniert nicht – Matcher in Records werden nicht ausgewertet; einzeln prüfen.
+- **Wichtige Entscheidungen und ihre Gründe:** Quartile per linearer Interpolation (wie Excel `QUARTILE.INC`). Standardabweichung als Stichprobe (n−1) – offene Frage damit entschieden. IQR-Filter erst ab 4 Werten (darunter wird nichts verworfen). Standardmethode Median (robust), bis Task_10 eine Voreinstellung liefert. Schrittzeiten zählen auch aus unvollständigen Zyklen (jede abgeschlossene Schrittzeit ist gültig), Zykluszeiten nur aus vollständigen. Im Schritt-Timer gibt es keine Zyklus-Kachel, dafür Anteile pro Schritt.
+- **Auswirkungen auf Folge-Tasks:** Task_10: `RecordingController.defaultMethod` und `analysisUnit` aus den Einstellungen setzen (vor `load()`). Task_16/17: `StudyAnalysis.compute` direkt für Export/PDF wiederverwenden; `analysisDecimals()` und `methodLabel()` in `analysis_view.dart` für einheitliche Darstellung.
+- **Hinweise zu Tests und Befehlen:** `tests/analysis/domain/statistics_test.dart` (Referenzwerte von Hand gerechnet: [10,11,12,13,40] → Mittel 17,2, Median 12, Q1 11, Q3 13, IQR-Mittel 11,5, s = 12,79453), `tests/analysis/domain/analysis_test.dart`, `tests/analysis/presentation/analysis_view_test.dart`.

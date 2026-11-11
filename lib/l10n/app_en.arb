@@ -168,5 +168,47 @@
   "stepsSection": "Steps",
   "stepsEditHint": "Tap to rename, drag to reorder. Recorded times stay with their step.",
   "newStepHint": "New step",
-  "addStep": "Add step"
+  "addStep": "Add step",
+  "tabAnalysis": "Analysis",
+  "realCycleTime": "Real cycle time",
+  "realLapTime": "Real lap time",
+  "methodMean": "Mean",
+  "methodMedian": "Median",
+  "methodIqr": "IQR",
+  "methodHint": "Mean: all cycles · Median: robust · IQR: mean without outliers (1.5 × IQR)",
+  "completeCycles": "{count, plural, =1{1 complete cycle} other{{count} complete cycles}}",
+  "@completeCycles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "incompleteCycles": "{count} incomplete",
+  "@incompleteCycles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outliersRemoved": "{count, plural, =1{1 outlier removed} other{{count} outliers removed}}",
+  "@outliersRemoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mean": "Mean",
+  "median": "Median",
+  "minimum": "Min",
+  "maximum": "Max",
+  "stdDev": "Std. dev.",
+  "cv": "CV",
+  "meanShort": "Ø",
+  "medianShort": "Md",
+  "specialTimesTotal": "Special times",
+  "specialTimesExcluded": "Not included in step or cycle times",
+  "noTimesShort": "No times"
 }
