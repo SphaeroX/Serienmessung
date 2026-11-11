@@ -486,4 +486,37 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get dictationUnavailable =>
       'Spracherkennung ist nicht verfügbar oder der Mikrofonzugriff wurde verweigert.';
+
+  @override
+  String get chooseVideo => 'Video auswählen';
+
+  @override
+  String get noVideoYet =>
+      'Wähle ein aufgenommenes Video, um die Schritte bei der Wiedergabe zu markieren.';
+
+  @override
+  String get videoMissing =>
+      'Das Video dieser Studie wurde nicht gefunden. Bitte erneut auswählen.';
+
+  @override
+  String get frameBack => 'Vorheriges Bild';
+
+  @override
+  String get frameForward => 'Nächstes Bild';
+
+  @override
+  String get playbackSpeed => 'Wiedergabetempo';
+
+  @override
+  String get undoMarker => 'Letzten Marker entfernen';
+
+  @override
+  String get markStart => 'START-MARKER';
+
+  @override
+  String get mark => 'MARKIEREN';
+
+  @override
+  String get markerBeforeLast =>
+      'Diese Position liegt vor dem letzten Marker. Video erst weiter vorspulen.';
 }

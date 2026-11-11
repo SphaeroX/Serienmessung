@@ -101,6 +101,12 @@ class RecordingEngine {
   int get stepIndex => _stepIndex;
   int? get currentStepId => _currentStepId;
 
+  /// Start of the current timing segment (the last marker in video studies).
+  int get segmentStartMicros => _segmentStart;
+
+  /// Start of the current step (end of the previous one, or the start).
+  int get stepStartMicros => _stepStart;
+
   /// Step after the current one in a fixed sequence (null in free order).
   int? get nextStepId => freeOrder || sequence.isEmpty
       ? null
@@ -206,6 +212,19 @@ class RecordingEngine {
     _status = EngineStatus.idle;
     _accumulated = 0;
     return out;
+  }
+
+  /// Reopens the step of [m] as if it had never been closed (undo of the
+  /// last marker): timing continues from its start.
+  void rewindTo(MeasurementDraft m) {
+    final idx = sequence.indexOf(m.stepId);
+    _stepIndex = idx >= 0 ? idx : 0;
+    _currentStepId = sequence.isEmpty ? null : sequence[_stepIndex];
+    _cycle = m.cycle;
+    _stepStart = m.startMicros;
+    _segmentStart = m.startMicros;
+    _accumulated = 0;
+    _status = EngineStatus.running;
   }
 
   EngineSnapshot snapshot() => EngineSnapshot(

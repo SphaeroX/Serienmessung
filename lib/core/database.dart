@@ -67,6 +67,10 @@ final List<Migration> migrations = [
       'CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)',
     );
   },
+  // v6: imported video of a video study.
+  (db) async {
+    await db.execute('ALTER TABLE study ADD COLUMN video_path TEXT');
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.

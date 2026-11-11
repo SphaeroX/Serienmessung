@@ -133,5 +133,15 @@
   "version": "Version",
   "holdToDictate": "Gedrückt halten zum Diktieren, loslassen zum Beenden",
   "listening": "Höre zu…",
-  "dictationUnavailable": "Spracherkennung ist nicht verfügbar oder der Mikrofonzugriff wurde verweigert."
+  "dictationUnavailable": "Spracherkennung ist nicht verfügbar oder der Mikrofonzugriff wurde verweigert.",
+  "chooseVideo": "Video auswählen",
+  "noVideoYet": "Wähle ein aufgenommenes Video, um die Schritte bei der Wiedergabe zu markieren.",
+  "videoMissing": "Das Video dieser Studie wurde nicht gefunden. Bitte erneut auswählen.",
+  "frameBack": "Vorheriges Bild",
+  "frameForward": "Nächstes Bild",
+  "playbackSpeed": "Wiedergabetempo",
+  "undoMarker": "Letzten Marker entfernen",
+  "markStart": "START-MARKER",
+  "mark": "MARKIEREN",
+  "markerBeforeLast": "Diese Position liegt vor dem letzten Marker. Video erst weiter vorspulen."
 }

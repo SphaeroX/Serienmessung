@@ -11,7 +11,8 @@
 - Localization: Flutter `gen-l10n` with ARB files in `lib/l10n/` (`l10n.yaml`); **English is the template/fallback**, German is the translation. Generated `app_localizations*.dart` are committed; after editing ARB files run `flutter gen-l10n`.
 - `speech_to_text` – push-to-talk dictation of steps (platform recognizer, no own model).
 - `wakelock_plus` – keep the screen on while recording.
-- Further libraries (video player, export) are chosen in their roadmap tasks and recorded here with the reason.
+- `video_player` – video playback (ExoPlayer) for video studies; `file_picker` – choosing videos (and backup files).
+- Further libraries (export) are chosen in their roadmap tasks and recorded here with the reason.
 
 ## Architecture
 

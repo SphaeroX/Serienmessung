@@ -171,6 +171,13 @@ class StudyRepository {
     }
   });
 
+  Future<void> setVideoPath(int id, String path) => _db.db.update(
+    'study',
+    {'video_path': path},
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+
   Future<void> setCycleTimeMethod(int id, String method) => _db.db.update(
     'study',
     {'cycle_time_method': method},

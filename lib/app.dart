@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/providers.dart';
 import 'l10n/app_localizations.dart';
 import 'recording/presentation/recording_screen.dart';
+import 'study/domain/study.dart';
+import 'video/presentation/video_study_screen.dart';
 import 'settings/domain/app_settings.dart';
 import 'settings/presentation/settings_controller.dart';
 import 'settings/presentation/settings_screen.dart';
@@ -63,8 +65,15 @@ class CycleScopeApp extends ConsumerWidget {
 
 /// Opens the screen matching the study's mode.
 Future<void> openStudy(BuildContext context, int studyId) async {
+  final container = ProviderScope.containerOf(context, listen: false);
+  final study = await container.read(studyRepositoryProvider).getStudy(studyId);
+  if (!context.mounted) return;
   await Navigator.of(context).push(
-    MaterialPageRoute<void>(builder: (_) => RecordingScreen(studyId: studyId)),
+    MaterialPageRoute<void>(
+      builder: (_) => study?.mode == StudyMode.video
+          ? VideoStudyScreen(studyId: studyId)
+          : RecordingScreen(studyId: studyId),
+    ),
   );
   if (context.mounted) {
     // Counts and "active" timestamps changed while the study was open.

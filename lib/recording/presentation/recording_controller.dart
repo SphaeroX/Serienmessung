@@ -26,6 +26,7 @@ class RecordingController extends ChangeNotifier {
     required this.clock,
     required this.feedback,
     required this.wallClock,
+    this.detectReboot = true,
   });
 
   final int studyId;
@@ -35,6 +36,10 @@ class RecordingController extends ChangeNotifier {
   final Clock clock;
   final DeviceFeedback feedback;
   final DateTime Function() wallClock;
+
+  /// False for video studies: their time base is the video position, which
+  /// is legitimately smaller after reopening.
+  final bool detectReboot;
 
   Study? study;
   List<StepDefinition> steps = const [];
@@ -129,7 +134,7 @@ class RecordingController extends ChangeNotifier {
     final saved = await runStates.load(studyId);
     EngineSnapshot? restore;
     if (saved != null) {
-      if (clock.nowMicros() < saved.savedClockMicros) {
+      if (detectReboot && clock.nowMicros() < saved.savedClockMicros) {
         // Device reboot: timestamps are no longer comparable. Completed
         // measurements are already stored; the unfinished step is dropped.
         interruptedByReboot = true;
@@ -227,6 +232,55 @@ class RecordingController extends ChangeNotifier {
     ];
     notifyListeners();
   }
+
+  /// Position of the last marker (video studies).
+  int get markerPosition => loaded ? engine.segmentStartMicros : 0;
+
+  /// Whether a marker may be set at [at]: never before the last marker and
+  /// not during a special time.
+  bool canMarkAt(int at) => switch (status) {
+    EngineStatus.idle => true,
+    EngineStatus.running => at >= engine.segmentStartMicros,
+    _ => false,
+  };
+
+  /// Video marker: the first marker starts step 1, every further marker
+  /// closes the current step. Returns false if rejected.
+  Future<bool> mark({int? at}) async {
+    final pos = at ?? clock.nowMicros();
+    if (!loaded || !canMarkAt(pos)) return false;
+    if (status == EngineStatus.idle) {
+      await startStop(at: pos);
+    } else {
+      await next(at: pos);
+    }
+    return true;
+  }
+
+  /// Removes the last marker: the last step time is deleted and its step is
+  /// timed again from its start. Undoing the start marker returns to idle.
+  Future<void> undoLastMarker() => _run(() async {
+    if (status == EngineStatus.special) return;
+    final normals = measurements
+        .where((m) => m.kind == MeasurementKind.normal)
+        .toList();
+    final last = normals.isEmpty ? null : normals.last;
+    // The current step was opened by the start marker (not by closing
+    // [last]) when its start differs from the end of the last step time.
+    final runningOwnMarker =
+        status != EngineStatus.idle &&
+        (last == null || last.endMicros != engine.stepStartMicros);
+    if (runningOwnMarker) {
+      // Only the start marker of this run exists.
+      _session!.discard();
+      return;
+    }
+    if (last == null) return;
+    await measurementRepo.deleteById(last.id);
+    measurements = await measurementRepo.listForStudy(studyId);
+    engine.rewindTo(last);
+    displayCycle = engine.cycle;
+  });
 
   Future<List<Measurement>> deleteCycle(int cycle) async {
     final removed = await measurementRepo.deleteCycle(studyId, cycle);

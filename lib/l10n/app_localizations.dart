@@ -901,6 +901,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Speech recognition is not available or microphone access was denied.'**
   String get dictationUnavailable;
+
+  /// No description provided for @chooseVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose video'**
+  String get chooseVideo;
+
+  /// No description provided for @noVideoYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a recorded video to mark the steps during playback.'**
+  String get noVideoYet;
+
+  /// No description provided for @videoMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'The video of this study can no longer be found. Please choose it again.'**
+  String get videoMissing;
+
+  /// No description provided for @frameBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous frame'**
+  String get frameBack;
+
+  /// No description provided for @frameForward.
+  ///
+  /// In en, this message translates to:
+  /// **'Next frame'**
+  String get frameForward;
+
+  /// No description provided for @playbackSpeed.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback speed'**
+  String get playbackSpeed;
+
+  /// No description provided for @undoMarker.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo last marker'**
+  String get undoMarker;
+
+  /// No description provided for @markStart.
+  ///
+  /// In en, this message translates to:
+  /// **'START MARK'**
+  String get markStart;
+
+  /// No description provided for @mark.
+  ///
+  /// In en, this message translates to:
+  /// **'MARK'**
+  String get mark;
+
+  /// No description provided for @markerBeforeLast.
+  ///
+  /// In en, this message translates to:
+  /// **'This position is before the last marker. Move the video forward first.'**
+  String get markerBeforeLast;
 }
 
 class _AppLocalizationsDelegate
