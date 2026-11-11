@@ -152,4 +152,50 @@ void main() {
     expect(find.textContaining('before the last marker'), findsOneWidget);
     expect(await durations(tester), isEmpty);
   });
+
+  testWidgets('dragging the timeline scrubs the video', (tester) async {
+    await tester.runAsync(
+      () => StudyRepository(db).setVideoPath(studyId, 'fake:v.mp4'),
+    );
+    await pump(tester);
+    await tester.tap(find.byKey(const Key('playPause')));
+    await settle(tester);
+    video.moveTo(10 * s);
+    await settle(tester);
+    // Drag to the left = forward in time (60 px = 1 s at default zoom).
+    await tester.drag(find.byKey(const Key('timeline')), const Offset(-120, 0));
+    await settle(tester);
+    expect(video.isPlaying, isFalse);
+    expect(video.position, greaterThan(10 * s));
+  });
+
+  testWidgets('long-press drag moves a marker between two steps', (
+    tester,
+  ) async {
+    await tester.runAsync(
+      () => StudyRepository(db).setVideoPath(studyId, 'fake:v.mp4'),
+    );
+    await pump(tester);
+    for (final t in [1, 3, 6]) {
+      video.moveTo(t * s);
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('markButton')));
+      await settle(tester);
+    }
+    expect(await durations(tester), [2 * s, 3 * s]);
+
+    // Put the marker at 3 s under the fixed playhead (middle).
+    video.moveTo(3 * s);
+    await settle(tester);
+    final center = tester.getCenter(find.byKey(const Key('timeline')));
+    final g = await tester.startGesture(center);
+    await tester.pump(const Duration(milliseconds: 700));
+    await g.moveBy(const Offset(30, 0));
+    await tester.pump(const Duration(milliseconds: 50));
+    await g.moveBy(const Offset(30, 0)); // +60 px = +1 s
+    await tester.pump(const Duration(milliseconds: 50));
+    await g.up();
+    await settle(tester);
+    expect(await durations(tester), [3 * s, 2 * s]);
+  });
 }

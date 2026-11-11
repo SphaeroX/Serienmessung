@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../analysis/domain/statistics.dart';
 import '../../core/time_format.dart';
+import '../../video/domain/boundary.dart';
 
 import '../../core/clock.dart';
 import '../../core/platform.dart';
@@ -281,6 +282,17 @@ class RecordingController extends ChangeNotifier {
     engine.rewindTo(last);
     displayCycle = engine.cycle;
   });
+
+  /// Moves a video marker between two step times. Returns false if the move
+  /// is not possible (a marker cannot pass its neighbours).
+  Future<bool> moveMarker(Boundary b, int to) async {
+    final moved = moveBoundary(b, to);
+    if (moved == null) return false;
+    await measurementRepo.updateTimes(moved.$1);
+    await measurementRepo.updateTimes(moved.$2);
+    await reloadMeasurements();
+    return true;
+  }
 
   Future<List<Measurement>> deleteCycle(int cycle) async {
     final removed = await measurementRepo.deleteCycle(studyId, cycle);

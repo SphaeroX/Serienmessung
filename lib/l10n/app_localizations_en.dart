@@ -512,4 +512,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get markerBeforeLast =>
       'This position is before the last marker. Move the video forward first.';
+
+  @override
+  String get markerCannotMove =>
+      'A marker cannot be moved past its neighbours.';
 }

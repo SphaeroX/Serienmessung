@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-11 – Task_12 erledigt.
+Stand: 2026-11-11 – Task_13 erledigt.
 
 | Task | Titel | Status |
 |---|---|---|
@@ -30,7 +30,7 @@ Stand: 2026-11-11 – Task_12 erledigt.
 | 10 | Einstellungen | erledigt |
 | 11 | Spracheingabe Push-to-talk | erledigt |
 | 12 | Video-Studie: Import & Markieren | erledigt |
-| 13 | Video-Zeitleiste flüssig & Marker ziehen | offen |
+| 13 | Video-Zeitleiste flüssig & Marker ziehen | erledigt |
 | 14 | Modus "Einfach" | offen |
 | 15 | Modus "Schritt-Timer" | offen |
 | 16 | Export CSV + Excel | offen |
@@ -74,6 +74,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_10] Einstellungen:** in SQLite-Tabelle `settings` (Migration v5), geladen in `main()` → `initialSettingsProvider`, live über `settingsProvider`. Kein shared_preferences mehr. Tests setzen Einstellungen per `initialSettingsProvider.overrideWithValue`.
 - **[Task_11] Diktat:** `DictationButton` + `speechInputProvider` (speech_to_text); eine Aufnahme = eine Zeile/ein Schritt.
 - **[Task_12] Video:** Zeitbasis = Videoposition (`VideoClock`), Video wird nach `Documents/videos/` kopiert, `study.video_path` (Migration v6). Player/Picker hinter `VideoPlayback`/`VideoPicker`. Gleicher `RecordingController` wie live, mit `detectReboot: false`.
+- **[Task_13] Zeitleiste:** `PositionInterpolator` liefert die flüssige Videoposition (auch Zeitbasis für Marker). `VideoTimeline` zeichnet per `CustomPainter(repaint: ValueNotifier)`. Nur innere Marker sind verschiebbar.
 
 ## Auffälligkeiten & Details
 

@@ -961,6 +961,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This position is before the last marker. Move the video forward first.'**
   String get markerBeforeLast;
+
+  /// No description provided for @markerCannotMove.
+  ///
+  /// In en, this message translates to:
+  /// **'A marker cannot be moved past its neighbours.'**
+  String get markerCannotMove;
 }
 
 class _AppLocalizationsDelegate

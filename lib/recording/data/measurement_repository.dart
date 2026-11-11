@@ -52,6 +52,18 @@ class MeasurementRepository {
     return rows.map(fromRow).toList();
   }
 
+  /// Updates start, end and duration (moved video marker).
+  Future<void> updateTimes(Measurement m) => _db.db.update(
+    'measurement',
+    {
+      'start_us': m.startMicros,
+      'end_us': m.endMicros,
+      'duration_us': m.durationMicros,
+    },
+    where: 'id = ?',
+    whereArgs: [m.id],
+  );
+
   /// Re-inserts deleted measurements with their original ids (undo).
   Future<void> restore(List<Measurement> items) async {
     await _db.db.transaction((txn) async {

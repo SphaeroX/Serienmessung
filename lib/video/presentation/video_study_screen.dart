@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../analysis/presentation/analysis_view.dart';
+import '../../core/clock.dart';
 import '../../core/providers.dart';
 import '../../core/time_format.dart';
 import '../../l10n/app_localizations.dart';
@@ -16,9 +17,12 @@ import '../../recording/presentation/recording_controller.dart';
 import '../../recording/presentation/recording_screen.dart' show StepOverlay;
 import '../../settings/presentation/settings_controller.dart';
 import '../../study/presentation/edit_study_screen.dart';
+import '../domain/boundary.dart';
+import '../domain/position_interpolator.dart';
 import '../domain/video_clock.dart';
 import '../platform/video_picker.dart';
 import '../platform/video_playback.dart';
+import 'video_timeline.dart';
 
 /// Creates a player per screen; overridden in tests.
 final videoPlaybackFactoryProvider = Provider<VideoPlayback Function()>(
@@ -54,15 +58,35 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
   StreamSubscription<KeyEventData>? _keySub;
   bool _keysEnabled = true;
   bool _videoMissing = false;
+  late final Clock _mono;
+  final _interpolator = PositionInterpolator();
 
-  /// Current video position used as the time base.
-  int get position => playback.positionMicros;
+  /// Smooth video position used as the time base and for the timeline.
+  int get position => _interpolator.estimate(_mono.nowMicros());
+
+  void _report() => _interpolator.report(
+    position: playback.positionMicros,
+    now: _mono.nowMicros(),
+    playing: playback.playing,
+    speed: playback.speed,
+    duration: playback.durationMicros,
+  );
+
+  /// Seeks and moves the timeline there immediately.
+  Future<void> _seek(int micros) async {
+    final target = micros.clamp(0, playback.durationMicros);
+    _interpolator.snap(target, _mono.nowMicros());
+    _now.value = target;
+    await playback.seekTo(target);
+  }
 
   @override
   void initState() {
     super.initState();
     final settings = ref.read(settingsProvider);
+    _mono = ref.read(clockProvider);
     playback = ref.read(videoPlaybackFactoryProvider)()
+      ..addListener(_report)
       ..addListener(_onChanged);
     controller =
         RecordingController(
@@ -81,7 +105,7 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
           ..addListener(_onChanged);
     _ticker = createTicker((_) => _now.value = position)..start();
 
-    final mono = ref.read(clockProvider);
+    final mono = _mono;
     int toVideo(int monoAt) => videoPositionAt(
       keyAtMonotonic: monoAt,
       nowMonotonic: mono.nowMicros(),
@@ -121,8 +145,9 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
       return;
     }
     // Continue where the last marker was set.
+    _report();
     if (controller.status != EngineStatus.idle) {
-      await playback.seekTo(controller.markerPosition);
+      await _seek(controller.markerPosition);
     }
     if (mounted) setState(() => _videoMissing = false);
   }
@@ -152,6 +177,7 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
     controller.removeListener(_onChanged);
     controller.dispose();
     playback.removeListener(_onChanged);
+    playback.removeListener(_report);
     playback.dispose();
     _now.dispose();
     super.dispose();
@@ -172,7 +198,17 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
 
   Future<void> _step(int frames) async {
     if (playback.playing) await playback.pause();
-    await playback.seekTo(position + frames * frameMicros);
+    await _seek(playback.positionMicros + frames * frameMicros);
+  }
+
+  Future<void> _moveMarker(Boundary b, int to) async {
+    final ok = await controller.moveMarker(b, to);
+    if (!ok && mounted) {
+      final l = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l.markerCannotMove)));
+    }
   }
 
   Future<void> _editStudy() async {
@@ -223,6 +259,20 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
                     now: _now,
                     onToggle: _togglePlay,
                     onStep: _step,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: VideoTimeline(
+                      position: _now,
+                      durationMicros: playback.durationMicros,
+                      measurements: c.measurements,
+                      steps: c.steps,
+                      onSeek: _seek,
+                      onMoveBoundary: _moveMarker,
+                      onScrubStart: () {
+                        if (playback.playing) playback.pause();
+                      },
+                    ),
                   ),
                   StepOverlay(controller: c, now: _now),
                   TabBar(

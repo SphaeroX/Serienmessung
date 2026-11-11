@@ -519,4 +519,8 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get markerBeforeLast =>
       'Diese Position liegt vor dem letzten Marker. Video erst weiter vorspulen.';
+
+  @override
+  String get markerCannotMove =>
+      'Ein Marker kann nicht über seine Nachbarn hinaus verschoben werden.';
 }
