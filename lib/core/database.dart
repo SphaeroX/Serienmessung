@@ -61,6 +61,12 @@ final List<Migration> migrations = [
   (db) async {
     await db.execute('ALTER TABLE study ADD COLUMN cycle_time_method TEXT');
   },
+  // v5: key/value settings.
+  (db) async {
+    await db.execute(
+      'CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)',
+    );
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.

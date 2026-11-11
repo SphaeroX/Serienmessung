@@ -82,6 +82,9 @@ class RecordingController extends ChangeNotifier {
   /// Default method for studies without their own choice (from settings).
   CycleTimeMethod defaultMethod = CycleTimeMethod.median;
 
+  /// Secondary unit of the live displays (from the settings).
+  TimeUnit displayUnit = TimeUnit.hm;
+
   /// Unit used in the analysis tab.
   TimeUnit analysisUnit = TimeUnit.hm;
 

@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/providers.dart';
 import 'l10n/app_localizations.dart';
 import 'recording/presentation/recording_screen.dart';
+import 'settings/domain/app_settings.dart';
+import 'settings/presentation/settings_controller.dart';
+import 'settings/presentation/settings_screen.dart';
 import 'study/presentation/study_list_screen.dart';
 
 const _seed = Color(0xFF0B6B8A);
@@ -26,7 +29,18 @@ class CycleScopeApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsProvider);
     return MaterialApp(
+      themeMode: switch (settings.theme) {
+        ThemeChoice.system => ThemeMode.system,
+        ThemeChoice.light => ThemeMode.light,
+        ThemeChoice.dark => ThemeMode.dark,
+      },
+      locale: switch (settings.language) {
+        LanguageChoice.system => null,
+        LanguageChoice.en => const Locale('en'),
+        LanguageChoice.de => const Locale('de'),
+      },
       onGenerateTitle: (ctx) => AppLocalizations.of(ctx).appTitle,
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
@@ -37,7 +51,12 @@ class CycleScopeApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      home: StudyListScreen(onOpenStudy: openStudy),
+      home: StudyListScreen(
+        onOpenStudy: openStudy,
+        onOpenSettings: (context) => Navigator.of(
+          context,
+        ).push(MaterialPageRoute<void>(builder: (_) => const SettingsScreen())),
+      ),
     );
   }
 }

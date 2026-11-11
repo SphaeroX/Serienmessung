@@ -4,6 +4,7 @@ import '../recording/data/measurement_repository.dart';
 import '../recording/data/run_state_repository.dart';
 import '../recording/platform/hardware_keys.dart';
 import '../recording/platform/recording_notifier.dart';
+import '../settings/presentation/settings_controller.dart';
 import '../study/data/study_repository.dart';
 import '../study/domain/study.dart';
 import 'clock.dart';
@@ -40,9 +41,13 @@ final wallClockProvider = Provider<DateTime Function()>((ref) => DateTime.now);
 final clockProvider = Provider<Clock>((ref) => MonotonicClock());
 
 /// Haptics and wake lock.
-final deviceFeedbackProvider = Provider<DeviceFeedback>(
-  (ref) => SystemDeviceFeedback(),
-);
+final deviceFeedbackProvider = Provider<DeviceFeedback>((ref) {
+  final s = ref.watch(settingsProvider);
+  return SystemDeviceFeedback(
+    vibrate: s.vibration,
+    keepScreenOn: s.keepScreenOn,
+  );
+});
 
 /// Volume keys (Android platform channel).
 final hardwareKeysProvider = Provider<HardwareKeys>(
@@ -51,5 +56,7 @@ final hardwareKeysProvider = Provider<HardwareKeys>(
 
 /// Ongoing notification while recording.
 final recordingNotifierProvider = Provider<RecordingNotifier>(
-  (ref) => AndroidRecordingNotifier(),
+  (ref) => ref.watch(settingsProvider).notifications
+      ? AndroidRecordingNotifier()
+      : const SilentRecordingNotifier(),
 );

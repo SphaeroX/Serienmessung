@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
+import '../../settings/presentation/settings_controller.dart';
 import '../../l10n/app_localizations.dart';
 import '../domain/step_parser.dart';
 import '../domain/study.dart';
@@ -54,6 +55,7 @@ class _CreateStudyScreenState extends ConsumerState<CreateStudyScreen> {
       mode: _mode,
       steps: _mode.usesSteps ? parseSteps(_steps.text) : const [],
       now: ref.read(wallClockProvider)(),
+      cycleTimeMethod: ref.read(settingsProvider).defaultMethod.name,
     );
     ref.invalidate(studyListProvider);
     if (mounted) Navigator.of(context).pop(id);

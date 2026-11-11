@@ -13,6 +13,7 @@ class StudyRepository {
     required StudyMode mode,
     required List<String> steps,
     required DateTime now,
+    String? cycleTimeMethod,
   }) {
     return _db.db.transaction((txn) async {
       final id = await txn.insert('study', {
@@ -21,6 +22,7 @@ class StudyRepository {
         'mode': mode.name,
         'created_at': now.millisecondsSinceEpoch,
         'last_active_at': now.millisecondsSinceEpoch,
+        'cycle_time_method': ?cycleTimeMethod,
       });
       for (var i = 0; i < steps.length; i++) {
         await txn.insert('step_definition', {

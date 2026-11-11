@@ -48,7 +48,7 @@ class CyclesView extends StatelessWidget {
     }
     String fmt(int us) => formatTime(us, TimeUnit.stopwatch);
     String hm(int us) =>
-        formatTime(us, TimeUnit.hm, decimals: 1, locale: locale);
+        formatTime(us, c.displayUnit, decimals: 1, locale: locale);
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
@@ -146,7 +146,7 @@ class _MeasurementRow extends StatelessWidget {
       ),
       subtitle: Text(
         '${formatTime(m.durationMicros, TimeUnit.stopwatch)} · '
-        '${formatTime(m.durationMicros, TimeUnit.hm, decimals: 1, locale: locale)}',
+        '${formatTime(m.durationMicros, controller.displayUnit, decimals: 1, locale: locale)}',
         style: const TextStyle(fontFamily: 'monospace'),
       ),
       onTap: special ? () => editSpecialNote(context, controller, m) : null,

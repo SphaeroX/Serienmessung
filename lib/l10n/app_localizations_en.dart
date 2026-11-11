@@ -395,4 +395,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noTimesShort => 'No times';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get appearance => 'Appearance';
+
+  @override
+  String get design => 'Theme';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get followSystem => 'System';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get general => 'General';
+
+  @override
+  String get defaultUnit => 'Default time unit';
+
+  @override
+  String get unitHm => 'HM (1/100 minute)';
+
+  @override
+  String get unitSeconds => 'Seconds';
+
+  @override
+  String get unitStopwatch => 'mm:ss.SSS';
+
+  @override
+  String get unitTmu => 'TMU (MTM)';
+
+  @override
+  String get defaultMethod => 'Real cycle time method';
+
+  @override
+  String get vibration => 'Vibration';
+
+  @override
+  String get hardwareKeys => 'Hardware keys';
+
+  @override
+  String get hardwareKeysHint =>
+      'Volume up: next step (hold: special time) · Volume down: start/stop';
+
+  @override
+  String get holdThreshold => 'Hold time for special time';
+
+  @override
+  String get keepScreenOn => 'Keep screen on';
+
+  @override
+  String get keepScreenOnHint => 'Prevent screen lock while recording';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get notificationsHint =>
+      'Show the running step while the app is in the background';
+
+  @override
+  String get about => 'About';
+
+  @override
+  String get version => 'Version';
 }

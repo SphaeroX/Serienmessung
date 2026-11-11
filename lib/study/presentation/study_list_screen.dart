@@ -24,7 +24,7 @@ class StudyListScreen extends ConsumerStatefulWidget {
   });
 
   final OpenStudy? onOpenStudy;
-  final VoidCallback? onOpenSettings;
+  final void Function(BuildContext context)? onOpenSettings;
   final bool checkActiveRuns;
 
   @override
@@ -123,7 +123,7 @@ class _StudyListScreenState extends ConsumerState<StudyListScreen> {
             IconButton(
               key: const Key('settingsButton'),
               icon: const Icon(Icons.settings),
-              onPressed: widget.onOpenSettings,
+              onPressed: () => widget.onOpenSettings!(context),
             ),
         ],
       ),

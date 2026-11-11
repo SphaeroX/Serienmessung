@@ -400,4 +400,79 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get noTimesShort => 'Keine Zeiten';
+
+  @override
+  String get settings => 'Einstellungen';
+
+  @override
+  String get appearance => 'Erscheinungsbild';
+
+  @override
+  String get design => 'Design';
+
+  @override
+  String get language => 'Sprache';
+
+  @override
+  String get followSystem => 'System';
+
+  @override
+  String get themeLight => 'Hell';
+
+  @override
+  String get themeDark => 'Dunkel';
+
+  @override
+  String get general => 'Allgemein';
+
+  @override
+  String get defaultUnit => 'Standard-Zeiteinheit';
+
+  @override
+  String get unitHm => 'HM (Hundertstelminute)';
+
+  @override
+  String get unitSeconds => 'Sekunden';
+
+  @override
+  String get unitStopwatch => 'mm:ss.SSS';
+
+  @override
+  String get unitTmu => 'TMU (MTM)';
+
+  @override
+  String get defaultMethod => 'Methode reale Taktzeit';
+
+  @override
+  String get vibration => 'Vibration';
+
+  @override
+  String get hardwareKeys => 'Hardware-Tasten';
+
+  @override
+  String get hardwareKeysHint =>
+      'Lautstärke hoch: nächster Schritt (halten: Sonderzeit) · Lautstärke runter: Start/Stopp';
+
+  @override
+  String get holdThreshold => 'Haltedauer für Sonderzeit';
+
+  @override
+  String get keepScreenOn => 'Bildschirm aktiv halten';
+
+  @override
+  String get keepScreenOnHint =>
+      'Bildschirmsperre während der Aufnahme verhindern';
+
+  @override
+  String get notifications => 'Benachrichtigungen';
+
+  @override
+  String get notificationsHint =>
+      'Laufenden Schritt anzeigen, wenn die App im Hintergrund ist';
+
+  @override
+  String get about => 'Über';
+
+  @override
+  String get version => 'Version';
 }

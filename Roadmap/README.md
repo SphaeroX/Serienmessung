@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-11 – Task_09 erledigt.
+Stand: 2026-11-11 – Task_10 erledigt.
 
 | Task | Titel | Status |
 |---|---|---|
@@ -27,7 +27,7 @@ Stand: 2026-11-11 – Task_09 erledigt.
 | 07 | Zyklen ansehen & löschen | erledigt |
 | 08 | Schrittdefinition nachträglich bearbeiten | erledigt |
 | 09 | Auswertung & reale Taktzeit | erledigt |
-| 10 | Einstellungen | offen |
+| 10 | Einstellungen | erledigt |
 | 11 | Spracheingabe Push-to-talk | offen |
 | 12 | Video-Studie: Import & Markieren | offen |
 | 13 | Video-Zeitleiste flüssig & Marker ziehen | offen |
@@ -71,6 +71,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_07] Zyklen:** `groupCycles()` in `lib/recording/domain/cycles.dart` ist die gemeinsame Grundlage für Zyklen-Ansicht und Auswertung (vollständig = jeder aktuelle Schritt hat eine normale Zeit). Löschen hart + Rückgängig per Wiedereinfügen; Zyklusnummern bleiben stabil.
 - **[Task_08] Schritte bearbeiten:** nur im Ruhezustand (Stift-Symbol im Messbildschirm). Schritt löschen entfernt auch dessen Zeiten (mit Warnung). Nach dem Bearbeiten `RecordingController.load()`.
 - **[Task_09] Auswertung:** `StudyAnalysis.compute()` (reines Dart) ist die einzige Quelle für Kennzahlen – Export und PDF verwenden sie mit. Quartile wie Excel `QUARTILE.INC`, Standardabweichung n−1, IQR-Filter erst ab 4 Werten. Methode pro Studie in `study.cycle_time_method` (Migration v4), Standard Median.
+- **[Task_10] Einstellungen:** in SQLite-Tabelle `settings` (Migration v5), geladen in `main()` → `initialSettingsProvider`, live über `settingsProvider`. Kein shared_preferences mehr. Tests setzen Einstellungen per `initialSettingsProvider.overrideWithValue`.
 
 ## Auffälligkeiten & Details
 

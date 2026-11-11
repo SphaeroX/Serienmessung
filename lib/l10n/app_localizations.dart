@@ -739,6 +739,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No times'**
   String get noTimesShort;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @appearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance;
+
+  /// No description provided for @design.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get design;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @followSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get followSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @general.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get general;
+
+  /// No description provided for @defaultUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Default time unit'**
+  String get defaultUnit;
+
+  /// No description provided for @unitHm.
+  ///
+  /// In en, this message translates to:
+  /// **'HM (1/100 minute)'**
+  String get unitHm;
+
+  /// No description provided for @unitSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Seconds'**
+  String get unitSeconds;
+
+  /// No description provided for @unitStopwatch.
+  ///
+  /// In en, this message translates to:
+  /// **'mm:ss.SSS'**
+  String get unitStopwatch;
+
+  /// No description provided for @unitTmu.
+  ///
+  /// In en, this message translates to:
+  /// **'TMU (MTM)'**
+  String get unitTmu;
+
+  /// No description provided for @defaultMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Real cycle time method'**
+  String get defaultMethod;
+
+  /// No description provided for @vibration.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibration'**
+  String get vibration;
+
+  /// No description provided for @hardwareKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Hardware keys'**
+  String get hardwareKeys;
+
+  /// No description provided for @hardwareKeysHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume up: next step (hold: special time) · Volume down: start/stop'**
+  String get hardwareKeysHint;
+
+  /// No description provided for @holdThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold time for special time'**
+  String get holdThreshold;
+
+  /// No description provided for @keepScreenOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep screen on'**
+  String get keepScreenOn;
+
+  /// No description provided for @keepScreenOnHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Prevent screen lock while recording'**
+  String get keepScreenOnHint;
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @notificationsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the running step while the app is in the background'**
+  String get notificationsHint;
+
+  /// No description provided for @about.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get about;
+
+  /// No description provided for @version.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get version;
 }
 
 class _AppLocalizationsDelegate

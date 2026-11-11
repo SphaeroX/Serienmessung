@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../core/time_format.dart';
 import '../../l10n/app_localizations.dart';
+import '../../settings/presentation/settings_controller.dart';
 import '../../study/presentation/edit_study_screen.dart';
 import '../../study/domain/study.dart';
 import '../domain/key_interpreter.dart';
@@ -36,6 +37,7 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
   late final HardwareKeys _keys;
   late final KeyInterpreter _interpreter;
   StreamSubscription<KeyEventData>? _keySub;
+  bool _keysEnabled = true;
   late final RecordingNotifier _notifier;
   StreamSubscription<String>? _actionSub;
   bool _rebootShown = false;
@@ -52,19 +54,28 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
       feedback: ref.read(deviceFeedbackProvider),
       wallClock: ref.read(wallClockProvider),
     );
+    final settings = ref.read(settingsProvider);
+    controller
+      ..defaultMethod = settings.defaultMethod
+      ..analysisUnit = settings.defaultUnit
+      ..displayUnit = settings.defaultUnit;
     controller.addListener(_onChanged);
     controller.load();
     _ticker = createTicker((_) => _now.value = controller.clock.nowMicros())
       ..start();
     _keys = ref.read(hardwareKeysProvider);
     _interpreter = KeyInterpreter(
+      holdThreshold: Duration(milliseconds: settings.holdThresholdMs),
       onNext: (at) => controller.next(at: at),
       onStartStop: (at) => controller.startStop(at: at),
       onSpecialStart: (at) => controller.beginSpecial(at: at),
       onSpecialEnd: (at) => controller.endSpecial(at: at),
     );
-    _keySub = _keys.events.listen(_interpreter.handle);
-    _keys.setCapture(true);
+    _keysEnabled = settings.hardwareKeys;
+    if (_keysEnabled) {
+      _keySub = _keys.events.listen(_interpreter.handle);
+      _keys.setCapture(true);
+    }
     _notifier = ref.read(recordingNotifierProvider);
     _actionSub = _notifier.actions.listen((a) {
       if (a == 'next') controller.next();
@@ -121,7 +132,7 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
   @override
   void dispose() {
     _actionSub?.cancel();
-    _keys.setCapture(false);
+    if (_keysEnabled) _keys.setCapture(false);
     _keySub?.cancel();
     _interpreter.dispose();
     _ticker.dispose();
@@ -244,13 +255,18 @@ class _TimerTiles extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: _TimeTile(label: l.totalLabel, micros: total),
+                child: _TimeTile(
+                  label: l.totalLabel,
+                  micros: total,
+                  unit: c.displayUnit,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: _TimeTile(
                   label: c.hasSteps ? l.stepLabel : l.lapLabel,
                   micros: step,
+                  unit: c.displayUnit,
                   valueKey: const Key('stepTime'),
                 ),
               ),
@@ -263,10 +279,16 @@ class _TimerTiles extends StatelessWidget {
 }
 
 class _TimeTile extends StatelessWidget {
-  const _TimeTile({required this.label, required this.micros, this.valueKey});
+  const _TimeTile({
+    required this.label,
+    required this.micros,
+    required this.unit,
+    this.valueKey,
+  });
 
   final String label;
   final int micros;
+  final TimeUnit unit;
   final Key? valueKey;
 
   @override
@@ -295,13 +317,19 @@ class _TimeTile extends StatelessWidget {
               ),
             ),
           ),
-          Text(
-            formatTime(micros, TimeUnit.hm, locale: locale),
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.primary,
-              fontFamily: 'monospace',
+          if (unit != TimeUnit.stopwatch)
+            Text(
+              formatTime(
+                micros,
+                unit,
+                decimals: unit == TimeUnit.seconds ? 1 : 0,
+                locale: locale,
+              ),
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontFamily: 'monospace',
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -489,7 +517,7 @@ class LiveList extends StatelessWidget {
               Text(
                 formatTime(
                   m.durationMicros,
-                  TimeUnit.hm,
+                  c.displayUnit,
                   decimals: 1,
                   locale: locale,
                 ),

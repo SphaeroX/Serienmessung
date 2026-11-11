@@ -31,6 +31,20 @@ abstract class RecordingNotifier {
   Stream<String> get actions;
 }
 
+/// Used when notifications are switched off in the settings.
+class SilentRecordingNotifier implements RecordingNotifier {
+  const SilentRecordingNotifier();
+
+  @override
+  Stream<String> get actions => const Stream.empty();
+
+  @override
+  Future<void> show(RecordingNotice notice) async {}
+
+  @override
+  Future<void> hide() async {}
+}
+
 /// Android implementation (see `MainActivity.kt`).
 class AndroidRecordingNotifier implements RecordingNotifier {
   static const _methods = MethodChannel('dev.cyclescope/platform');

@@ -1,5 +1,8 @@
 import 'package:cyclescope/core/clock.dart';
 import 'package:cyclescope/core/database.dart';
+import 'package:cyclescope/core/time_format.dart';
+import 'package:cyclescope/settings/domain/app_settings.dart';
+import 'package:cyclescope/settings/presentation/settings_controller.dart';
 import 'package:cyclescope/core/providers.dart';
 import 'package:cyclescope/recording/data/measurement_repository.dart';
 import 'package:cyclescope/recording/presentation/recording_screen.dart';
@@ -37,11 +40,15 @@ void main() {
 
   tearDown(() => db.close());
 
-  Future<void> pumpScreen(WidgetTester tester) async {
+  Future<void> pumpScreen(
+    WidgetTester tester, {
+    AppSettings settings = const AppSettings(),
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           databaseProvider.overrideWithValue(db),
+          initialSettingsProvider.overrideWithValue(settings),
           clockProvider.overrideWithValue(clock as Clock),
           ...fakePlatformOverrides(keys: keys, notifier: notifier),
         ],
@@ -236,5 +243,24 @@ void main() {
     await tester.tap(find.text('Reset').last);
     await settle(tester);
     expect(notifier.shown, isNull);
+  });
+
+  testWidgets('hardware keys can be switched off', (tester) async {
+    await pumpScreen(tester, settings: const AppSettings(hardwareKeys: false));
+    expect(keys.capturing, isFalse);
+    keys.press(VolumeKey.down, at: clock.micros);
+    await settle(tester);
+    expect(find.text('START'), findsOneWidget);
+  });
+
+  testWidgets('live display uses the default unit', (tester) async {
+    await pumpScreen(
+      tester,
+      settings: const AppSettings(defaultUnit: TimeUnit.seconds),
+    );
+    await tap(tester, 'startStopButton');
+    clock.advanceSeconds(3);
+    await tap(tester, 'nextButton');
+    expect(find.text('3.0 s'), findsWidgets);
   });
 }
