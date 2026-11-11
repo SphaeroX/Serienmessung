@@ -973,6 +973,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Times'**
   String get tabTimes;
+
+  /// No description provided for @export.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get export;
+
+  /// No description provided for @exportCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV'**
+  String get exportCsv;
+
+  /// No description provided for @exportCsvHint.
+  ///
+  /// In en, this message translates to:
+  /// **'All times as a table, opens in Excel'**
+  String get exportCsvHint;
+
+  /// No description provided for @exportXlsx.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel (.xlsx)'**
+  String get exportXlsx;
+
+  /// No description provided for @exportXlsxHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Times, cycle matrix and analysis'**
+  String get exportXlsxHint;
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String exportFailed(String error);
+
+  /// No description provided for @exportStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Study'**
+  String get exportStudy;
+
+  /// No description provided for @exportDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get exportDescription;
+
+  /// No description provided for @exportDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported'**
+  String get exportDate;
+
+  /// No description provided for @exportUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get exportUnit;
+
+  /// No description provided for @exportCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle'**
+  String get exportCycle;
+
+  /// No description provided for @exportLap.
+  ///
+  /// In en, this message translates to:
+  /// **'Lap'**
+  String get exportLap;
+
+  /// No description provided for @exportStepNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Step no.'**
+  String get exportStepNo;
+
+  /// No description provided for @exportStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Step'**
+  String get exportStep;
+
+  /// No description provided for @exportStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get exportStart;
+
+  /// No description provided for @exportEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get exportEnd;
+
+  /// No description provided for @exportDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get exportDuration;
+
+  /// No description provided for @exportType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get exportType;
+
+  /// No description provided for @exportNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get exportNote;
+
+  /// No description provided for @exportStepTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Step time'**
+  String get exportStepTime;
+
+  /// No description provided for @exportSheetTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Times'**
+  String get exportSheetTimes;
+
+  /// No description provided for @exportTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get exportTotal;
+
+  /// No description provided for @exportComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get exportComplete;
+
+  /// No description provided for @exportYes.
+  ///
+  /// In en, this message translates to:
+  /// **'yes'**
+  String get exportYes;
+
+  /// No description provided for @exportNo.
+  ///
+  /// In en, this message translates to:
+  /// **'no'**
+  String get exportNo;
+
+  /// No description provided for @exportRealTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Real time'**
+  String get exportRealTime;
+
+  /// No description provided for @exportShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get exportShare;
+
+  /// No description provided for @exportOutliers.
+  ///
+  /// In en, this message translates to:
+  /// **'Outliers removed'**
+  String get exportOutliers;
 }
 
 class _AppLocalizationsDelegate

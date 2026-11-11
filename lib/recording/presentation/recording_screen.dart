@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
 import '../../core/time_format.dart';
+import '../../export/presentation/export_menu.dart';
 import '../../l10n/app_localizations.dart';
 import '../../settings/presentation/settings_controller.dart';
 import '../../study/presentation/edit_study_screen.dart';
@@ -183,6 +184,7 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
       appBar: AppBar(
         title: Text(c.study?.name ?? ''),
         actions: [
+          ExportButton(controller: controller),
           IconButton(
             key: const Key('editStudyButton'),
             tooltip: l.editStudy,

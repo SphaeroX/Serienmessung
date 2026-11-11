@@ -519,4 +519,90 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tabTimes => 'Times';
+
+  @override
+  String get export => 'Export';
+
+  @override
+  String get exportCsv => 'CSV';
+
+  @override
+  String get exportCsvHint => 'All times as a table, opens in Excel';
+
+  @override
+  String get exportXlsx => 'Excel (.xlsx)';
+
+  @override
+  String get exportXlsxHint => 'Times, cycle matrix and analysis';
+
+  @override
+  String exportFailed(String error) {
+    return 'Export failed: $error';
+  }
+
+  @override
+  String get exportStudy => 'Study';
+
+  @override
+  String get exportDescription => 'Description';
+
+  @override
+  String get exportDate => 'Exported';
+
+  @override
+  String get exportUnit => 'Unit';
+
+  @override
+  String get exportCycle => 'Cycle';
+
+  @override
+  String get exportLap => 'Lap';
+
+  @override
+  String get exportStepNo => 'Step no.';
+
+  @override
+  String get exportStep => 'Step';
+
+  @override
+  String get exportStart => 'Start';
+
+  @override
+  String get exportEnd => 'End';
+
+  @override
+  String get exportDuration => 'Duration';
+
+  @override
+  String get exportType => 'Type';
+
+  @override
+  String get exportNote => 'Note';
+
+  @override
+  String get exportStepTime => 'Step time';
+
+  @override
+  String get exportSheetTimes => 'Times';
+
+  @override
+  String get exportTotal => 'Total';
+
+  @override
+  String get exportComplete => 'Complete';
+
+  @override
+  String get exportYes => 'yes';
+
+  @override
+  String get exportNo => 'no';
+
+  @override
+  String get exportRealTime => 'Real time';
+
+  @override
+  String get exportShare => 'Share';
+
+  @override
+  String get exportOutliers => 'Outliers removed';
 }

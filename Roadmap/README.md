@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-11 – Task_15 erledigt.
+Stand: 2026-11-11 – Task_16 erledigt.
 
 | Task | Titel | Status |
 |---|---|---|
@@ -33,7 +33,7 @@ Stand: 2026-11-11 – Task_15 erledigt.
 | 13 | Video-Zeitleiste flüssig & Marker ziehen | erledigt |
 | 14 | Modus "Einfach" | erledigt |
 | 15 | Modus "Schritt-Timer" | erledigt |
-| 16 | Export CSV + Excel | offen |
+| 16 | Export CSV + Excel | erledigt |
 | 17 | Export PDF-Bericht | offen |
 | 18 | Backup & Wiederherstellen | offen |
 
@@ -76,6 +76,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_12] Video:** Zeitbasis = Videoposition (`VideoClock`), Video wird nach `Documents/videos/` kopiert, `study.video_path` (Migration v6). Player/Picker hinter `VideoPlayback`/`VideoPicker`. Gleicher `RecordingController` wie live, mit `detectReboot: false`.
 - **[Task_13] Zeitleiste:** `PositionInterpolator` liefert die flüssige Videoposition (auch Zeitbasis für Marker). `VideoTimeline` zeichnet per `CustomPainter(repaint: ValueNotifier)`. Nur innere Marker sind verschiebbar.
 - **[Task_15] Schritt-Timer:** `StepGrid` + `RecordingController.selectStep`; Zeiten-Tab als flache Liste. Keine Zyklen (Zyklus 0).
+- **[Task_16] Export:** Flutter-freie Builder `buildCsv`/`buildXlsx` auf Basis von `ExportInput` (+ `StudyAnalysis`); UI `ExportButton`, Teilen über `FileSharer` (share_plus). Zeiten relativ zum ersten Start (Video: Videoposition).
 
 ## Auffälligkeiten & Details
 

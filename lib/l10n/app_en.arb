@@ -249,5 +249,40 @@
   "mark": "MARK",
   "markerBeforeLast": "This position is before the last marker. Move the video forward first.",
   "markerCannotMove": "A marker cannot be moved past its neighbours.",
-  "tabTimes": "Times"
+  "tabTimes": "Times",
+  "export": "Export",
+  "exportCsv": "CSV",
+  "exportCsvHint": "All times as a table, opens in Excel",
+  "exportXlsx": "Excel (.xlsx)",
+  "exportXlsxHint": "Times, cycle matrix and analysis",
+  "exportFailed": "Export failed: {error}",
+  "@exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "exportStudy": "Study",
+  "exportDescription": "Description",
+  "exportDate": "Exported",
+  "exportUnit": "Unit",
+  "exportCycle": "Cycle",
+  "exportLap": "Lap",
+  "exportStepNo": "Step no.",
+  "exportStep": "Step",
+  "exportStart": "Start",
+  "exportEnd": "End",
+  "exportDuration": "Duration",
+  "exportType": "Type",
+  "exportNote": "Note",
+  "exportStepTime": "Step time",
+  "exportSheetTimes": "Times",
+  "exportTotal": "Total",
+  "exportComplete": "Complete",
+  "exportYes": "yes",
+  "exportNo": "no",
+  "exportRealTime": "Real time",
+  "exportShare": "Share",
+  "exportOutliers": "Outliers removed"
 }

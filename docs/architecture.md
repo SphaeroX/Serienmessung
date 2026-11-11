@@ -12,7 +12,8 @@
 - `speech_to_text` – push-to-talk dictation of steps (platform recognizer, no own model).
 - `wakelock_plus` – keep the screen on while recording.
 - `video_player` – video playback (ExoPlayer) for video studies; `file_picker` – choosing videos (and backup files).
-- Further libraries (export) are chosen in their roadmap tasks and recorded here with the reason.
+- `excel` – .xlsx export; `share_plus` – system share sheet for export/backup files.
+- Further libraries (PDF) are chosen in their roadmap tasks and recorded here with the reason.
 
 ## Architecture
 

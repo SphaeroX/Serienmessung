@@ -526,4 +526,90 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get tabTimes => 'Zeiten';
+
+  @override
+  String get export => 'Exportieren';
+
+  @override
+  String get exportCsv => 'CSV';
+
+  @override
+  String get exportCsvHint => 'Alle Zeiten als Tabelle, öffnet in Excel';
+
+  @override
+  String get exportXlsx => 'Excel (.xlsx)';
+
+  @override
+  String get exportXlsxHint => 'Zeiten, Zyklen-Matrix und Auswertung';
+
+  @override
+  String exportFailed(String error) {
+    return 'Export fehlgeschlagen: $error';
+  }
+
+  @override
+  String get exportStudy => 'Studie';
+
+  @override
+  String get exportDescription => 'Beschreibung';
+
+  @override
+  String get exportDate => 'Exportiert';
+
+  @override
+  String get exportUnit => 'Einheit';
+
+  @override
+  String get exportCycle => 'Zyklus';
+
+  @override
+  String get exportLap => 'Runde';
+
+  @override
+  String get exportStepNo => 'Schritt-Nr.';
+
+  @override
+  String get exportStep => 'Schritt';
+
+  @override
+  String get exportStart => 'Beginn';
+
+  @override
+  String get exportEnd => 'Ende';
+
+  @override
+  String get exportDuration => 'Dauer';
+
+  @override
+  String get exportType => 'Typ';
+
+  @override
+  String get exportNote => 'Notiz';
+
+  @override
+  String get exportStepTime => 'Schrittzeit';
+
+  @override
+  String get exportSheetTimes => 'Zeiten';
+
+  @override
+  String get exportTotal => 'Summe';
+
+  @override
+  String get exportComplete => 'Vollständig';
+
+  @override
+  String get exportYes => 'ja';
+
+  @override
+  String get exportNo => 'nein';
+
+  @override
+  String get exportRealTime => 'Reale Zeit';
+
+  @override
+  String get exportShare => 'Anteil';
+
+  @override
+  String get exportOutliers => 'Entfernte Ausreißer';
 }

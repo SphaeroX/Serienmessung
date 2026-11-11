@@ -8,6 +8,7 @@ import '../../analysis/presentation/analysis_view.dart';
 import '../../core/clock.dart';
 import '../../core/providers.dart';
 import '../../core/time_format.dart';
+import '../../export/presentation/export_menu.dart';
 import '../../l10n/app_localizations.dart';
 import '../../recording/domain/key_interpreter.dart';
 import '../../recording/domain/recording_engine.dart';
@@ -229,6 +230,7 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
       appBar: AppBar(
         title: Text(c.study?.name ?? ''),
         actions: [
+          ExportButton(controller: controller),
           IconButton(
             key: const Key('chooseVideoAction'),
             tooltip: l.chooseVideo,
