@@ -6,6 +6,7 @@ import 'package:cyclescope/study/platform/speech_input.dart';
 import 'package:cyclescope/study/presentation/create_study_screen.dart';
 import 'package:cyclescope/study/presentation/dictation_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -67,7 +68,11 @@ void main() {
   setUp(() async => db = await openTestDatabase());
   tearDown(() => db.close());
 
-  Future<void> pump(WidgetTester tester, FakeSpeechInput speech) async {
+  Future<void> pump(
+    WidgetTester tester,
+    FakeSpeechInput speech, {
+    Locale locale = const Locale('en'),
+  }) async {
     usePhoneSize(tester);
     await tester.pumpWidget(
       ProviderScope(
@@ -76,7 +81,7 @@ void main() {
           speechInputProvider.overrideWithValue(speech),
           ...fakePlatformOverrides(),
         ],
-        child: localizedApp(const CreateStudyScreen()),
+        child: localizedApp(const CreateStudyScreen(), locale: locale),
       ),
     );
     await settle(tester);
@@ -110,6 +115,21 @@ void main() {
     expect(field.controller!.text, 'Pick\nTeil einlegen');
     expect(find.text('2 steps'), findsOneWidget);
   });
+
+  for (final locale in const [Locale('en'), Locale('de')]) {
+    testWidgets('the idle label fits on one line ($locale)', (tester) async {
+      await pump(tester, FakeSpeechInput(), locale: locale);
+      final label = find.descendant(
+        of: find.byKey(const Key('dictationButton')),
+        matching: find.byType(Text),
+      );
+      final paragraph = tester.renderObject<RenderParagraph>(label);
+      final lineHeight = paragraph.getFullHeightForCaret(
+        const TextPosition(offset: 0),
+      );
+      expect(paragraph.size.height, lessThan(lineHeight * 1.5));
+    });
+  }
 
   testWidgets('unavailable recognition shows a hint', (tester) async {
     await pump(tester, FakeSpeechInput(available: false));

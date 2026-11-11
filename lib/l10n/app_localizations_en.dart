@@ -472,7 +472,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get version => 'Version';
 
   @override
-  String get holdToDictate => 'Hold to dictate, release to stop';
+  String get holdToDictate => 'Hold to dictate';
 
   @override
   String get listening => 'Listening…';

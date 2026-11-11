@@ -887,7 +887,7 @@ abstract class AppLocalizations {
   /// No description provided for @holdToDictate.
   ///
   /// In en, this message translates to:
-  /// **'Hold to dictate, release to stop'**
+  /// **'Hold to dictate'**
   String get holdToDictate;
 
   /// No description provided for @listening.

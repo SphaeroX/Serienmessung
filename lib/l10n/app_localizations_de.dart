@@ -477,8 +477,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get version => 'Version';
 
   @override
-  String get holdToDictate =>
-      'Gedrückt halten zum Diktieren, loslassen zum Beenden';
+  String get holdToDictate => 'Zum Diktieren halten';
 
   @override
   String get listening => 'Höre zu…';
