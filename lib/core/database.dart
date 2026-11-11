@@ -47,6 +47,16 @@ final List<Migration> migrations = [
       'CREATE INDEX idx_measurement_study ON measurement(study_id, cycle)',
     );
   },
+  // v3: crash-safe engine state of running recordings.
+  (db) async {
+    await db.execute('''
+      CREATE TABLE run_state (
+        study_id INTEGER PRIMARY KEY REFERENCES study(id) ON DELETE CASCADE,
+        snapshot TEXT NOT NULL,
+        saved_clock_us INTEGER NOT NULL,
+        saved_at INTEGER NOT NULL
+      )''');
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.

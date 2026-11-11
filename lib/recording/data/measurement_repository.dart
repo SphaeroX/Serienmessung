@@ -19,6 +19,13 @@ class MeasurementRepository {
         'note': m.note,
       });
 
+  Future<void> updateNote(int id, String note) => _db.db.update(
+    'measurement',
+    {'note': note},
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+
   /// All measurements of a study in chronological order.
   Future<List<Measurement>> listForStudy(int studyId) async {
     final rows = await _db.db.query(

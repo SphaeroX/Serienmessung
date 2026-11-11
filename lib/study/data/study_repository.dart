@@ -53,11 +53,19 @@ class StudyRepository {
       'study',
       orderBy: 'last_active_at DESC, id DESC',
     );
+    final running = {
+      for (final r in await _db.db.query('run_state', columns: ['study_id']))
+        r['study_id'] as int,
+    };
     final result = <StudySummary>[];
     for (final row in rows) {
       final study = studyFromRow(row);
       result.add(
-        StudySummary(study: study, cycleCount: await countCycles(study)),
+        StudySummary(
+          study: study,
+          cycleCount: await countCycles(study),
+          isRecording: running.contains(study.id),
+        ),
       );
     }
     return result;

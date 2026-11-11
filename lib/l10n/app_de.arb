@@ -59,5 +59,15 @@
   "next": "NÄCHSTER",
   "lap": "RUNDE",
   "reset": "Zurücksetzen",
-  "resetConfirm": "Aufnahme beenden und den unvollendeten Schritt verwerfen?"
+  "resetConfirm": "Aufnahme beenden und den unvollendeten Schritt verwerfen?",
+  "specialShort": "HALTEN\nSONDERZEIT",
+  "specialTimeNote": "Notiz zur Sonderzeit",
+  "specialTimeNoteHint": "Was ist passiert? (optional)",
+  "save": "Speichern",
+  "rebootInterrupted": "Das Gerät wurde während der Aufnahme neu gestartet. Abgeschlossene Zeiten bleiben erhalten, der unvollendete Schritt wurde verworfen.",
+  "recordingInProgress": "Aufnahme läuft",
+  "recordingInProgressText": "„{name}“ wird noch aufgenommen. Fortsetzen?",
+  "open": "Öffnen",
+  "discard": "Verwerfen",
+  "recBadge": "REC"
 }

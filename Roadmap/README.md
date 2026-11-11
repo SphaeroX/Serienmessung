@@ -14,16 +14,16 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-11 – Task_03 erledigt.
+Stand: 2026-11-11 – Task_06 erledigt.
 
 | Task | Titel | Status |
 |---|---|---|
 | 01 | Durchstich: Studie anlegen & Liste | erledigt |
 | 02 | Mess-Engine Zeitstudie | erledigt |
 | 03 | Live-Messbildschirm mit Schritt-Overlay | erledigt |
-| 04 | Hardware-Tasten (Android) | offen |
-| 05 | Sonderzeit | offen |
-| 06 | Hintergrundbetrieb & Wiederherstellung | offen |
+| 04 | Hardware-Tasten (Android) | erledigt |
+| 05 | Sonderzeit | erledigt |
+| 06 | Hintergrundbetrieb & Wiederherstellung | erledigt |
 | 07 | Zyklen ansehen & löschen | offen |
 | 08 | Schrittdefinition nachträglich bearbeiten | offen |
 | 09 | Auswertung & reale Taktzeit | offen |
@@ -65,10 +65,16 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_03] Zeitformat:** `formatTime(micros, TimeUnit, decimals:, locale:)` in `lib/core/time_format.dart` kann bereits HM, s, mm:ss.SSS und TMU (Task_09 muss das nicht mehr bauen). Live-Anzeige: Stoppuhr groß + HM.
 - **[Task_03] Plattform:** Haptik und Wakelock hinter `DeviceFeedback` (`lib/core/platform.dart`); Tests nutzen `fakePlatformOverrides()` aus `tests/fakes/fake_platform.dart`.
 
+- **[Task_04] Hardware-Tasten:** eigener Platform Channel in `MainActivity.kt` (`dev.cyclescope/platform` Methoden, `dev.cyclescope/keys` Events). `KeyInterpreter` (reines Dart) setzt kurz/lang um. Erfassung nur auf dem Messbildschirm.
+- **[Task_05] Sonderzeit:** Taste halten (rückwirkend ab Key-Down) oder Bildschirm-Button "HALTEN SONDERZEIT". Eigene Zeile `kind = 'special'` mit `cycle`/`step_id` des unterbrochenen Schritts und optionaler Notiz.
+- **[Task_06] Wiederherstellung:** `run_state`-Tabelle (Migration v3) hält den Engine-Snapshot jeder laufenden Studie; Uhr-Offset = Android `elapsedRealtime`. Gerätereboot (Uhr kleiner als gespeichert) → Laufzustand verwerfen. Hintergrund: dauerhafte Benachrichtigung mit Chronometer und Aktionen statt Foreground-Service.
+
 ## Auffälligkeiten & Details
 
 Dinge, die global noch zu beachten sind: Besonderheiten, bekannte Einschränkungen, kleinere Details. Wird laufend ergänzt.
 
 - Fachbegriffe im Code (siehe `docs/conventions.md`): Studie = `Study`, Schritt = `StepDefinition`, Zyklus = `Cycle`, Messung = `Measurement`, Sonderzeit = `SpecialTime`, Taktzeit = `CycleTime`.
 - Mindest-Android-Version: API 26 gesetzt (Annahme, vom Nutzer nicht bestätigt).
+- **Sandbox-Hinweis (nur für die KI-Umgebung, in der die Tasks bisher liefen):** `flutter gen-l10n`/Build-Zeit-Generierung hatte dort keine Schreibrechte auf `lib/l10n`; die Agenten generierten in einem Temp-Ordner und kopierten. Auf normalen Rechnern funktioniert `flutter gen-l10n` direkt.
+- Lautstärketasten funktionieren nur bei eingeschaltetem Bildschirm mit geöffnetem Messbildschirm (Task_06).
 - Hardware-nahe Funktionen (Lautstärketasten, Mikrofon, Video, Hintergrunddienst) lassen sich nur teilweise automatisiert testen. Logik mit Fakes testen, zusätzlich eine kurze manuelle Geräteprüfung in den Task-Notizen protokollieren.

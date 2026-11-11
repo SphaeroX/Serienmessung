@@ -144,4 +144,43 @@ void main() {
     expect(restored.currentStepId, 12);
     expect(restored.currentStepElapsed(), 1 * s);
   });
+
+  test('special time pauses the step and is stored separately', () {
+    engine.start(cycle: 1);
+    clock.advanceSeconds(1);
+    engine.next(); // step 1 done, step 2 running
+    clock.advanceSeconds(5);
+    engine.beginSpecial();
+    expect(engine.status, EngineStatus.special);
+    clock.advanceSeconds(3);
+    expect(engine.specialElapsed(), 3 * s);
+    expect(engine.currentStepElapsed(), 5 * s);
+    final special = engine.endSpecial(note: 'jam').single;
+    clock.advanceSeconds(2);
+    final step = engine.next().single;
+
+    expect(special.kind, MeasurementKind.special);
+    expect(
+      (special.cycle, special.stepId, special.durationMicros, special.note),
+      (1, 12, 3 * s, 'jam'),
+    );
+    expect((step.stepId, step.durationMicros), (12, 7 * s));
+    expect(engine.currentStepId, 13);
+  });
+
+  test('special time starts at the given key-down time', () {
+    engine.start(cycle: 1);
+    clock.advanceSeconds(10);
+    engine.beginSpecial(at: clock.micros - 400000);
+    clock.advanceSeconds(1);
+    final special = engine.endSpecial().single;
+    expect(special.durationMicros, 1400000);
+    expect(engine.currentStepElapsed(), 10 * s - 400000);
+  });
+
+  test('next is ignored while a special time runs', () {
+    engine.start(cycle: 1);
+    engine.beginSpecial();
+    expect(engine.next(), isEmpty);
+  });
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,7 +8,10 @@ import '../../core/providers.dart';
 import '../../core/time_format.dart';
 import '../../l10n/app_localizations.dart';
 import '../../study/domain/study.dart';
+import '../domain/key_interpreter.dart';
 import '../domain/measurement.dart';
+import '../platform/hardware_keys.dart';
+import '../platform/recording_notifier.dart';
 import '../domain/recording_engine.dart';
 import 'recording_controller.dart';
 
@@ -25,6 +30,12 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
   late final RecordingController controller;
   late final Ticker _ticker;
   final _now = ValueNotifier<int>(0);
+  late final HardwareKeys _keys;
+  late final KeyInterpreter _interpreter;
+  StreamSubscription<KeyEventData>? _keySub;
+  late final RecordingNotifier _notifier;
+  StreamSubscription<String>? _actionSub;
+  bool _rebootShown = false;
 
   @override
   void initState() {
@@ -33,6 +44,7 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
       studyId: widget.studyId,
       studies: ref.read(studyRepositoryProvider),
       measurementRepo: ref.read(measurementRepositoryProvider),
+      runStates: ref.read(runStateRepositoryProvider),
       clock: ref.read(clockProvider),
       feedback: ref.read(deviceFeedbackProvider),
       wallClock: ref.read(wallClockProvider),
@@ -41,15 +53,74 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
     controller.load();
     _ticker = createTicker((_) => _now.value = controller.clock.nowMicros())
       ..start();
+    _keys = ref.read(hardwareKeysProvider);
+    _interpreter = KeyInterpreter(
+      onNext: (at) => controller.next(at: at),
+      onStartStop: (at) => controller.startStop(at: at),
+      onSpecialStart: (at) => controller.beginSpecial(at: at),
+      onSpecialEnd: (at) => controller.endSpecial(at: at),
+    );
+    _keySub = _keys.events.listen(_interpreter.handle);
+    _keys.setCapture(true);
+    _notifier = ref.read(recordingNotifierProvider);
+    _actionSub = _notifier.actions.listen((a) {
+      if (a == 'next') controller.next();
+      if (a == 'toggle') controller.startStop();
+    });
   }
 
   void _onChanged() {
     _now.value = controller.clock.nowMicros();
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    _updateNotification();
+    if (controller.interruptedByReboot && !_rebootShown) {
+      _rebootShown = true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).rebootInterrupted)),
+      );
+    }
+  }
+
+  /// Mirrors the recording state in the ongoing notification.
+  void _updateNotification() {
+    final c = controller;
+    if (!c.loaded) return;
+    if (c.status == EngineStatus.idle) {
+      _notifier.hide();
+      return;
+    }
+    final l = AppLocalizations.of(context);
+    final stepName = c.hasSteps
+        ? (c.currentStep?.name ?? '')
+        : l.lapNumber(c.displayCycle);
+    final mode = c.study?.mode;
+    final where = mode == StudyMode.timeStudy || mode == StudyMode.video
+        ? '$stepName · ${l.cycleNumber(c.displayCycle)}'
+        : stepName;
+    final text = switch (c.status) {
+      EngineStatus.paused => '${l.paused} – $where',
+      EngineStatus.special => '${l.specialTimeRunning} – $where',
+      _ => where,
+    };
+    _notifier.show(
+      RecordingNotice(
+        title: c.study?.name ?? l.appTitle,
+        text: text,
+        elapsedMicros: c.engine.currentStepElapsed(),
+        running: c.status == EngineStatus.running,
+        nextLabel: c.hasSteps ? l.next : l.lap,
+        toggleLabel: c.status == EngineStatus.paused ? l.resume : l.stop,
+      ),
+    );
   }
 
   @override
   void dispose() {
+    _actionSub?.cancel();
+    _keys.setCapture(false);
+    _keySub?.cancel();
+    _interpreter.dispose();
     _ticker.dispose();
     controller.feedback.setKeepScreenOn(false);
     controller.removeListener(_onChanged);
@@ -346,6 +417,7 @@ class LiveList extends StatelessWidget {
         return ListTile(
           key: const Key('liveRow'),
           dense: true,
+          onTap: special ? () => editSpecialNote(context, c, m) : null,
           contentPadding: EdgeInsets.zero,
           leading: SizedBox(
             width: 44,
@@ -390,6 +462,37 @@ class LiveList extends StatelessWidget {
       },
     );
   }
+}
+
+/// Lets the user add or change the note of a special time.
+Future<void> editSpecialNote(
+  BuildContext context,
+  RecordingController c,
+  Measurement m,
+) async {
+  final l = AppLocalizations.of(context);
+  final text = TextEditingController(text: m.note);
+  final note = await showDialog<String>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(l.specialTimeNote),
+      content: TextField(
+        key: const Key('noteField'),
+        controller: text,
+        autofocus: true,
+        decoration: InputDecoration(hintText: l.specialTimeNoteHint),
+        onSubmitted: (v) => Navigator.pop(ctx, v),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, text.text),
+          child: Text(l.save),
+        ),
+      ],
+    ),
+  );
+  if (note != null) await c.updateNote(m.id, note.trim());
 }
 
 /// Large buttons for one-handed operation.
@@ -438,6 +541,8 @@ class ControlBar extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
+            Expanded(child: _SpecialButton(controller: c)),
+            const SizedBox(width: 8),
             Expanded(
               flex: 2,
               child: _BigButton(
@@ -449,6 +554,60 @@ class ControlBar extends StatelessWidget {
                 onPressed: status == EngineStatus.running
                     ? () => c.next()
                     : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Records a special time while pressed (on-screen alternative to holding
+/// volume up).
+class _SpecialButton extends StatelessWidget {
+  const _SpecialButton({required this.controller});
+
+  final RecordingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final c = controller;
+    final active = c.status == EngineStatus.special;
+    final enabled = c.status == EngineStatus.running || active;
+    return Listener(
+      key: const Key('specialButton'),
+      onPointerDown: enabled ? (_) => c.beginSpecial() : null,
+      // Always queue the end: the begin may still be pending in the queue.
+      onPointerUp: enabled ? (_) => c.endSpecial() : null,
+      onPointerCancel: enabled ? (_) => c.endSpecial() : null,
+      child: Container(
+        height: 96,
+        decoration: BoxDecoration(
+          color: active
+              ? scheme.error
+              : (enabled
+                    ? scheme.errorContainer
+                    : scheme.surfaceContainerHighest),
+          borderRadius: BorderRadius.circular(28),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.pan_tool_alt,
+              size: 28,
+              color: active ? scheme.onError : scheme.onErrorContainer,
+            ),
+            Text(
+              l.specialShort,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: active ? scheme.onError : scheme.onErrorContainer,
               ),
             ),
           ],

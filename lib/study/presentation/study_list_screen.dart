@@ -12,26 +12,80 @@ import 'mode_texts.dart';
 typedef OpenStudy = Future<void> Function(BuildContext context, int studyId);
 
 /// Home screen: list of all studies.
-class StudyListScreen extends ConsumerWidget {
-  const StudyListScreen({super.key, this.onOpenStudy, this.onOpenSettings});
+///
+/// On first show it offers to continue a recording that was still running
+/// when the app was closed or killed.
+class StudyListScreen extends ConsumerStatefulWidget {
+  const StudyListScreen({
+    super.key,
+    this.onOpenStudy,
+    this.onOpenSettings,
+    this.checkActiveRuns = true,
+  });
 
   final OpenStudy? onOpenStudy;
   final VoidCallback? onOpenSettings;
+  final bool checkActiveRuns;
+
+  @override
+  ConsumerState<StudyListScreen> createState() => _StudyListScreenState();
+}
+
+class _StudyListScreenState extends ConsumerState<StudyListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.checkActiveRuns) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _offerResume());
+    }
+  }
+
+  Future<void> _offerResume() async {
+    final runs = await ref.read(runStateRepositoryProvider).activeRuns();
+    if (runs.isEmpty || !mounted) return;
+    final run = runs.first;
+    final l = AppLocalizations.of(context);
+    final open = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.recordingInProgress),
+        content: Text(l.recordingInProgressText(run.studyName)),
+        actions: [
+          TextButton(
+            key: const Key('discardRunButton'),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.discard),
+          ),
+          FilledButton(
+            key: const Key('openRunButton'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.open),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    if (open == true) {
+      if (widget.onOpenStudy != null) {
+        await widget.onOpenStudy!(context, run.studyId);
+      }
+    } else if (open == false) {
+      await ref.read(runStateRepositoryProvider).delete(run.studyId);
+      await ref.read(recordingNotifierProvider).hide();
+      ref.invalidate(studyListProvider);
+    }
+  }
 
   Future<void> _create(BuildContext context) async {
     final id = await Navigator.of(
       context,
     ).push<int>(MaterialPageRoute(builder: (_) => const CreateStudyScreen()));
-    if (id != null && context.mounted && onOpenStudy != null) {
-      await onOpenStudy!(context, id);
+    if (id != null && context.mounted && widget.onOpenStudy != null) {
+      await widget.onOpenStudy!(context, id);
     }
   }
 
-  Future<void> _confirmDelete(
-    BuildContext context,
-    WidgetRef ref,
-    Study study,
-  ) async {
+  Future<void> _confirmDelete(BuildContext context, Study study) async {
     final l = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
@@ -57,18 +111,19 @@ class StudyListScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final studies = ref.watch(studyListProvider);
+    final onOpenStudy = widget.onOpenStudy;
     return Scaffold(
       appBar: AppBar(
         title: Text(l.appTitle),
         actions: [
-          if (onOpenSettings != null)
+          if (widget.onOpenSettings != null)
             IconButton(
               key: const Key('settingsButton'),
               icon: const Icon(Icons.settings),
-              onPressed: onOpenSettings,
+              onPressed: widget.onOpenSettings,
             ),
         ],
       ),
@@ -95,9 +150,8 @@ class StudyListScreen extends ConsumerWidget {
                   summary: list[i],
                   onTap: onOpenStudy == null
                       ? null
-                      : () => onOpenStudy!(context, list[i].study.id),
-                  onLongPress: () =>
-                      _confirmDelete(context, ref, list[i].study),
+                      : () => onOpenStudy(context, list[i].study.id),
+                  onLongPress: () => _confirmDelete(context, list[i].study),
                 ),
               ),
       ),
@@ -177,6 +231,26 @@ class _StudyCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (summary.isRecording)
+                    Container(
+                      key: const Key('recBadge'),
+                      margin: const EdgeInsets.only(right: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.error,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        l.recBadge,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onError,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   const Icon(Icons.chevron_right),
                 ],
               ),

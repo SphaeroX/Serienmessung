@@ -111,4 +111,22 @@ void main() {
     await latest.close();
     await dir.delete(recursive: true);
   });
+
+  test('note of a special time is saved and loaded', () async {
+    final id = await repo.insert(
+      studyId,
+      const MeasurementDraft(
+        cycle: 1,
+        stepId: null,
+        kind: MeasurementKind.special,
+        startMicros: 0,
+        endMicros: 5,
+        durationMicros: 5,
+      ),
+    );
+    await repo.updateNote(id, 'Material missing');
+    final m = (await repo.listForStudy(studyId)).single;
+    expect(m.note, 'Material missing');
+    expect(m.isSpecial, isTrue);
+  });
 }

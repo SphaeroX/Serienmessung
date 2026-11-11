@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../recording/data/measurement_repository.dart';
+import '../recording/data/run_state_repository.dart';
+import '../recording/platform/hardware_keys.dart';
+import '../recording/platform/recording_notifier.dart';
 import '../study/data/study_repository.dart';
 import '../study/domain/study.dart';
 import 'clock.dart';
@@ -20,6 +23,10 @@ final measurementRepositoryProvider = Provider<MeasurementRepository>(
   (ref) => MeasurementRepository(ref.watch(databaseProvider)),
 );
 
+final runStateRepositoryProvider = Provider<RunStateRepository>(
+  (ref) => RunStateRepository(ref.watch(databaseProvider)),
+);
+
 /// Studies for the home screen. Invalidate after changes.
 final studyListProvider = FutureProvider<List<StudySummary>>(
   (ref) => ref.watch(studyRepositoryProvider).listStudies(),
@@ -35,4 +42,14 @@ final clockProvider = Provider<Clock>((ref) => MonotonicClock());
 /// Haptics and wake lock.
 final deviceFeedbackProvider = Provider<DeviceFeedback>(
   (ref) => SystemDeviceFeedback(),
+);
+
+/// Volume keys (Android platform channel).
+final hardwareKeysProvider = Provider<HardwareKeys>(
+  (ref) => AndroidHardwareKeys(ref.watch(clockProvider)),
+);
+
+/// Ongoing notification while recording.
+final recordingNotifierProvider = Provider<RecordingNotifier>(
+  (ref) => AndroidRecordingNotifier(),
 );

@@ -111,5 +111,22 @@
   "next": "NEXT",
   "lap": "LAP",
   "reset": "Reset",
-  "resetConfirm": "Stop recording and discard the unfinished step?"
+  "resetConfirm": "Stop recording and discard the unfinished step?",
+  "specialShort": "HOLD\nSPECIAL",
+  "specialTimeNote": "Special time note",
+  "specialTimeNoteHint": "What happened? (optional)",
+  "save": "Save",
+  "rebootInterrupted": "The device was restarted during the recording. Completed times are kept; the unfinished step was discarded.",
+  "recordingInProgress": "Recording in progress",
+  "recordingInProgressText": "\"{name}\" is still being recorded. Continue?",
+  "@recordingInProgressText": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "open": "Open",
+  "discard": "Discard",
+  "recBadge": "REC"
 }

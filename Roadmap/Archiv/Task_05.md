@@ -32,12 +32,12 @@ Unvorhergesehene Unterbrechungen werden als Sonderzeit erfasst: Solange Lautstä
 
 ## Umsetzungsschritte
 
-1. [ ] Datenmodell um Typ und Notiz erweitern.
-2. [ ] Engine-Zustand "Sonderzeit" mit rückwirkendem Start ab Key-Down umsetzen.
-3. [ ] Interpreter aus Task_04 erweitern: lang = Sonderzeit Start/Ende.
-4. [ ] UI-Anzeige und Live-Listen-Zeile umsetzen.
-5. [ ] Sonderzeit-Button auf dem Bildschirm.
-6. [ ] Notiz-Dialog umsetzen, Texte DE/EN.
+1. [x] Datenmodell um Typ und Notiz erweitern.
+2. [x] Engine-Zustand "Sonderzeit" mit rückwirkendem Start ab Key-Down umsetzen.
+3. [x] Interpreter aus Task_04 erweitern: lang = Sonderzeit Start/Ende.
+4. [x] UI-Anzeige und Live-Listen-Zeile umsetzen.
+5. [x] Sonderzeit-Button auf dem Bildschirm.
+6. [x] Notiz-Dialog umsetzen, Texte DE/EN.
 
 ## Tests
 
@@ -56,9 +56,9 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün.
-- [ ] Die Dauer des unterbrochenen Schritts enthält die Sonderzeit nicht (Test).
-- [ ] Manuell auf Gerät: Halten von Lautstärke hoch zeigt sofort sichtbar "Sonderzeit" an.
+- [x] Tests grün.
+- [x] Die Dauer des unterbrochenen Schritts enthält die Sonderzeit nicht (Test).
+- [x] Manuell auf Gerät: Halten von Lautstärke hoch zeigt sofort sichtbar "Sonderzeit" an.
 
 ## Offene Fragen / Annahmen
 
@@ -72,19 +72,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Sonderzeit per gehaltener Lautstärke-hoch-Taste (rückwirkend ab Key-Down) und per Bildschirm-Button "HALTEN SONDERZEIT" (läuft genau solange gedrückt, ohne Schwelle). Overlay färbt sich rot ("SONDERZEIT" + laufende Zeit), der unterbrochene Schritt bleibt angezeigt und läuft nach dem Loslassen weiter. Sonderzeit = eigene Zeile (rot) in der Live-Liste; Tippen öffnet einen Notiz-Dialog (`MeasurementRepository.updateNote`). Keine DB-Migration nötig (Spalten `kind`/`note` existieren seit v2).
+- **Learnings & Stolpersteine:** Aktionen laufen über eine Warteschlange im Controller – beim Loslassen des Buttons daher immer `endSpecial()` einreihen, auch wenn der Status noch nicht "special" ist (sonst bleibt eine Sonderzeit bei sehr kurzem Tippen hängen).
+- **Wichtige Entscheidungen und ihre Gründe:** Offene Frage entschieden: Sonderzeit gehört zum Zyklus und Schritt, in dem sie begann (`cycle`, `step_id` des unterbrochenen Schritts). Während der Sonderzeit sind Weiter und Start/Stopp gesperrt.
+- **Auswirkungen auf Folge-Tasks:** Task_07: Sonderzeiten in der Zyklen-Ansicht als eigene Einträge zeigen, Notiz dort ebenfalls bearbeitbar (`editSpecialNote` in `recording_screen.dart` wiederverwenden). Task_09: Sonderzeiten über `kind = 'special'` ausschließen und separat summieren.
+- **Hinweise zu Tests und Befehlen:** Engine-Tests (Schritt 7 s + Sonderzeit 3 s, Key-Down-Start), Repository-Test für Notizen, Widget-Tests für Taste halten (echter 400-ms-Timer via `tester.pump(450 ms)`), Button halten und Notiz bearbeiten.

@@ -217,4 +217,37 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get resetConfirm =>
       'Aufnahme beenden und den unvollendeten Schritt verwerfen?';
+
+  @override
+  String get specialShort => 'HALTEN\nSONDERZEIT';
+
+  @override
+  String get specialTimeNote => 'Notiz zur Sonderzeit';
+
+  @override
+  String get specialTimeNoteHint => 'Was ist passiert? (optional)';
+
+  @override
+  String get save => 'Speichern';
+
+  @override
+  String get rebootInterrupted =>
+      'Das Gerät wurde während der Aufnahme neu gestartet. Abgeschlossene Zeiten bleiben erhalten, der unvollendete Schritt wurde verworfen.';
+
+  @override
+  String get recordingInProgress => 'Aufnahme läuft';
+
+  @override
+  String recordingInProgressText(String name) {
+    return '„$name“ wird noch aufgenommen. Fortsetzen?';
+  }
+
+  @override
+  String get open => 'Öffnen';
+
+  @override
+  String get discard => 'Verwerfen';
+
+  @override
+  String get recBadge => 'REC';
 }

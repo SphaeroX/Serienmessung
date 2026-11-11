@@ -457,6 +457,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stop recording and discard the unfinished step?'**
   String get resetConfirm;
+
+  /// No description provided for @specialShort.
+  ///
+  /// In en, this message translates to:
+  /// **'HOLD\nSPECIAL'**
+  String get specialShort;
+
+  /// No description provided for @specialTimeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Special time note'**
+  String get specialTimeNote;
+
+  /// No description provided for @specialTimeNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What happened? (optional)'**
+  String get specialTimeNoteHint;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @rebootInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'The device was restarted during the recording. Completed times are kept; the unfinished step was discarded.'**
+  String get rebootInterrupted;
+
+  /// No description provided for @recordingInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording in progress'**
+  String get recordingInProgress;
+
+  /// No description provided for @recordingInProgressText.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{name}\" is still being recorded. Continue?'**
+  String recordingInProgressText(String name);
+
+  /// No description provided for @open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
+  /// No description provided for @recBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'REC'**
+  String get recBadge;
 }
 
 class _AppLocalizationsDelegate

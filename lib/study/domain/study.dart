@@ -56,10 +56,17 @@ class StepDefinition {
 
 /// Study plus figures shown on the study list card.
 class StudySummary {
-  const StudySummary({required this.study, required this.cycleCount});
+  const StudySummary({
+    required this.study,
+    required this.cycleCount,
+    this.isRecording = false,
+  });
 
   final Study study;
 
   /// Number of cycles (laps / measurements for modes without cycles).
   final int cycleCount;
+
+  /// A recording of this study is in progress (saved run state).
+  final bool isRecording;
 }

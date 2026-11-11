@@ -213,4 +213,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resetConfirm => 'Stop recording and discard the unfinished step?';
+
+  @override
+  String get specialShort => 'HOLD\nSPECIAL';
+
+  @override
+  String get specialTimeNote => 'Special time note';
+
+  @override
+  String get specialTimeNoteHint => 'What happened? (optional)';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get rebootInterrupted =>
+      'The device was restarted during the recording. Completed times are kept; the unfinished step was discarded.';
+
+  @override
+  String get recordingInProgress => 'Recording in progress';
+
+  @override
+  String recordingInProgressText(String name) {
+    return '\"$name\" is still being recorded. Continue?';
+  }
+
+  @override
+  String get open => 'Open';
+
+  @override
+  String get discard => 'Discard';
+
+  @override
+  String get recBadge => 'REC';
 }
