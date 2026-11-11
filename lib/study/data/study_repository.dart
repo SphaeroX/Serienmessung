@@ -23,6 +23,8 @@ class StudyRepository {
         'created_at': now.millisecondsSinceEpoch,
         'last_active_at': now.millisecondsSinceEpoch,
         'cycle_time_method': ?cycleTimeMethod,
+        // Only written when set; the column defaults to 0.
+        'steps_open': ?(mode == StudyMode.video && steps.isEmpty ? 1 : null),
       });
       for (var i = 0; i < steps.length; i++) {
         await txn.insert('step_definition', {
@@ -171,6 +173,33 @@ class StudyRepository {
     }
   });
 
+  /// Ends the step definition of a video study (first cycle closed).
+  Future<void> closeSteps(int id) => _db.db.update(
+    'study',
+    {'steps_open': 0},
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+
+  /// Creates a live time study with the steps of study [id] (e.g. steps
+  /// defined in a video study) and returns its id.
+  Future<int> copyAsTimeStudy(
+    int id, {
+    required String name,
+    required DateTime now,
+  }) async {
+    final source = await getStudy(id);
+    final steps = await getSteps(id);
+    return createStudy(
+      name: name,
+      description: source?.description ?? '',
+      mode: StudyMode.timeStudy,
+      steps: [for (final s in steps) s.name],
+      now: now,
+      cycleTimeMethod: source?.cycleTimeMethod,
+    );
+  }
+
   Future<void> setVideoPath(int id, String path) => _db.db.update(
     'study',
     {'video_path': path},
@@ -205,6 +234,7 @@ class StudyRepository {
     ),
     cycleTimeMethod: r['cycle_time_method'] as String?,
     videoPath: r['video_path'] as String?,
+    stepsOpen: (r['steps_open'] as int? ?? 0) == 1,
   );
 
   static StepDefinition stepFromRow(Map<String, Object?> r) => StepDefinition(

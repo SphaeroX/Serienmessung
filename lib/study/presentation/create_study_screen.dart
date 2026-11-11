@@ -54,7 +54,7 @@ class _CreateStudyScreenState extends ConsumerState<CreateStudyScreen> {
       name: _name.text.trim(),
       description: _description.text.trim(),
       mode: _mode,
-      steps: _mode.usesSteps ? parseSteps(_steps.text) : const [],
+      steps: _mode.definesStepsUpfront ? parseSteps(_steps.text) : const [],
       now: ref.read(wallClockProvider)(),
       cycleTimeMethod: ref.read(settingsProvider).defaultMethod.name,
     );
@@ -163,36 +163,28 @@ class _CreateStudyScreenState extends ConsumerState<CreateStudyScreen> {
                   ],
                 ),
               ),
-              if (_mode.usesSteps) ...[
+              if (_mode.definesStepsUpfront) ...[
                 const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        key: const Key('stepsField'),
-                        controller: _steps,
-                        minLines: 5,
-                        maxLines: 12,
-                        keyboardType: TextInputType.multiline,
-                        onChanged: (_) => setState(() {}),
-                        decoration: InputDecoration(
-                          labelText: l.stepsLabel,
-                          alignLabelWithHint: true,
-                          border: const OutlineInputBorder(),
-                          helperText: l.stepsCount(stepCount),
-                        ),
-                        validator: (v) => parseSteps(v ?? '').isEmpty
-                            ? l.stepsRequired
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    DictationButton(
-                      controller: _steps,
-                      onInserted: () => setState(() {}),
-                    ),
-                  ],
+                TextFormField(
+                  key: const Key('stepsField'),
+                  controller: _steps,
+                  minLines: 5,
+                  maxLines: 12,
+                  keyboardType: TextInputType.multiline,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    labelText: l.stepsLabel,
+                    alignLabelWithHint: true,
+                    border: const OutlineInputBorder(),
+                    helperText: l.stepsCount(stepCount),
+                  ),
+                  validator: (v) =>
+                      parseSteps(v ?? '').isEmpty ? l.stepsRequired : null,
+                ),
+                const SizedBox(height: 8),
+                DictationButton(
+                  controller: _steps,
+                  onInserted: () => setState(() {}),
                 ),
               ],
               const SizedBox(height: 24),

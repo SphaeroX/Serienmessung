@@ -71,6 +71,12 @@ final List<Migration> migrations = [
   (db) async {
     await db.execute('ALTER TABLE study ADD COLUMN video_path TEXT');
   },
+  // v7: video studies define their steps while marking the first cycle.
+  (db) async {
+    await db.execute(
+      'ALTER TABLE study ADD COLUMN steps_open INTEGER NOT NULL DEFAULT 0',
+    );
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.

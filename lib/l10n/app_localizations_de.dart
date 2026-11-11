@@ -63,11 +63,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get modeVideoDesc =>
-      'Video importieren und Schritte bei der Wiedergabe markieren';
+      'Video importieren und die Schritte beim Markieren festlegen';
 
   @override
   String get modeVideoInfo =>
-      'Importiere ein aufgenommenes Video und spiele es ab. Markiere jeden Schritt, sobald er im Bild erscheint, um die Studie direkt aus dem Material zu erstellen – ohne Live-Messung.';
+      'Importiere ein aufgenommenes Video und spiele es ab. Schritte musst du vorher nicht anlegen: Im ersten Zyklus beginnt jeder Marker einen neuen Schritt. Am Ende des Zyklus „Zyklus fertig“ tippen und die Schritte benennen. Weitere Marker folgen dann Zyklus für Zyklus diesen Schritten. Anschließend kannst du die Schritte für eine Live-Zeitstudie übernehmen.';
 
   @override
   String get modeBadgeSimple => 'EINFACH';
@@ -680,4 +680,35 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get restoreTooNew =>
       'Dieses Backup stammt aus einer neueren App-Version. Bitte die App aktualisieren.';
+
+  @override
+  String newStepName(int number) {
+    return 'Schritt $number';
+  }
+
+  @override
+  String get closeCycle => 'Zyklus fertig';
+
+  @override
+  String get definingSteps =>
+      'Jeder Marker legt einen Schritt an. Am Ende des Zyklus „Zyklus fertig“ tippen.';
+
+  @override
+  String get firstMarkerHint =>
+      'Ersten Marker dort setzen, wo der erste Schritt beginnt';
+
+  @override
+  String get nameStepsTitle => 'Schritte benennen';
+
+  @override
+  String get useAsTimeStudy => 'Schritte als Live-Zeitstudie übernehmen';
+
+  @override
+  String liveStudyName(String name) {
+    return '$name (live)';
+  }
+
+  @override
+  String get closeCycleRejected =>
+      'Der Zyklus kann nur nach dem letzten Marker im letzten Schritt abgeschlossen werden.';
 }

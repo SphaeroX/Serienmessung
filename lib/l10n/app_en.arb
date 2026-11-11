@@ -16,8 +16,8 @@
   "modeStepTimerDesc": "Tap steps in any order, time per step",
   "modeStepTimerInfo": "Tap any step to start timing it. The time always runs for the step you tapped last. Useful when the order of work varies.",
   "modeVideo": "Video study",
-  "modeVideoDesc": "Import a video and mark steps during playback",
-  "modeVideoInfo": "Import a recorded video and play it back. Mark every step as it appears in the picture to build your study from the footage, without live timing.",
+  "modeVideoDesc": "Import a video and define the steps while marking it",
+  "modeVideoInfo": "Import a recorded video and play it back. No steps are needed beforehand: in the first cycle every marker starts a new step. Tap “Cycle complete” at the end of the cycle and name the steps. Further markers then follow these steps cycle by cycle. Afterwards you can use the steps for a live time study.",
   "modeBadgeSimple": "SIMPLE",
   "modeBadgeTimeStudy": "TIME STUDY",
   "modeBadgeStepTimer": "STEP TIMER",
@@ -323,5 +323,27 @@
   },
   "restoreVideoHint": "Video studies: choose the video again on this device.",
   "restoreInvalid": "This is not a valid backup file. Nothing was changed.",
-  "restoreTooNew": "This backup was created by a newer app version. Please update the app."
+  "restoreTooNew": "This backup was created by a newer app version. Please update the app.",
+  "newStepName": "Step {number}",
+  "@newStepName": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "closeCycle": "Cycle complete",
+  "definingSteps": "Every marker adds a step. Tap “Cycle complete” at the end of the cycle.",
+  "firstMarkerHint": "Set the first marker where the first step begins",
+  "nameStepsTitle": "Name the steps",
+  "useAsTimeStudy": "Use steps for a live time study",
+  "liveStudyName": "{name} (live)",
+  "@liveStudyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "closeCycleRejected": "The cycle can only be completed after the last marker, on the last step."
 }

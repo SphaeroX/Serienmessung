@@ -18,7 +18,7 @@ import 'app_localizations_en.dart';
 /// `supportedLocales` list. For example:
 ///
 /// ```dart
-/// import 'out/app_localizations.dart';
+/// import 'l10n/app_localizations.dart';
 ///
 /// return MaterialApp(
 ///   localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -197,13 +197,13 @@ abstract class AppLocalizations {
   /// No description provided for @modeVideoDesc.
   ///
   /// In en, this message translates to:
-  /// **'Import a video and mark steps during playback'**
+  /// **'Import a video and define the steps while marking it'**
   String get modeVideoDesc;
 
   /// No description provided for @modeVideoInfo.
   ///
   /// In en, this message translates to:
-  /// **'Import a recorded video and play it back. Mark every step as it appears in the picture to build your study from the footage, without live timing.'**
+  /// **'Import a recorded video and play it back. No steps are needed beforehand: in the first cycle every marker starts a new step. Tap “Cycle complete” at the end of the cycle and name the steps. Further markers then follow these steps cycle by cycle. Afterwards you can use the steps for a live time study.'**
   String get modeVideoInfo;
 
   /// No description provided for @modeBadgeSimple.
@@ -1255,6 +1255,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This backup was created by a newer app version. Please update the app.'**
   String get restoreTooNew;
+
+  /// No description provided for @newStepName.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {number}'**
+  String newStepName(int number);
+
+  /// No description provided for @closeCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle complete'**
+  String get closeCycle;
+
+  /// No description provided for @definingSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Every marker adds a step. Tap “Cycle complete” at the end of the cycle.'**
+  String get definingSteps;
+
+  /// No description provided for @firstMarkerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the first marker where the first step begins'**
+  String get firstMarkerHint;
+
+  /// No description provided for @nameStepsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Name the steps'**
+  String get nameStepsTitle;
+
+  /// No description provided for @useAsTimeStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Use steps for a live time study'**
+  String get useAsTimeStudy;
+
+  /// No description provided for @liveStudyName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (live)'**
+  String liveStudyName(String name);
+
+  /// No description provided for @closeCycleRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'The cycle can only be completed after the last marker, on the last step.'**
+  String get closeCycleRejected;
 }
 
 class _AppLocalizationsDelegate

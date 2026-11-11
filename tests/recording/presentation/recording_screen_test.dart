@@ -263,4 +263,33 @@ void main() {
     await tap(tester, 'nextButton');
     expect(find.text('3.0 s'), findsWidgets);
   });
+
+  testWidgets('header and control bar are only shown on the live tab', (
+    tester,
+  ) async {
+    await pumpScreen(tester);
+    expect(find.byKey(const Key('stepTime')), findsOneWidget);
+    expect(find.byKey(const Key('stepOverlay')), findsOneWidget);
+    expect(find.byKey(const Key('startStopButton')), findsOneWidget);
+
+    for (final tab in ['cyclesTab', 'analysisTab']) {
+      await tester.tap(find.byKey(Key(tab)));
+      await pumpFrames(tester);
+      await settle(tester);
+      expect(find.byKey(const Key('stepTime')), findsNothing, reason: tab);
+      expect(find.byKey(const Key('stepOverlay')), findsNothing, reason: tab);
+      expect(
+        find.byKey(const Key('startStopButton')),
+        findsNothing,
+        reason: tab,
+      );
+    }
+
+    await tester.tap(find.byKey(const Key('liveTab')));
+    await pumpFrames(tester);
+    await settle(tester);
+    expect(find.byKey(const Key('stepTime')), findsOneWidget);
+    expect(find.byKey(const Key('stepOverlay')), findsOneWidget);
+    expect(find.byKey(const Key('startStopButton')), findsOneWidget);
+  });
 }

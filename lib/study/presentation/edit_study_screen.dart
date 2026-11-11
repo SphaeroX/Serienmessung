@@ -236,27 +236,33 @@ class _EditStudyScreenState extends ConsumerState<EditStudyScreen> {
                     top: false,
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 4, 8, 8),
-                      child: Row(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Expanded(
-                            child: TextField(
-                              key: const Key('newStepField'),
-                              controller: _newStep,
-                              decoration: InputDecoration(
-                                hintText: l.newStepHint,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  key: const Key('newStepField'),
+                                  controller: _newStep,
+                                  decoration: InputDecoration(
+                                    hintText: l.newStepHint,
+                                  ),
+                                  onSubmitted: (_) => _add(),
+                                ),
                               ),
-                              onSubmitted: (_) => _add(),
-                            ),
+                              IconButton(
+                                key: const Key('addStepButton'),
+                                tooltip: l.addStep,
+                                icon: const Icon(Icons.add_circle),
+                                onPressed: _add,
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 4),
                           DictationButton(
                             controller: _newStep,
                             multiline: false,
-                          ),
-                          IconButton(
-                            key: const Key('addStepButton'),
-                            tooltip: l.addStep,
-                            icon: const Icon(Icons.add_circle),
-                            onPressed: _add,
                           ),
                         ],
                       ),

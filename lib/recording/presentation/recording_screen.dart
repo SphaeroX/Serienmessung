@@ -31,8 +31,13 @@ class RecordingScreen extends ConsumerStatefulWidget {
 }
 
 class _RecordingScreenState extends ConsumerState<RecordingScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final RecordingController controller;
+  late final TabController _tabs;
+
+  /// Live timers and controls are only shown on the live tab; the cycles
+  /// and analysis tabs get the full screen height.
+  bool _onLiveTab = true;
   late final Ticker _ticker;
   final _now = ValueNotifier<int>(0);
   late final HardwareKeys _keys;
@@ -62,6 +67,7 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
       ..displayUnit = settings.defaultUnit;
     controller.addListener(_onChanged);
     controller.load();
+    _tabs = TabController(length: 3, vsync: this)..addListener(_onTabChanged);
     _ticker = createTicker((_) => _now.value = controller.clock.nowMicros())
       ..start();
     _keys = ref.read(hardwareKeysProvider);
@@ -82,6 +88,11 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
       if (a == 'next') controller.next();
       if (a == 'toggle') controller.startStop();
     });
+  }
+
+  void _onTabChanged() {
+    final live = _tabs.index == 0;
+    if (live != _onLiveTab) setState(() => _onLiveTab = live);
   }
 
   void _onChanged() {
@@ -137,6 +148,7 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
     _keySub?.cancel();
     _interpreter.dispose();
     _ticker.dispose();
+    _tabs.dispose();
     controller.feedback.setKeepScreenOn(false);
     controller.removeListener(_onChanged);
     controller.dispose();
@@ -203,43 +215,72 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
       ),
       body: !c.loaded
           ? const Center(child: CircularProgressIndicator())
-          : DefaultTabController(
-              length: 3,
-              child: Column(
-                children: [
-                  _TimerTiles(controller: c, now: _now),
-                  StepOverlay(controller: c, now: _now),
-                  TabBar(
-                    tabs: [
-                      Tab(key: const Key('liveTab'), text: l.tabLive),
-                      Tab(
-                        key: const Key('cyclesTab'),
-                        text: switch (c.study?.mode) {
-                          StudyMode.stepTimer => l.tabTimes,
-                          StudyMode.simple => l.tabLaps,
-                          _ => l.tabCycles,
-                        },
-                      ),
-                      Tab(key: const Key('analysisTab'), text: l.tabAnalysis),
+          : Column(
+              children: [
+                _Collapsible(
+                  visible: _onLiveTab,
+                  child: Column(
+                    children: [
+                      _TimerTiles(controller: c, now: _now),
+                      StepOverlay(controller: c, now: _now),
                     ],
                   ),
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        LiveList(controller: c),
-                        CyclesView(controller: c),
-                        AnalysisView(controller: c),
-                      ],
+                ),
+                TabBar(
+                  controller: _tabs,
+                  tabs: [
+                    Tab(key: const Key('liveTab'), text: l.tabLive),
+                    Tab(
+                      key: const Key('cyclesTab'),
+                      text: switch (c.study?.mode) {
+                        StudyMode.stepTimer => l.tabTimes,
+                        StudyMode.simple => l.tabLaps,
+                        _ => l.tabCycles,
+                      },
                     ),
+                    Tab(key: const Key('analysisTab'), text: l.tabAnalysis),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    controller: _tabs,
+                    children: [
+                      LiveList(controller: c),
+                      CyclesView(controller: c),
+                      AnalysisView(controller: c),
+                    ],
                   ),
-                  if (c.study?.mode == StudyMode.stepTimer)
-                    StepGrid(controller: c),
-                  ControlBar(controller: c),
-                ],
-              ),
+                ),
+                _Collapsible(
+                  visible: _onLiveTab,
+                  child: Column(
+                    children: [
+                      if (c.study?.mode == StudyMode.stepTimer)
+                        StepGrid(controller: c),
+                      ControlBar(controller: c),
+                    ],
+                  ),
+                ),
+              ],
             ),
     );
   }
+}
+
+/// Slides [child] in and out; hidden children are removed from the tree.
+class _Collapsible extends StatelessWidget {
+  const _Collapsible({required this.visible, required this.child});
+
+  final bool visible;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => AnimatedSize(
+    duration: const Duration(milliseconds: 200),
+    curve: Curves.easeInOut,
+    alignment: Alignment.topCenter,
+    child: visible ? child : const SizedBox(width: double.infinity),
+  );
 }
 
 /// Total time and current step/lap time tiles.
@@ -371,7 +412,9 @@ class StepOverlay extends StatelessWidget {
     };
     final step = c.currentStep;
     final mode = c.study?.mode ?? StudyMode.timeStudy;
-    final name = c.hasSteps ? (step?.name ?? '') : l.lapNumber(c.displayCycle);
+    final name = c.hasSteps
+        ? (step?.name ?? (c.stepsOpen ? l.firstMarkerHint : ''))
+        : l.lapNumber(c.displayCycle);
     final statusText = switch (status) {
       EngineStatus.idle => l.ready,
       EngineStatus.paused => l.paused,
@@ -423,7 +466,9 @@ class StepOverlay extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            if (c.hasSteps && mode != StudyMode.stepTimer) ...[
+            if (c.stepsOpen)
+              Text(l.definingSteps, key: const Key('definingSteps'))
+            else if (c.hasSteps && mode != StudyMode.stepTimer) ...[
               Text(
                 l.stepOf(c.currentStepIndex + 1, c.steps.length),
                 key: const Key('stepPosition'),

@@ -163,4 +163,24 @@ void main() {
       ),
     );
   });
+
+  test('a video study still defining its steps keeps that state', () async {
+    final id = await StudyRepository(source).createStudy(
+      name: 'Open video',
+      mode: StudyMode.video,
+      steps: const [],
+      now: DateTime(2026, 11, 11, 12),
+    );
+    expect((await StudyRepository(source).getStudy(id))!.stepsOpen, isTrue);
+    final json = await BackupService(source).exportJson(now: DateTime(2026));
+    await BackupService(target).importJson(json, replace: false);
+    final restored = (await StudyRepository(
+      target,
+    ).listStudies()).map((s) => s.study).toList();
+    expect(
+      restored.singleWhere((s) => s.name == 'Open video').stepsOpen,
+      isTrue,
+    );
+    expect(restored.singleWhere((s) => s.name == 'Video').stepsOpen, isFalse);
+  });
 }

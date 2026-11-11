@@ -1,6 +1,7 @@
 import 'package:cyclescope/core/database.dart';
 import 'package:cyclescope/core/providers.dart';
 import 'package:cyclescope/study/data/study_repository.dart';
+import 'package:cyclescope/study/domain/study.dart';
 import 'package:cyclescope/study/presentation/create_study_screen.dart';
 import 'package:cyclescope/study/presentation/study_list_screen.dart';
 import 'package:flutter/material.dart';
@@ -88,5 +89,26 @@ void main() {
 
     expect(find.text('Conveyor 200'), findsOneWidget);
     expect(find.text('TIME STUDY'), findsOneWidget);
+  });
+
+  testWidgets('a video study is created without steps', (tester) async {
+    await tester.pumpWidget(app(const CreateStudyScreen()));
+    await settle(tester);
+    await tester.enterText(find.byKey(const Key('studyNameField')), 'Clip');
+    await tapVisible(tester, find.text('Video study').first);
+    await tester.pump();
+    expect(find.byKey(const Key('stepsField')), findsNothing);
+    expect(find.byKey(const Key('dictationButton')), findsNothing);
+
+    await tapVisible(tester, find.byKey(const Key('createStudyButton')));
+    await settle(tester);
+    final repo = StudyRepository(db);
+    final list = (await tester.runAsync(repo.listStudies))!;
+    expect(list.single.study.mode, StudyMode.video);
+    expect(list.single.study.stepsOpen, isTrue);
+    expect(
+      await tester.runAsync(() => repo.getSteps(list.single.study.id)),
+      isEmpty,
+    );
   });
 }

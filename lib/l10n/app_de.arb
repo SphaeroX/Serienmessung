@@ -16,8 +16,8 @@
   "modeStepTimerDesc": "Schritte in beliebiger Reihenfolge antippen, Zeit pro Schritt",
   "modeStepTimerInfo": "Tippe einen beliebigen Schritt an, um seine Zeit zu messen. Die Zeit läuft immer für den zuletzt angetippten Schritt. Praktisch, wenn die Reihenfolge variiert.",
   "modeVideo": "Video-Studie",
-  "modeVideoDesc": "Video importieren und Schritte bei der Wiedergabe markieren",
-  "modeVideoInfo": "Importiere ein aufgenommenes Video und spiele es ab. Markiere jeden Schritt, sobald er im Bild erscheint, um die Studie direkt aus dem Material zu erstellen – ohne Live-Messung.",
+  "modeVideoDesc": "Video importieren und die Schritte beim Markieren festlegen",
+  "modeVideoInfo": "Importiere ein aufgenommenes Video und spiele es ab. Schritte musst du vorher nicht anlegen: Im ersten Zyklus beginnt jeder Marker einen neuen Schritt. Am Ende des Zyklus „Zyklus fertig“ tippen und die Schritte benennen. Weitere Marker folgen dann Zyklus für Zyklus diesen Schritten. Anschließend kannst du die Schritte für eine Live-Zeitstudie übernehmen.",
   "modeBadgeSimple": "EINFACH",
   "modeBadgeTimeStudy": "ZEITSTUDIE",
   "modeBadgeStepTimer": "SCHRITT-TIMER",
@@ -192,5 +192,13 @@
   "restoreResult": "{imported} importiert, {skipped} bereits vorhanden.",
   "restoreVideoHint": "Video-Studien: Video auf diesem Gerät erneut auswählen.",
   "restoreInvalid": "Das ist keine gültige Backup-Datei. Es wurde nichts geändert.",
-  "restoreTooNew": "Dieses Backup stammt aus einer neueren App-Version. Bitte die App aktualisieren."
+  "restoreTooNew": "Dieses Backup stammt aus einer neueren App-Version. Bitte die App aktualisieren.",
+  "newStepName": "Schritt {number}",
+  "closeCycle": "Zyklus fertig",
+  "definingSteps": "Jeder Marker legt einen Schritt an. Am Ende des Zyklus „Zyklus fertig“ tippen.",
+  "firstMarkerHint": "Ersten Marker dort setzen, wo der erste Schritt beginnt",
+  "nameStepsTitle": "Schritte benennen",
+  "useAsTimeStudy": "Schritte als Live-Zeitstudie übernehmen",
+  "liveStudyName": "{name} (live)",
+  "closeCycleRejected": "Der Zyklus kann nur nach dem letzten Marker im letzten Schritt abgeschlossen werden."
 }

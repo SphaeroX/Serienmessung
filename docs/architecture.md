@@ -32,6 +32,8 @@
 - Platform side effects (haptics, wake lock, later keys/notifications) go through interfaces in `lib/core/platform.dart`, provided via `deviceFeedbackProvider` etc.
 - Settings: `settingsProvider` (Riverpod `Notifier`) backed by the `settings` table; loaded in `main()` and injected via `initialSettingsProvider`. Providers that depend on settings (`deviceFeedbackProvider`, `recordingNotifierProvider`) watch it.
 - Wall-clock timestamps (created/active) come from `wallClockProvider`, never directly from `DateTime.now()` in widgets.
+- Video studies without steps have `study.steps_open = 1` (migration v7): `RecordingController.mark()` appends a step (and rebuilds the engine from its snapshot) while on the last step; `closeCycle()` wraps to the next cycle and clears the flag (`StudyRepository.closeSteps`). `StudyMode.definesStepsUpfront` says which modes ask for steps on creation.
+- Dictation (`DictationButton`) queues recognizer calls: a release during start stops once started, a new press waits for the previous session's result. `SystemSpeechInput.stop()` waits (bounded) for the recognizer's "done" status, because Android's recognizer is busy until then.
 
 ## Environment
 

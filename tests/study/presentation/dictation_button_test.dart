@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cyclescope/core/database.dart';
 import 'package:cyclescope/core/providers.dart';
 import 'package:cyclescope/study/platform/speech_input.dart';
@@ -19,13 +21,26 @@ class FakeSpeechInput implements SpeechInput {
   String text = '';
   void Function(String)? _onText;
 
+  /// When set, [start] waits for it (a slow recognizer start).
+  Completer<void>? startGate;
+
+  /// When set, [stop] waits for it (the final result arrives late).
+  Completer<void>? stopGate;
+
+  bool _stopping = false;
+  int stopCalls = 0;
+
   @override
   Future<bool> start({
     required String localeId,
     required void Function(String text) onText,
   }) async {
     if (!available) return false;
+    // Like the platform recognizer: busy while the last session ends.
+    if (_stopping) return false;
+    await startGate?.future;
     listening = true;
+    text = '';
     _onText = onText;
     return true;
   }
@@ -37,6 +52,10 @@ class FakeSpeechInput implements SpeechInput {
 
   @override
   Future<String> stop() async {
+    stopCalls++;
+    _stopping = true;
+    await stopGate?.future;
+    _stopping = false;
     listening = false;
     return text;
   }
@@ -106,5 +125,97 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  String stepsText(WidgetTester tester) => tester
+      .widget<TextField>(
+        find.descendant(
+          of: find.byKey(const Key('stepsField')),
+          matching: find.byType(TextField),
+        ),
+      )
+      .controller!
+      .text;
+
+  Future<void> dictate(
+    WidgetTester tester,
+    FakeSpeechInput speech,
+    String words,
+  ) async {
+    final button = find.byKey(const Key('dictationButton'));
+    await tester.ensureVisible(button);
+    final gesture = await tester.startGesture(tester.getCenter(button));
+    await tester.pump();
+    speech.say(words);
+    await tester.pump();
+    await gesture.up();
+    await tester.pump();
+  }
+
+  testWidgets('a second dictation works after the first', (tester) async {
+    final speech = FakeSpeechInput();
+    await pump(tester, speech);
+    await dictate(tester, speech, 'Pick');
+    await dictate(tester, speech, 'Place');
+    await dictate(tester, speech, 'Check');
+    expect(stepsText(tester), 'Pick\nPlace\nCheck');
+  });
+
+  testWidgets('pressing again while the last result is still arriving waits '
+      'for it', (tester) async {
+    final speech = FakeSpeechInput()..stopGate = Completer<void>();
+    await pump(tester, speech);
+    await dictate(tester, speech, 'Pick');
+
+    // Second press before the recognizer has finished the first session.
+    final button = find.byKey(const Key('dictationButton'));
+    final gesture = await tester.startGesture(tester.getCenter(button));
+    await tester.pump();
+    final gate = speech.stopGate!;
+    speech.stopGate = null;
+    gate.complete();
+    await tester.pump();
+    await tester.pump();
+    expect(speech.listening, isTrue);
+    speech.say('Place');
+    await gesture.up();
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byType(SnackBar), findsNothing);
+    expect(stepsText(tester), 'Pick\nPlace');
+  });
+
+  testWidgets('releasing while the recognizer is still starting stops it', (
+    tester,
+  ) async {
+    final speech = FakeSpeechInput()..startGate = Completer<void>();
+    await pump(tester, speech);
+    final button = find.byKey(const Key('dictationButton'));
+    await tester.ensureVisible(button);
+    final gesture = await tester.startGesture(tester.getCenter(button));
+    await tester.pump();
+    await gesture.up();
+    await tester.pump();
+    speech.startGate!.complete();
+    await tester.pump();
+    await tester.pump();
+
+    expect(speech.listening, isFalse);
+    // The button is ready again.
+    speech.startGate = null;
+    await dictate(tester, speech, 'Pick');
+    expect(stepsText(tester), 'Pick');
+  });
+
+  testWidgets('the dictation button is a wide button below the steps field', (
+    tester,
+  ) async {
+    await pump(tester, FakeSpeechInput());
+    final field = tester.getRect(find.byKey(const Key('stepsField')));
+    final button = tester.getRect(find.byKey(const Key('dictationButton')));
+    expect(button.top, greaterThanOrEqualTo(field.bottom));
+    expect(button.width, closeTo(field.width, 1));
+    expect(button.height, greaterThanOrEqualTo(56));
   });
 }

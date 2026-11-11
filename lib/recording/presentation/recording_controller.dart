@@ -59,6 +59,12 @@ class RecordingController extends ChangeNotifier {
   /// Whether the study records fixed step sequences.
   bool get hasSteps => study?.mode.usesSteps ?? false;
 
+  /// Video study still defining its steps in the first cycle.
+  bool get stepsOpen => study?.stepsOpen ?? false;
+
+  /// Name of a step created by a marker (1-based number); set from l10n.
+  String Function(int number) newStepName = (n) => 'Step $n';
+
   StepDefinition? stepById(int? id) {
     if (id == null) return null;
     for (final s in steps) {
@@ -120,6 +126,10 @@ class RecordingController extends ChangeNotifier {
         engine.specialElapsed(at);
   }
 
+  List<int?> get _sequence => (study?.mode ?? StudyMode.timeStudy).usesSteps
+      ? steps.map<int?>((s) => s.id).toList()
+      : <int?>[null];
+
   Future<void> load() async {
     study = await studies.getStudy(studyId);
     steps = await studies.getSteps(studyId);
@@ -129,9 +139,7 @@ class RecordingController extends ChangeNotifier {
         ? defaultMethod
         : CycleTimeMethod.parse(savedMethod);
     final mode = study?.mode ?? StudyMode.timeStudy;
-    final sequence = mode.usesSteps
-        ? steps.map<int?>((s) => s.id).toList()
-        : <int?>[null];
+    final sequence = _sequence;
     final saved = await runStates.load(studyId);
     EngineSnapshot? restore;
     if (saved != null) {
@@ -264,15 +272,63 @@ class RecordingController extends ChangeNotifier {
 
   /// Video marker: the first marker starts step 1, every further marker
   /// closes the current step. Returns false if rejected.
+  ///
+  /// While [stepsOpen], a marker on the last defined step creates a new
+  /// step instead of starting the next cycle (see [closeCycle]).
   Future<bool> mark({int? at}) async {
     final pos = at ?? clock.nowMicros();
     if (!loaded || !canMarkAt(pos)) return false;
     if (status == EngineStatus.idle) {
+      if (stepsOpen && steps.isEmpty) await _appendStep();
       await startStop(at: pos);
     } else {
+      if (stepsOpen && engine.stepIndex == steps.length - 1) {
+        await _appendStep();
+      }
       await next(at: pos);
     }
     return true;
+  }
+
+  /// Ends the first cycle of a video study with open steps: closes the
+  /// current (last) step, fixes the steps as the sequence and starts the
+  /// next cycle at step 1. Returns false if not possible.
+  Future<bool> closeCycle({int? at}) async {
+    final pos = at ?? clock.nowMicros();
+    if (!loaded ||
+        !stepsOpen ||
+        status != EngineStatus.running ||
+        !canMarkAt(pos) ||
+        engine.stepIndex != steps.length - 1) {
+      return false;
+    }
+    await next(at: pos);
+    await studies.closeSteps(studyId);
+    study = await studies.getStudy(studyId);
+    notifyListeners();
+    return true;
+  }
+
+  /// Adds a step at the end of the sequence and keeps the running state.
+  Future<void> _appendStep() => _run(() async {
+    await studies.addStep(studyId, newStepName(steps.length + 1));
+    steps = await studies.getSteps(studyId);
+    final running = engine.status != EngineStatus.idle;
+    _session = RecordingSession(
+      studyId: studyId,
+      engine: RecordingEngine(
+        clock: clock,
+        sequence: _sequence,
+        restore: running ? engine.snapshot() : null,
+      ),
+      measurements: measurementRepo,
+    );
+  });
+
+  /// Reloads the step names (e.g. after renaming during a recording).
+  Future<void> reloadSteps() async {
+    steps = await studies.getSteps(studyId);
+    notifyListeners();
   }
 
   /// Removes the last marker: the last step time is deleted and its step is

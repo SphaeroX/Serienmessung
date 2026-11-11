@@ -76,6 +76,7 @@ class BackupService {
         'lastActiveAt': s['last_active_at'],
         'cycleTimeMethod': s['cycle_time_method'],
         'videoPath': s['video_path'],
+        'stepsOpen': s['steps_open'] == 1,
         'steps': [
           for (final st in steps)
             {'ref': st['id'], 'position': st['position'], 'name': st['name']},
@@ -130,6 +131,7 @@ class BackupService {
           'last_active_at': s['lastActiveAt'] ?? s['createdAt'],
           'cycle_time_method': s['cycleTimeMethod'],
           'video_path': s['videoPath'],
+          'steps_open': s['stepsOpen'] == true ? 1 : 0,
         });
         final stepIds = <Object?, int>{};
         for (final st in s['steps'] as List) {

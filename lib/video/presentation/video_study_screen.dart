@@ -15,7 +15,8 @@ import '../../recording/domain/recording_engine.dart';
 import '../../recording/platform/hardware_keys.dart';
 import '../../recording/presentation/cycles_view.dart';
 import '../../recording/presentation/recording_controller.dart';
-import '../../recording/presentation/recording_screen.dart' show StepOverlay;
+import '../../recording/presentation/recording_screen.dart'
+    show RecordingScreen, StepOverlay;
 import '../../settings/presentation/settings_controller.dart';
 import '../../study/presentation/edit_study_screen.dart';
 import '../domain/boundary.dart';
@@ -212,6 +213,99 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
     }
   }
 
+  /// Ends the first cycle of a study that defines its steps by markers.
+  Future<void> _closeCycle() async {
+    final ok = await controller.closeCycle(at: position);
+    if (!mounted) return;
+    if (!ok) {
+      final l = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l.closeCycleRejected)));
+      return;
+    }
+    await _nameSteps();
+  }
+
+  /// Lets the user name the steps created by the markers.
+  Future<void> _nameSteps() async {
+    if (playback.playing) await playback.pause();
+    if (!mounted) return;
+    final l = AppLocalizations.of(context);
+    final steps = controller.steps;
+    final fields = [for (final s in steps) TextEditingController(text: s.name)];
+    final save = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.nameStepsTitle),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < fields.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: TextField(
+                    key: Key('stepNameField-$i'),
+                    controller: fields[i],
+                    autofocus: i == 0,
+                    textInputAction: i == fields.length - 1
+                        ? TextInputAction.done
+                        : TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: l.stepOf(i + 1, fields.length),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          FilledButton(
+            key: const Key('saveStepNames'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.save),
+          ),
+        ],
+      ),
+    );
+    if (save == true) {
+      final repo = ref.read(studyRepositoryProvider);
+      for (var i = 0; i < steps.length; i++) {
+        final name = fields[i].text.trim();
+        if (name.isNotEmpty && name != steps[i].name) {
+          await repo.renameStep(steps[i].id, name);
+        }
+      }
+      await controller.reloadSteps();
+    }
+    for (final f in fields) {
+      f.dispose();
+    }
+  }
+
+  /// Creates a live time study with this study's steps and opens it.
+  Future<void> _useAsTimeStudy() async {
+    final l = AppLocalizations.of(context);
+    final id = await ref
+        .read(studyRepositoryProvider)
+        .copyAsTimeStudy(
+          widget.studyId,
+          name: l.liveStudyName(controller.study?.name ?? ''),
+          now: ref.read(wallClockProvider)(),
+        );
+    ref.invalidate(studyListProvider);
+    if (!mounted) return;
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => RecordingScreen(studyId: id)),
+    );
+  }
+
   Future<void> _editStudy() async {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -226,6 +320,7 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
     final l = AppLocalizations.of(context);
     final c = controller;
     final hasVideo = playback.initialized;
+    c.newStepName = l.newStepName;
     return Scaffold(
       appBar: AppBar(
         title: Text(c.study?.name ?? ''),
@@ -244,6 +339,17 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
             onPressed: c.loaded && c.status == EngineStatus.idle
                 ? _editStudy
                 : null,
+          ),
+          PopupMenuButton<void>(
+            key: const Key('studyMenu'),
+            itemBuilder: (_) => [
+              PopupMenuItem<void>(
+                key: const Key('useAsTimeStudy'),
+                enabled: c.steps.isNotEmpty && !c.stepsOpen,
+                onTap: _useAsTimeStudy,
+                child: Text(l.useAsTimeStudy),
+              ),
+            ],
           ),
         ],
       ),
@@ -294,6 +400,7 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
                   _MarkBar(
                     controller: c,
                     onMark: () => _mark(),
+                    onCloseCycle: _closeCycle,
                     onSpecialDown: () => c.beginSpecial(at: position),
                     onSpecialUp: () => c.endSpecial(at: position),
                   ),
@@ -449,12 +556,14 @@ class _MarkBar extends StatelessWidget {
   const _MarkBar({
     required this.controller,
     required this.onMark,
+    required this.onCloseCycle,
     required this.onSpecialDown,
     required this.onSpecialUp,
   });
 
   final RecordingController controller;
   final VoidCallback onMark;
+  final VoidCallback onCloseCycle;
   final VoidCallback onSpecialDown;
   final VoidCallback onSpecialUp;
 
@@ -469,70 +578,100 @@ class _MarkBar extends StatelessWidget {
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton.outlined(
-              key: const Key('undoMarker'),
-              tooltip: l.undoMarker,
-              icon: const Icon(Icons.undo),
-              onPressed: c.status == EngineStatus.idle && c.measurements.isEmpty
-                  ? null
-                  : c.undoLastMarker,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Listener(
-                key: const Key('specialButton'),
-                onPointerDown: running ? (_) => onSpecialDown() : null,
-                onPointerUp: (running || special) ? (_) => onSpecialUp() : null,
-                child: Container(
-                  height: 72,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: special ? scheme.error : scheme.errorContainer,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: Text(
-                    l.specialShort,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: special ? scheme.onError : scheme.onErrorContainer,
-                    ),
+            if (c.stepsOpen && running)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: FilledButton.tonalIcon(
+                    key: const Key('closeCycleButton'),
+                    onPressed: onCloseCycle,
+                    icon: const Icon(Icons.done_all),
+                    label: Text(l.closeCycle),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              flex: 2,
-              child: SizedBox(
-                height: 72,
-                child: FilledButton.icon(
-                  key: const Key('markButton'),
-                  style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                  onPressed: special ? null : onMark,
-                  icon: const Icon(Icons.flag),
-                  label: FittedBox(
-                    child: Text(
-                      c.status == EngineStatus.idle ? l.markStart : l.mark,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            _row(context, l, scheme, c, running, special),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _row(
+    BuildContext context,
+    AppLocalizations l,
+    ColorScheme scheme,
+    RecordingController c,
+    bool running,
+    bool special,
+  ) {
+    return Row(
+      children: [
+        IconButton.outlined(
+          key: const Key('undoMarker'),
+          tooltip: l.undoMarker,
+          icon: const Icon(Icons.undo),
+          onPressed: c.status == EngineStatus.idle && c.measurements.isEmpty
+              ? null
+              : c.undoLastMarker,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Listener(
+            key: const Key('specialButton'),
+            onPointerDown: running ? (_) => onSpecialDown() : null,
+            onPointerUp: (running || special) ? (_) => onSpecialUp() : null,
+            child: Container(
+              height: 72,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: special ? scheme.error : scheme.errorContainer,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Text(
+                l.specialShort,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: special ? scheme.onError : scheme.onErrorContainer,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 2,
+          child: SizedBox(
+            height: 72,
+            child: FilledButton.icon(
+              key: const Key('markButton'),
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              onPressed: special ? null : onMark,
+              icon: const Icon(Icons.flag),
+              label: FittedBox(
+                child: Text(
+                  c.status == EngineStatus.idle ? l.markStart : l.mark,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -8,6 +8,11 @@ enum StudyMode {
   /// Whether the mode needs step definitions.
   bool get usesSteps => this != StudyMode.simple;
 
+  /// Whether steps are entered when the study is created. Video studies
+  /// define their steps while marking the video instead.
+  bool get definesStepsUpfront =>
+      this == StudyMode.timeStudy || this == StudyMode.stepTimer;
+
   static StudyMode parse(String value) =>
       StudyMode.values.firstWhere((m) => m.name == value);
 }
@@ -23,6 +28,7 @@ class Study {
     required this.lastActiveAt,
     this.cycleTimeMethod,
     this.videoPath,
+    this.stepsOpen = false,
   });
 
   final int id;
@@ -37,6 +43,10 @@ class Study {
 
   /// Local path of the imported video (video studies only).
   final String? videoPath;
+
+  /// Video study still defining its steps: every marker of the first cycle
+  /// creates a new step until the cycle is closed.
+  final bool stepsOpen;
 }
 
 /// One defined work step of a study.

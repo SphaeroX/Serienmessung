@@ -8,14 +8,15 @@ Rebuild an existing Android "time study stopwatch" app as a better Flutter app f
 
 ## Core features
 
-- Create a study: name, optional description, mode; steps entered in a text area, one line per step, with push-to-talk dictation (hold = dictate, release = stop).
+- Create a study: name, optional description, mode; for time study and step timer the steps are entered in a text area, one line per step, with push-to-talk dictation (wide button below the field: hold = dictate, release = stop). Video studies start without steps.
 - Modes: Time study (fixed step sequence, cycles), Video study, Simple (stopwatch with laps), Step timer (free order).
 - Recording: on start, step 1 is immediately active; "next" closes the current step and starts the next; after the last step a new cycle begins. The current step is always shown prominently.
 - Volume keys: up short = next step, up held = special time (interruption, separate entry with optional note, excluded from cycle time), down = start/stop.
 - Recording continues in background / with screen off and survives app crashes.
 - Edit afterwards: view cycles, delete whole cycles or single measurements, rename and reorder step definitions.
 - Analysis per step and cycle: sum, mean, median, min, max, spread; real cycle time with selectable method (mean, median, IQR-cleaned); special times always excluded. Units: HM, seconds, mm:ss.SSS, TMU.
-- Video study: import video, play with speed 0.25×–2× and frame stepping, mark steps via button or volume key, smooth 60 fps timeline, drag markers.
+- Video study: import video, play with speed 0.25×–2× and frame stepping, mark steps via button or volume key, smooth 60 fps timeline, drag markers. Steps are defined in the video: in the first cycle every marker creates a new step; "Cycle complete" ends the cycle, asks for the step names and fixes them as the sequence. The steps can then be copied into a new live time study.
+- Recording screen: total/step time tiles, current-step overlay and the control bar are only shown on the Live tab; the Cycles and Analysis tabs use the full height.
 - Export CSV, Excel (.xlsx), PDF report; backup/restore file.
 - Settings: theme, default unit, cycle-time method, vibration, hardware keys, keep screen on, notifications, language.
 

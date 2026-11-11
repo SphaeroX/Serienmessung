@@ -61,11 +61,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modeVideo => 'Video study';
 
   @override
-  String get modeVideoDesc => 'Import a video and mark steps during playback';
+  String get modeVideoDesc =>
+      'Import a video and define the steps while marking it';
 
   @override
   String get modeVideoInfo =>
-      'Import a recorded video and play it back. Mark every step as it appears in the picture to build your study from the footage, without live timing.';
+      'Import a recorded video and play it back. No steps are needed beforehand: in the first cycle every marker starts a new step. Tap “Cycle complete” at the end of the cycle and name the steps. Further markers then follow these steps cycle by cycle. Afterwards you can use the steps for a live time study.';
 
   @override
   String get modeBadgeSimple => 'SIMPLE';
@@ -672,4 +673,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get restoreTooNew =>
       'This backup was created by a newer app version. Please update the app.';
+
+  @override
+  String newStepName(int number) {
+    return 'Step $number';
+  }
+
+  @override
+  String get closeCycle => 'Cycle complete';
+
+  @override
+  String get definingSteps =>
+      'Every marker adds a step. Tap “Cycle complete” at the end of the cycle.';
+
+  @override
+  String get firstMarkerHint =>
+      'Set the first marker where the first step begins';
+
+  @override
+  String get nameStepsTitle => 'Name the steps';
+
+  @override
+  String get useAsTimeStudy => 'Use steps for a live time study';
+
+  @override
+  String liveStudyName(String name) {
+    return '$name (live)';
+  }
+
+  @override
+  String get closeCycleRejected =>
+      'The cycle can only be completed after the last marker, on the last step.';
 }
