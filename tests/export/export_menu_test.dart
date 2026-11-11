@@ -85,7 +85,8 @@ void main() {
     await pumpFrames(tester, count: 5);
     await tester.tap(find.byKey(Key(key)));
     await pumpFrames(tester, count: 3);
-    await settle(tester);
+    // Writing the file takes longer on slow machines (CI).
+    await settleUntil(tester, () => sharer.shared.isNotEmpty);
   }
 
   testWidgets('exports a CSV file and opens the share sheet', (tester) async {
@@ -121,8 +122,6 @@ void main() {
 
   testWidgets('exports a PDF report', (tester) async {
     await exportAs(tester, 'exportPdf');
-    // Rendering the PDF takes longer on slow machines (CI).
-    await settleUntil(tester, () => sharer.shared.isNotEmpty);
     expect(sharer.shared.single.$1, endsWith('.pdf'));
     expect(sharer.shared.single.$2, 'application/pdf');
   });
