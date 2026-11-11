@@ -279,4 +279,42 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get editStudy => 'Studie bearbeiten';
+
+  @override
+  String get renameStep => 'Schritt umbenennen';
+
+  @override
+  String get deleteStep => 'Schritt löschen';
+
+  @override
+  String deleteStepConfirm(String name) {
+    return 'Schritt „$name“ löschen?';
+  }
+
+  @override
+  String deleteStepWithTimes(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count erfasster Zeiten',
+      one: '1 erfasster Zeit',
+    );
+    return 'Schritt „$name“ inklusive $_temp0 löschen?';
+  }
+
+  @override
+  String get stepsSection => 'Schritte';
+
+  @override
+  String get stepsEditHint =>
+      'Tippen zum Umbenennen, ziehen zum Umsortieren. Erfasste Zeiten bleiben beim Schritt.';
+
+  @override
+  String get newStepHint => 'Neuer Schritt';
+
+  @override
+  String get addStep => 'Schritt hinzufügen';
 }

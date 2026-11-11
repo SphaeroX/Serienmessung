@@ -275,4 +275,42 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get editStudy => 'Edit study';
+
+  @override
+  String get renameStep => 'Rename step';
+
+  @override
+  String get deleteStep => 'Delete step';
+
+  @override
+  String deleteStepConfirm(String name) {
+    return 'Delete step \"$name\"?';
+  }
+
+  @override
+  String deleteStepWithTimes(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recorded times',
+      one: '1 recorded time',
+    );
+    return 'Delete step \"$name\" including $_temp0?';
+  }
+
+  @override
+  String get stepsSection => 'Steps';
+
+  @override
+  String get stepsEditHint =>
+      'Tap to rename, drag to reorder. Recorded times stay with their step.';
+
+  @override
+  String get newStepHint => 'New step';
+
+  @override
+  String get addStep => 'Add step';
 }

@@ -30,11 +30,11 @@ Die Schritte einer Studie können auch nach Beginn der Messung umbenannt und ums
 
 ## Umsetzungsschritte
 
-1. [ ] Repository-Operationen umbenennen, umsortieren, hinzufügen, löschen.
-2. [ ] Bearbeiten-Bildschirm umsetzen.
-3. [ ] Sperre bei laufender Messung.
-4. [ ] Zyklen-Ansicht und Messbildschirm zeigen geänderte Namen/Reihenfolge.
-5. [ ] Texte DE/EN.
+1. [x] Repository-Operationen umbenennen, umsortieren, hinzufügen, löschen.
+2. [x] Bearbeiten-Bildschirm umsetzen.
+3. [x] Sperre bei laufender Messung.
+4. [x] Zyklen-Ansicht und Messbildschirm zeigen geänderte Namen/Reihenfolge.
+5. [x] Texte DE/EN.
 
 ## Tests
 
@@ -53,8 +53,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün.
-- [ ] Nach Umsortieren zeigt die Zyklen-Ansicht alte Messungen weiterhin beim richtigen Schrittnamen (Test).
+- [x] Tests grün.
+- [x] Nach Umsortieren zeigt die Zyklen-Ansicht alte Messungen weiterhin beim richtigen Schrittnamen (Test).
 
 ## Offene Fragen / Annahmen
 
@@ -68,19 +68,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `EditStudyScreen` (`lib/study/presentation/edit_study_screen.dart`): Name/Beschreibung bearbeiten (Speichern-Button), Schritte per Tipp umbenennen, per Drag-Handle umsortieren (`ReorderableListView` mit `onReorderItem`), neuen Schritt am Ende hinzufügen, Schritt löschen. Repository-Methoden `updateStudy`, `renameStep`, `reorderSteps`, `addStep`, `countStepTimes`, `deleteStep`. Einstieg über das Stift-Symbol im Messbildschirm, nur im Ruhezustand aktiv; danach lädt der Controller Studie und Sequenz neu.
+- **Learnings & Stolpersteine:** `ReorderableListView.onReorder` ist ab Flutter 3.41 veraltet – `onReorderItem` liefert den bereits korrigierten Zielindex. In Dialog-Tests sind Beschriftungen wie "Save" doppelt vorhanden (AppBar + Dialog) → `.last` verwenden.
+- **Wichtige Entscheidungen und ihre Gründe:** Schritt löschen mit Zeiten ist erlaubt, aber nur nach Warnung mit Anzahl der betroffenen Zeiten; die Zeiten (inkl. Sonderzeiten dieses Schritts) werden mitgelöscht, die Positionen der übrigen Schritte lückenlos neu vergeben. Änderungen an Schritten werden sofort gespeichert, Name/Beschreibung erst mit "Speichern". Offene Frage zur Anzeige alter Zyklen: Messungen innerhalb eines Zyklus erscheinen chronologisch (so schon seit Task_07).
+- **Auswirkungen auf Folge-Tasks:** Task_11: Mikrofon-Button auch neben `newStepField` im Bearbeiten-Bildschirm einbauen. Task_09: Auswertung pro Schritt immer in der aktuellen Schrittreihenfolge anzeigen.
+- **Hinweise zu Tests und Befehlen:** `tests/study/data/step_editing_test.dart`, `tests/study/presentation/edit_study_screen_test.dart`.

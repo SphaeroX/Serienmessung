@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers.dart';
 import '../../core/time_format.dart';
 import '../../l10n/app_localizations.dart';
+import '../../study/presentation/edit_study_screen.dart';
 import '../../study/domain/study.dart';
 import '../domain/key_interpreter.dart';
 import '../domain/measurement.dart';
@@ -130,6 +131,16 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
     super.dispose();
   }
 
+  Future<void> _editStudy() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => EditStudyScreen(studyId: widget.studyId),
+      ),
+    );
+    // Steps may have been renamed, reordered, added or deleted.
+    await controller.load();
+  }
+
   Future<void> _confirmReset() async {
     final l = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
@@ -160,6 +171,14 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
       appBar: AppBar(
         title: Text(c.study?.name ?? ''),
         actions: [
+          IconButton(
+            key: const Key('editStudyButton'),
+            tooltip: l.editStudy,
+            icon: const Icon(Icons.edit_note),
+            onPressed: c.loaded && c.status == EngineStatus.idle
+                ? _editStudy
+                : null,
+          ),
           IconButton(
             key: const Key('resetButton'),
             tooltip: l.reset,

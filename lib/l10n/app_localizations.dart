@@ -559,6 +559,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 time deleted} other{{count} times deleted}}'**
   String deletedTimes(int count);
+
+  /// No description provided for @editStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit study'**
+  String get editStudy;
+
+  /// No description provided for @renameStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename step'**
+  String get renameStep;
+
+  /// No description provided for @deleteStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete step'**
+  String get deleteStep;
+
+  /// No description provided for @deleteStepConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete step \"{name}\"?'**
+  String deleteStepConfirm(String name);
+
+  /// No description provided for @deleteStepWithTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete step \"{name}\" including {count, plural, =1{1 recorded time} other{{count} recorded times}}?'**
+  String deleteStepWithTimes(String name, int count);
+
+  /// No description provided for @stepsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get stepsSection;
+
+  /// No description provided for @stepsEditHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to rename, drag to reorder. Recorded times stay with their step.'**
+  String get stepsEditHint;
+
+  /// No description provided for @newStepHint.
+  ///
+  /// In en, this message translates to:
+  /// **'New step'**
+  String get newStepHint;
+
+  /// No description provided for @addStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Add step'**
+  String get addStep;
 }
 
 class _AppLocalizationsDelegate

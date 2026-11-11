@@ -142,5 +142,31 @@
         "type": "int"
       }
     }
-  }
+  },
+  "editStudy": "Edit study",
+  "renameStep": "Rename step",
+  "deleteStep": "Delete step",
+  "deleteStepConfirm": "Delete step \"{name}\"?",
+  "@deleteStepConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteStepWithTimes": "Delete step \"{name}\" including {count, plural, =1{1 recorded time} other{{count} recorded times}}?",
+  "@deleteStepWithTimes": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "stepsSection": "Steps",
+  "stepsEditHint": "Tap to rename, drag to reorder. Recorded times stay with their step.",
+  "newStepHint": "New step",
+  "addStep": "Add step"
 }

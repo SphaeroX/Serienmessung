@@ -76,5 +76,14 @@
   "incomplete": "unvollständig",
   "deleteCycle": "Zyklus löschen",
   "undo": "Rückgängig",
-  "deletedTimes": "{count, plural, =1{1 Zeit gelöscht} other{{count} Zeiten gelöscht}}"
+  "deletedTimes": "{count, plural, =1{1 Zeit gelöscht} other{{count} Zeiten gelöscht}}",
+  "editStudy": "Studie bearbeiten",
+  "renameStep": "Schritt umbenennen",
+  "deleteStep": "Schritt löschen",
+  "deleteStepConfirm": "Schritt „{name}“ löschen?",
+  "deleteStepWithTimes": "Schritt „{name}“ inklusive {count, plural, =1{1 erfasster Zeit} other{{count} erfasster Zeiten}} löschen?",
+  "stepsSection": "Schritte",
+  "stepsEditHint": "Tippen zum Umbenennen, ziehen zum Umsortieren. Erfasste Zeiten bleiben beim Schritt.",
+  "newStepHint": "Neuer Schritt",
+  "addStep": "Schritt hinzufügen"
 }
