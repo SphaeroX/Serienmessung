@@ -59,3 +59,6 @@ CLAUDE.local.md
 # Windows
 Thumbs.db
 desktop.ini
+
+# Google Play store listing material (local only, see tool/generate_store_assets.py)
+/store/

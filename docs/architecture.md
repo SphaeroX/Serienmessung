@@ -43,6 +43,7 @@
 - Release signing: the only secret of the project. `android/app/build.gradle.kts` signs release builds with the key from `android/key.properties` (template: `android/key.properties.example`; the real file, `*.jks` and `*.keystore` are git-ignored). Without the file, release builds use the debug key.
 - The release keystore lives outside the repository and must be backed up by the owner: without it no update of an installed app is possible. GitHub secrets used by `.github/workflows/release.yml`: `ANDROID_KEYSTORE_BASE64` (base64 of the `.jks`), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
 - Releases: pushing a tag `vX.Y.Z` runs the tests, builds `flutter build apk --release` (version name from the tag, version code = workflow run number) and publishes the APK as a GitHub release.
+- Google Play: application ID `dev.cyclescope.cyclescope` (fixed once published), launcher label `CycleScope`. Upload an app bundle (`flutter build appbundle --release`, signed with the release key above as upload key; Play App Signing holds the app signing key). Store graphics come from `python tool/generate_store_assets.py`, which wraps `screenshots/<lang>/` in 1080 × 1920 frames and writes the icon and feature graphic into the local, git-ignored `store/` folder (listing texts and console answers are kept there by hand).
 - Android application id: `dev.cyclescope.cyclescope`, Dart package name `cyclescope`.
 
 ## Open decisions
