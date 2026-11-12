@@ -203,6 +203,11 @@ class RecordingController extends ChangeNotifier {
     await _touch();
   });
 
+  /// Volume-up key: the lap key, but it also starts a recording that has
+  /// not started yet, so pressing the wrong key never misses the start.
+  Future<void> nextOrStart({int? at}) =>
+      status == EngineStatus.idle ? startStop(at: at) : next(at: at);
+
   /// Next button and volume-up key.
   Future<void> next({int? at, int? stepId}) => _run(() async {
     if (status != EngineStatus.running) return;

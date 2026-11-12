@@ -73,7 +73,7 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
     _keys = ref.read(hardwareKeysProvider);
     _interpreter = KeyInterpreter(
       holdThreshold: Duration(milliseconds: settings.holdThresholdMs),
-      onNext: (at) => controller.next(at: at),
+      onNext: (at) => controller.nextOrStart(at: at),
       onStartStop: (at) => controller.startStop(at: at),
       onSpecialStart: (at) => controller.beginSpecial(at: at),
       onSpecialEnd: (at) => controller.endSpecial(at: at),

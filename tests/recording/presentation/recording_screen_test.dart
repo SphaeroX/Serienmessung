@@ -148,6 +148,29 @@ void main() {
     expect(stored!.single.durationMicros, 2000000);
   });
 
+  testWidgets('volume up also starts a recording that has not started', (
+    tester,
+  ) async {
+    await pumpScreen(tester);
+    clock.advanceSeconds(1);
+    final startAt = clock.micros;
+    keys.press(VolumeKey.up, at: startAt);
+    await settle(tester);
+    expect(find.text('STOP'), findsOneWidget);
+    expect(textOf(tester, 'currentStepName'), 'Pick');
+
+    // Once running, volume up is the lap key again.
+    clock.advanceSeconds(3);
+    keys.press(VolumeKey.up, at: clock.micros);
+    await settle(tester);
+    expect(textOf(tester, 'currentStepName'), 'Place');
+    final stored = await tester.runAsync(
+      () => MeasurementRepository(db).listForStudy(studyId),
+    );
+    expect(stored!.single.startMicros, startAt);
+    expect(stored.single.durationMicros, 3000000);
+  });
+
   testWidgets('key capture is released when the screen closes', (tester) async {
     await pumpScreen(tester);
     await tester.pumpWidget(const SizedBox());

@@ -11,7 +11,7 @@ Rebuild an existing Android "time study stopwatch" app as a better Flutter app f
 - Create a study: name, optional description, mode; for time study and step timer the steps are entered in a text area, one line per step, with push-to-talk dictation (wide button below the field: hold = dictate, release = stop). Video studies start without steps.
 - Modes: Time study (fixed step sequence, cycles), Video study, Simple (stopwatch with laps), Step timer (free order).
 - Recording: on start, step 1 is immediately active; "next" closes the current step and starts the next; after the last step a new cycle begins. The current step is always shown prominently.
-- Volume keys: up short = next step, up held = special time (interruption, separate entry with optional note, excluded from cycle time), down = start/stop.
+- Volume keys: up short = next step (before the start it starts the recording, so the start is never missed), up held = special time (interruption, separate entry with optional note, excluded from cycle time), down = start/stop.
 - Recording continues in background / with screen off and survives app crashes.
 - Edit afterwards: view cycles, delete whole cycles or single measurements, rename and reorder step definitions.
 - Analysis per step and cycle: sum, mean, median, min, max, spread; real cycle time with selectable method (mean, median, IQR-cleaned); special times always excluded. Units: HM, seconds, mm:ss.SSS, TMU.
