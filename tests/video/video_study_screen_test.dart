@@ -83,6 +83,129 @@ void main() {
     expect(study!.videoPath, 'fake:video.mp4');
   });
 
+  Future<void> markAt(WidgetTester tester, int micros) async {
+    video.moveTo(micros);
+    await tester.tap(find.byKey(const Key('markButton')));
+    await settle(tester);
+  }
+
+  Future<void> openTab(WidgetTester tester, String key) async {
+    await tester.tap(find.byKey(Key(key)));
+    await settle(tester);
+  }
+
+  testWidgets('after deleting the cycles new markers can be set anywhere', (
+    tester,
+  ) async {
+    await tester.runAsync(
+      () => StudyRepository(db).setVideoPath(studyId, 'fake:v.mp4'),
+    );
+    await pump(tester);
+    // Cycle 1 (Pick, Place) and the start of cycle 2.
+    await markAt(tester, 1 * s);
+    await markAt(tester, 2 * s);
+    await markAt(tester, 3 * s);
+    await markAt(tester, 4 * s);
+    expect(await durations(tester), [1 * s, 1 * s, 1 * s]);
+
+    await openTab(tester, 'cyclesTab');
+    await tester.tap(find.byKey(const Key('deleteCycle-2')));
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('deleteCycle-1')));
+    await settle(tester);
+    expect(await durations(tester), isEmpty);
+
+    // Back at the beginning of the video the markers work again.
+    await openTab(tester, 'markTab');
+    await markAt(tester, 500000);
+    expect(find.textContaining('before the last marker'), findsNothing);
+    expect(step(tester), 'Pick');
+    await markAt(tester, 1500000);
+    expect(step(tester), 'Place');
+    expect(await durations(tester), [1 * s]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('deleting an older cycle keeps the running cycle', (
+    tester,
+  ) async {
+    await tester.runAsync(
+      () => StudyRepository(db).setVideoPath(studyId, 'fake:v.mp4'),
+    );
+    await pump(tester);
+    await markAt(tester, 1 * s);
+    await markAt(tester, 2 * s);
+    await markAt(tester, 3 * s);
+    await markAt(tester, 4 * s);
+
+    await openTab(tester, 'cyclesTab');
+    await tester.tap(find.byKey(const Key('deleteCycle-1')));
+    await settle(tester);
+    await openTab(tester, 'markTab');
+    expect(step(tester), 'Place');
+    await markAt(tester, 5 * s);
+    expect(await durations(tester), [1 * s, 1 * s]);
+  });
+
+  testWidgets('replacing the video can delete the old cycles', (tester) async {
+    await tester.runAsync(
+      () => StudyRepository(db).setVideoPath(studyId, 'fake:v.mp4'),
+    );
+    await pump(tester);
+    await markAt(tester, 1 * s);
+    await markAt(tester, 2 * s);
+    await markAt(tester, 3 * s);
+
+    await tester.tap(find.byKey(const Key('chooseVideoAction')));
+    await settle(tester);
+    expect(find.byKey(const Key('deleteOldCycles')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('deleteOldCycles')));
+    await settle(tester);
+    expect(video.openedPath, 'fake:video.mp4');
+    expect(await durations(tester), isEmpty);
+
+    await markAt(tester, 500000);
+    expect(step(tester), 'Pick');
+    await markAt(tester, 1 * s);
+    expect(await durations(tester), [500000]);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('replacing the video can keep the old cycles', (tester) async {
+    await tester.runAsync(
+      () => StudyRepository(db).setVideoPath(studyId, 'fake:v.mp4'),
+    );
+    await pump(tester);
+    await markAt(tester, 1 * s);
+    await markAt(tester, 2 * s);
+    await markAt(tester, 3 * s);
+
+    await tester.tap(find.byKey(const Key('chooseVideoAction')));
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('keepOldCycles')));
+    await settle(tester);
+    expect(await durations(tester), [1 * s, 1 * s]);
+
+    // The open marker run of the old video is dropped: a new cycle starts.
+    await markAt(tester, 500000);
+    expect(step(tester), 'Pick');
+    await markAt(tester, 1 * s);
+    expect(await durations(tester), [1 * s, 1 * s, 500000]);
+  });
+
+  testWidgets('a new video without cycles is opened without asking', (
+    tester,
+  ) async {
+    await tester.runAsync(
+      () => StudyRepository(db).setVideoPath(studyId, 'fake:v.mp4'),
+    );
+    await pump(tester);
+    await tester.tap(find.byKey(const Key('chooseVideoAction')));
+    await settle(tester);
+    expect(find.byKey(const Key('deleteOldCycles')), findsNothing);
+    expect(video.openedPath, 'fake:video.mp4');
+  });
+
   testWidgets('markers create step times from the video position', (
     tester,
   ) async {

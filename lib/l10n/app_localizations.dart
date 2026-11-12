@@ -524,6 +524,30 @@ abstract class AppLocalizations {
   /// **'Live'**
   String get tabLive;
 
+  /// No description provided for @replaceVideoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace video?'**
+  String get replaceVideoTitle;
+
+  /// No description provided for @replaceVideoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The recorded cycles belong to the current video. Delete them or keep them?'**
+  String get replaceVideoBody;
+
+  /// No description provided for @keepCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep'**
+  String get keepCycles;
+
+  /// No description provided for @deleteCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete cycles'**
+  String get deleteCycles;
+
   /// No description provided for @tabMark.
   ///
   /// In en, this message translates to:

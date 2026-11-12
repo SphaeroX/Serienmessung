@@ -234,7 +234,33 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
     final path = await ref
         .read(videoPickerProvider)
         .pickAndCopy(studyId: widget.studyId);
-    if (path == null) return;
+    if (path == null || !mounted) return;
+    if (controller.measurements.isNotEmpty) {
+      final l = AppLocalizations.of(context);
+      final delete = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(l.replaceVideoTitle),
+          content: Text(l.replaceVideoBody),
+          actions: [
+            TextButton(
+              key: const Key('keepOldCycles'),
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l.keepCycles),
+            ),
+            FilledButton(
+              key: const Key('deleteOldCycles'),
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l.deleteCycles),
+            ),
+          ],
+        ),
+      );
+      if (delete == null) return;
+      if (delete) await controller.deleteAllMeasurements();
+    }
+    // Markers of the old video must not block positions in the new one.
+    await controller.resetMarkers();
     await ref.read(studyRepositoryProvider).setVideoPath(widget.studyId, path);
     await controller.load();
     await _open(path);

@@ -378,8 +378,38 @@ class RecordingController extends ChangeNotifier {
 
   Future<List<Measurement>> deleteCycle(int cycle) async {
     final removed = await measurementRepo.deleteCycle(studyId, cycle);
+    if (study?.mode == StudyMode.video &&
+        status != EngineStatus.idle &&
+        (cycle == engine.cycle ||
+            removed.any((m) => m.endMicros == engine.segmentStartMicros))) {
+      // The marker the open step started at is gone: without it every
+      // earlier position would stay blocked, so the marker run starts over.
+      await resetMarkers();
+    }
+    if (status == EngineStatus.idle && study?.mode != StudyMode.stepTimer) {
+      displayCycle = await measurementRepo.nextCycle(studyId);
+    }
     await reloadMeasurements();
     return removed;
+  }
+
+  /// Video studies: drops the open marker run (the next marker starts a
+  /// new cycle at step 1, anywhere in the video). Stored times are kept.
+  Future<void> resetMarkers() => _run(() async {
+    if (status == EngineStatus.idle) return;
+    _append(await _session!.discard());
+    displayCycle = await measurementRepo.nextCycle(studyId);
+  });
+
+  /// Deletes all times of the study (e.g. when its video is replaced).
+  Future<void> deleteAllMeasurements() async {
+    await resetMarkers();
+    final cycles = {for (final m in measurements) m.cycle};
+    for (final cycle in cycles) {
+      await measurementRepo.deleteCycle(studyId, cycle);
+    }
+    displayCycle = await measurementRepo.nextCycle(studyId);
+    await reloadMeasurements();
   }
 
   Future<List<Measurement>> deleteMeasurement(int id) async {

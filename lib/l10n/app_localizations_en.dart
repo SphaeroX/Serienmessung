@@ -252,6 +252,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabLive => 'Live';
 
   @override
+  String get replaceVideoTitle => 'Replace video?';
+
+  @override
+  String get replaceVideoBody =>
+      'The recorded cycles belong to the current video. Delete them or keep them?';
+
+  @override
+  String get keepCycles => 'Keep';
+
+  @override
+  String get deleteCycles => 'Delete cycles';
+
+  @override
   String get tabMark => 'Mark';
 
   @override
