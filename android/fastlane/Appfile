@@ -1,0 +1,3 @@
+# Google Play credentials come from the PLAY_SERVICE_ACCOUNT_JSON environment
+# variable (GitHub secret), see docs/architecture.md.
+package_name("dev.cyclescope.cyclescope")

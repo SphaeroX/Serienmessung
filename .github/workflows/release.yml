@@ -42,25 +42,12 @@ jobs:
         run: flutter test tests/
 
       - name: Signing key
-        env:
-          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ]; then
-            echo "::error::Release signing secrets are missing."
-            exit 1
-          fi
-          trim() { printf '%s' "$1" | tr -d '\r\n'; }
-          printf '%s' "$KEYSTORE_BASE64" | tr -d '\r\n ' | base64 -d \
-            > "$RUNNER_TEMP/release.jks"
-          {
-            echo "storeFile=$RUNNER_TEMP/release.jks"
-            echo "storePassword=$(trim "$KEYSTORE_PASSWORD")"
-            echo "keyAlias=$(trim "$KEY_ALIAS")"
-            echo "keyPassword=$(trim "$KEY_PASSWORD")"
-          } > android/key.properties
+        uses: ./.github/actions/android-signing
+        with:
+          keystore-base64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          keystore-password: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          key-password: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
       - name: Build APK
         run: |

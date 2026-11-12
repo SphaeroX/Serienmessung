@@ -1,0 +1,47 @@
+# Google Play upload for CycleScope. Run from android/:
+#   bundle exec fastlane internal                  # upload as draft
+#   bundle exec fastlane internal status:completed # roll out to testers
+# Needs PLAY_SERVICE_ACCOUNT_JSON (service account key, JSON text) and
+# android/key.properties (release signing), see docs/architecture.md.
+
+default_platform(:android)
+
+ROOT = File.expand_path("../..", __dir__)
+TRACKS = %w[internal alpha beta production].freeze
+
+platform :android do
+  desc "Build a signed app bundle and upload it to a Play Console track"
+  lane :internal do |options|
+    track = options[:track] || "internal"
+    status = options[:status] || "draft"
+    json_key = ENV.fetch("PLAY_SERVICE_ACCOUNT_JSON") do
+      UI.user_error!("PLAY_SERVICE_ACCOUNT_JSON is not set")
+    end
+
+    # The version code must be higher than every code already on Play.
+    codes = TRACKS.flat_map do |name|
+      google_play_track_version_codes(track: name, json_key_data: json_key)
+    rescue StandardError => e
+      UI.important("Track #{name}: #{e.message}")
+      []
+    end
+    version_code = (codes.map(&:to_i).max || 0) + 1
+    UI.message("Building version code #{version_code}")
+
+    Dir.chdir(ROOT) do
+      sh("flutter", "build", "appbundle", "--release",
+         "--build-number", version_code.to_s)
+    end
+
+    upload_to_play_store(
+      track: track,
+      release_status: status,
+      aab: File.join(ROOT, "build/app/outputs/bundle/release/app-release.aab"),
+      json_key_data: json_key,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+end
