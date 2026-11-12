@@ -22,6 +22,7 @@ String buildCsv(ExportInput x) {
   if (x.study.description.isNotEmpty) {
     rows.add([l.description, x.study.description]);
   }
+  if (x.study.notes.isNotEmpty) rows.add([l.notes, x.study.notes]);
   rows.add([l.mode, l.modeName]);
   rows.add([l.date, DateFormat('yyyy-MM-dd HH:mm').format(x.exportedAt)]);
   rows.add([l.unit, unitLabel]);

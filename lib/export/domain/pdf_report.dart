@@ -107,6 +107,14 @@ Future<Uint8List> buildPdfReport(
             s(x.study.description),
             style: const pw.TextStyle(fontSize: 10),
           ),
+        if (x.study.notes.isNotEmpty) ...[
+          pw.SizedBox(height: 4),
+          pw.Text(
+            s(l.notes),
+            style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.Text(s(x.study.notes), style: const pw.TextStyle(fontSize: 10)),
+        ],
         pw.SizedBox(height: 6),
         pw.Text(
           s(

@@ -159,6 +159,8 @@
   "exportFailed": "Export fehlgeschlagen: {error}",
   "exportStudy": "Studie",
   "exportDescription": "Beschreibung",
+  "studyNotes": "Notizen",
+  "studyNotesHint": "z. B. Arbeitsplatz, Schicht, Besonderheiten",
   "exportDate": "Exportiert",
   "exportUnit": "Einheit",
   "exportCycle": "Zyklus",

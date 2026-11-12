@@ -64,7 +64,10 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
     controller
       ..defaultMethod = settings.defaultMethod
       ..analysisUnit = settings.defaultUnit
-      ..displayUnit = settings.defaultUnit;
+      ..displayUnit = settings.defaultUnit
+      ..onAnalysisUnitChosen = (u) => ref
+          .read(settingsProvider.notifier)
+          .update((s) => s.copyWith(defaultUnit: u));
     controller.addListener(_onChanged);
     controller.load();
     _tabs = TabController(length: 3, vsync: this)..addListener(_onTabChanged);

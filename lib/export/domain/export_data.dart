@@ -10,6 +10,7 @@ class ExportLabels {
   const ExportLabels({
     required this.study,
     required this.description,
+    required this.notes,
     required this.mode,
     required this.modeName,
     required this.date,
@@ -49,6 +50,7 @@ class ExportLabels {
 
   final String study;
   final String description;
+  final String notes;
   final String mode;
   final String modeName;
   final String date;

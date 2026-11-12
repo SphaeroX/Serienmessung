@@ -1,13 +1,17 @@
 import 'package:cyclescope/core/clock.dart';
 import 'package:cyclescope/core/database.dart';
 import 'package:cyclescope/core/providers.dart';
+import 'package:cyclescope/core/time_format.dart';
 import 'package:cyclescope/recording/data/measurement_repository.dart';
 import 'package:cyclescope/recording/domain/measurement.dart';
 import 'package:cyclescope/recording/presentation/recording_screen.dart';
+import 'package:cyclescope/settings/data/settings_repository.dart';
+import 'package:cyclescope/settings/presentation/settings_controller.dart';
 import 'package:cyclescope/study/data/study_repository.dart';
 import 'package:cyclescope/study/domain/study.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../fakes/fake_clock.dart';
@@ -54,12 +58,13 @@ void main() {
 
   tearDown(() => db.close());
 
-  Future<void> openAnalysis(WidgetTester tester) async {
+  Future<void> openAnalysis(WidgetTester tester, {Override? settings}) async {
     usePhoneSize(tester);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           databaseProvider.overrideWithValue(db),
+          ?settings,
           clockProvider.overrideWithValue(FakeClock(1) as Clock),
           ...fakePlatformOverrides(),
         ],
@@ -102,5 +107,64 @@ void main() {
     await tester.tap(find.byKey(const Key('method-mean')));
     await settle(tester);
     expect(real(tester), '17.20 s');
+  });
+
+  testWidgets('the last chosen unit is remembered for the next analysis', (
+    tester,
+  ) async {
+    await openAnalysis(tester);
+    await tester.tap(find.byKey(const Key('unit-seconds')));
+    await settle(tester);
+    final saved = (await tester.runAsync(() => SettingsRepository(db).load()))!;
+    expect(saved.defaultUnit, TimeUnit.seconds);
+
+    // A new screen (e.g. after an app restart) starts with seconds.
+    await tester.pumpWidget(const SizedBox());
+    await openAnalysis(
+      tester,
+      settings: initialSettingsProvider.overrideWithValue(saved),
+    );
+    expect(real(tester), '12.00 s');
+  });
+
+  testWidgets('the notes field grows while writing and shrinks after', (
+    tester,
+  ) async {
+    await openAnalysis(tester);
+    final notes = find.byKey(const Key('studyNotes'));
+    final small = tester.getSize(notes).height;
+
+    await tester.tap(notes);
+    await settle(tester);
+    final large = tester.getSize(notes).height;
+    expect(large, greaterThan(small * 3));
+
+    // Leaving the field (tap outside) makes it small again.
+    await tester.tapAt(
+      tester.getCenter(find.byKey(const Key('realCycleTime'))),
+    );
+    await settle(tester);
+    expect(tester.getSize(notes).height, small);
+  });
+
+  testWidgets('notes above the times are saved with the study', (tester) async {
+    await openAnalysis(tester);
+    final notes = find.byKey(const Key('studyNotes'));
+    expect(notes, findsOneWidget);
+    expect(
+      tester.getTopLeft(notes).dy,
+      lessThan(tester.getTopLeft(find.byKey(const Key('realCycleTime'))).dy),
+    );
+    await tester.enterText(notes, 'New fixture since Monday');
+    await settle(tester);
+    await tester.pumpWidget(const SizedBox());
+    await settle(tester);
+    final study = await tester.runAsync(
+      () => StudyRepository(db).getStudy(studyId),
+    );
+    expect(study!.notes, 'New fixture since Monday');
+
+    await openAnalysis(tester);
+    expect(find.text('New fixture since Monday'), findsOneWidget);
   });
 }

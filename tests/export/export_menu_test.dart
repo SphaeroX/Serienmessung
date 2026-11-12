@@ -65,7 +65,11 @@ void main() {
     await dir.delete(recursive: true);
   });
 
-  Future<void> exportAs(WidgetTester tester, String key) async {
+  Future<void> exportAs(
+    WidgetTester tester,
+    String key, {
+    String? notes,
+  }) async {
     usePhoneSize(tester);
     await tester.pumpWidget(
       ProviderScope(
@@ -81,6 +85,13 @@ void main() {
       ),
     );
     await settle(tester);
+    if (notes != null) {
+      await tester.tap(find.byKey(const Key('analysisTab')));
+      await pumpFrames(tester);
+      await settle(tester);
+      await tester.enterText(find.byKey(const Key('studyNotes')), notes);
+      await settle(tester);
+    }
     await tester.tap(find.byKey(const Key('exportButton')));
     await pumpFrames(tester, count: 5);
     await tester.tap(find.byKey(Key(key)));
@@ -98,6 +109,16 @@ void main() {
     );
     expect(content, contains('Line 200'));
     expect(content, contains('Pick'));
+  });
+
+  testWidgets('notes typed just before the export are in the file', (
+    tester,
+  ) async {
+    await exportAs(tester, 'exportCsv', notes: 'Night shift');
+    final content = await tester.runAsync(
+      () => File(sharer.shared.single.$1).readAsString(),
+    );
+    expect(content, contains('Notes,Night shift'));
   });
 
   testWidgets('exports an Excel file', (tester) async {

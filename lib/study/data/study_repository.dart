@@ -207,6 +207,13 @@ class StudyRepository {
     whereArgs: [id],
   );
 
+  Future<void> setNotes(int id, String notes) => _db.db.update(
+    'study',
+    {'notes': notes},
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+
   Future<void> setCycleTimeMethod(int id, String method) => _db.db.update(
     'study',
     {'cycle_time_method': method},
@@ -235,6 +242,7 @@ class StudyRepository {
     cycleTimeMethod: r['cycle_time_method'] as String?,
     videoPath: r['video_path'] as String?,
     stepsOpen: (r['steps_open'] as int? ?? 0) == 1,
+    notes: r['notes'] as String? ?? '',
   );
 
   static StepDefinition stepFromRow(Map<String, Object?> r) => StepDefinition(

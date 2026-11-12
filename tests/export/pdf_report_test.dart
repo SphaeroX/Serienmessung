@@ -22,7 +22,7 @@ final pdfLabels = PdfLabels(
   noData: 'No times recorded.',
 );
 
-ExportInput input(int cycles) {
+ExportInput input(int cycles, {String notes = ''}) {
   var t = 0;
   var id = 0;
   final ms = <Measurement>[];
@@ -65,6 +65,7 @@ ExportInput input(int cycles) {
       id: 1,
       name: 'Line 200 Größe',
       description: 'Früh',
+      notes: notes,
       mode: StudyMode.timeStudy,
       createdAt: DateTime(2026),
       lastActiveAt: DateTime(2026),
@@ -102,5 +103,19 @@ void main() {
     // Cycle totals 5, 7, 3 s → median 5 s.
     expect(has('5.00 s'), isTrue);
     expect(has('Material fehlt - Störung'), isTrue);
+  });
+
+  test('report shows the study notes', () async {
+    final bytes = await buildPdfReport(
+      input(3, notes: 'Night shift\nnew fixture'),
+      pdfLabels,
+      compress: false,
+    );
+    final text = latin1.decode(bytes);
+    bool has(String words) =>
+        words.split(' ').every((w) => text.contains('[($w)]TJ'));
+    expect(has('Notes'), isTrue);
+    expect(has('Night shift'), isTrue);
+    expect(has('new fixture'), isTrue);
   });
 }

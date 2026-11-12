@@ -183,4 +183,24 @@ void main() {
     );
     expect(restored.singleWhere((s) => s.name == 'Video').stepsOpen, isFalse);
   });
+
+  test('the notes of a study are part of the backup', () async {
+    final id = await StudyRepository(source).createStudy(
+      name: 'With notes',
+      mode: StudyMode.timeStudy,
+      steps: ['A'],
+      now: DateTime(2026, 11, 11, 13),
+    );
+    await StudyRepository(source).setNotes(id, 'Station 3, night shift');
+    final json = await BackupService(source).exportJson(now: DateTime(2026));
+    await BackupService(target).importJson(json, replace: false);
+    final restored = (await StudyRepository(
+      target,
+    ).listStudies()).map((s) => s.study).toList();
+    expect(
+      restored.singleWhere((s) => s.name == 'With notes').notes,
+      'Station 3, night shift',
+    );
+    expect(restored.singleWhere((s) => s.name == 'Video').notes, '');
+  });
 }

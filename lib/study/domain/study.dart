@@ -29,6 +29,7 @@ class Study {
     this.cycleTimeMethod,
     this.videoPath,
     this.stepsOpen = false,
+    this.notes = '',
   });
 
   final int id;
@@ -47,6 +48,9 @@ class Study {
   /// Video study still defining its steps: every marker of the first cycle
   /// creates a new step until the cycle is closed.
   final bool stepsOpen;
+
+  /// Free notes on the study (analysis tab), printed in the reports.
+  final String notes;
 }
 
 /// One defined work step of a study.

@@ -34,6 +34,7 @@ ExportLabels exportLabels(AppLocalizations l, Study study, String method) =>
     ExportLabels(
       study: l.exportStudy,
       description: l.exportDescription,
+      notes: l.studyNotes,
       mode: l.modeSection,
       modeName: study.mode.title(l),
       date: l.exportDate,

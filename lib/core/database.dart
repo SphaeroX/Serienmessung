@@ -77,6 +77,12 @@ final List<Migration> migrations = [
       'ALTER TABLE study ADD COLUMN steps_open INTEGER NOT NULL DEFAULT 0',
     );
   },
+  // v8: free notes per study (analysis tab, reports).
+  (db) async {
+    await db.execute(
+      "ALTER TABLE study ADD COLUMN notes TEXT NOT NULL DEFAULT ''",
+    );
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.

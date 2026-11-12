@@ -66,6 +66,8 @@ class AnalysisView extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
+        _NotesField(controller: c),
+        const SizedBox(height: 8),
         if (hasCycles)
           Card(
             color: theme.colorScheme.primaryContainer,
@@ -181,6 +183,58 @@ class AnalysisView extends StatelessWidget {
             ),
         ],
       ],
+    );
+  }
+}
+
+/// Free notes of the study, saved while typing and printed in the reports.
+/// Small in the overview; grows to a writing area while it has the focus.
+class _NotesField extends StatefulWidget {
+  const _NotesField({required this.controller});
+
+  final RecordingController controller;
+
+  @override
+  State<_NotesField> createState() => _NotesFieldState();
+}
+
+class _NotesFieldState extends State<_NotesField> {
+  late final _text = TextEditingController(text: widget.controller.notes);
+  final _focus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    _text.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return TextField(
+      key: const Key('studyNotes'),
+      controller: _text,
+      focusNode: _focus,
+      minLines: _focus.hasFocus ? 10 : 1,
+      maxLines: _focus.hasFocus ? 16 : 2,
+      keyboardType: TextInputType.multiline,
+      textCapitalization: TextCapitalization.sentences,
+      decoration: InputDecoration(
+        labelText: l.studyNotes,
+        hintText: l.studyNotesHint,
+        prefixIcon: const Icon(Icons.notes),
+        border: const OutlineInputBorder(),
+        isDense: true,
+      ),
+      onChanged: widget.controller.setNotes,
+      onTapOutside: (_) => FocusScope.of(context).unfocus(),
     );
   }
 }

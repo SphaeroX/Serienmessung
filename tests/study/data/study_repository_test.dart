@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:cyclescope/core/database.dart';
 import 'package:cyclescope/study/data/study_repository.dart';
 import 'package:cyclescope/study/domain/study.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as path;
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../../helpers.dart';
 
@@ -64,5 +68,46 @@ void main() {
     await repo.deleteStudy(id);
     expect(await repo.getStudy(id), isNull);
     expect(await repo.getSteps(id), isEmpty);
+  });
+
+  test('notes are saved per study and start empty', () async {
+    final id = await repo.createStudy(
+      name: 'Line 200',
+      mode: StudyMode.timeStudy,
+      steps: ['Pick'],
+      now: DateTime(2026),
+    );
+    expect((await repo.getStudy(id))!.notes, '');
+    await repo.setNotes(id, 'Worker A\nnew fixture');
+    expect((await repo.getStudy(id))!.notes, 'Worker A\nnew fixture');
+  });
+
+  test('migration to schema 8 gives old studies empty notes', () async {
+    sqfliteFfiInit();
+    final dir = await Directory.systemTemp.createTemp('cyclescope_mig8');
+    final file = path.join(dir.path, 'm.db');
+    final v7 = await AppDatabase.open(
+      factory: databaseFactoryFfi,
+      path: file,
+      version: 7,
+    );
+    await v7.db.insert('study', {
+      'name': 'Old',
+      'description': '',
+      'mode': 'timeStudy',
+      'created_at': 0,
+      'last_active_at': 0,
+    });
+    await v7.close();
+
+    final latest = await AppDatabase.open(
+      factory: databaseFactoryFfi,
+      path: file,
+    );
+    final old = (await StudyRepository(latest).listStudies()).single.study;
+    expect(old.name, 'Old');
+    expect(old.notes, '');
+    await latest.close();
+    await dir.delete(recursive: true);
   });
 }

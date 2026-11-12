@@ -106,9 +106,24 @@ class RecordingController extends ChangeNotifier {
     await studies.setCycleTimeMethod(studyId, m.name);
   }
 
+  /// Called when the user picks an analysis unit (screens save it as the
+  /// default so the next analysis starts with the last chosen unit).
+  void Function(TimeUnit unit)? onAnalysisUnitChosen;
+
   void setAnalysisUnit(TimeUnit u) {
     analysisUnit = u;
     notifyListeners();
+    onAnalysisUnitChosen?.call(u);
+  }
+
+  /// Free notes of the study (analysis tab, reports).
+  String notes = '';
+
+  Future<void> setNotes(String text) async {
+    notes = text;
+    await studies.setNotes(studyId, text);
+    // Exports read [study]: keep it in step with the saved notes.
+    study = await studies.getStudy(studyId);
   }
 
   /// Cycle shown in the overlay: the running one, or the one a start would use.
@@ -132,6 +147,7 @@ class RecordingController extends ChangeNotifier {
 
   Future<void> load() async {
     study = await studies.getStudy(studyId);
+    notes = study?.notes ?? '';
     steps = await studies.getSteps(studyId);
     measurements = await measurementRepo.listForStudy(studyId);
     final savedMethod = study?.cycleTimeMethod;

@@ -1052,6 +1052,18 @@ abstract class AppLocalizations {
   /// **'Description'**
   String get exportDescription;
 
+  /// No description provided for @studyNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get studyNotes;
+
+  /// No description provided for @studyNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. workplace, shift, special conditions'**
+  String get studyNotesHint;
+
   /// No description provided for @exportDate.
   ///
   /// In en, this message translates to:

@@ -92,6 +92,7 @@ List<int> buildXlsx(ExportInput x) {
   void kv(String k, CellValue? v) => an.appendRow([t(k), v]);
   kv(l.study, t(x.study.name));
   if (x.study.description.isNotEmpty) kv(l.description, t(x.study.description));
+  if (x.study.notes.isNotEmpty) kv(l.notes, t(x.study.notes));
   kv(l.mode, t(l.modeName));
   kv(l.date, t(DateFormat('yyyy-MM-dd HH:mm').format(x.exportedAt)));
   kv(l.unit, t(unit));

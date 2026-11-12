@@ -139,6 +139,7 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
           ..defaultMethod = settings.defaultMethod
           ..analysisUnit = settings.defaultUnit
           ..displayUnit = settings.defaultUnit
+          ..onAnalysisUnitChosen = _saveUnit
           ..addListener(_onChanged);
     _ticker = createTicker((_) => _now.value = position)..start();
 
@@ -265,6 +266,10 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
     await controller.load();
     await _open(path);
   }
+
+  void _saveUnit(TimeUnit unit) => ref
+      .read(settingsProvider.notifier)
+      .update((s) => s.copyWith(defaultUnit: unit));
 
   void _onChanged() {
     final playing = playback.playing;

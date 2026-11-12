@@ -13,6 +13,7 @@ const s = 1000000;
 const labels = ExportLabels(
   study: 'Study',
   description: 'Description',
+  notes: 'Notes',
   mode: 'Mode',
   modeName: 'Time study',
   date: 'Date',
@@ -70,33 +71,37 @@ Measurement m(
   note: note,
 );
 
-ExportInput input({String locale = 'en', TimeUnit unit = TimeUnit.seconds}) =>
-    ExportInput(
-      study: Study(
-        id: 1,
-        name: 'Line; "200"',
-        description: 'Früh',
-        mode: StudyMode.timeStudy,
-        createdAt: DateTime(2026),
-        lastActiveAt: DateTime(2026),
-      ),
-      steps: const [
-        StepDefinition(id: 1, studyId: 1, position: 0, name: 'Pick'),
-        StepDefinition(id: 2, studyId: 1, position: 1, name: 'Place; fast'),
-      ],
-      measurements: [
-        m(1, 1, 1, 100 * s, 1500000),
-        m(2, 1, 2, 101500000, 2 * s),
-        m(3, 2, 1, 103500000, 1 * s),
-        m(4, 2, 1, 104 * s, 3 * s, special: true, note: 'Jam'),
-        m(5, 2, 2, 104500000, 2500000),
-      ],
-      unit: unit,
-      method: CycleTimeMethod.median,
-      locale: locale,
-      exportedAt: DateTime(2026, 11, 11, 10, 30),
-      labels: labels,
-    );
+ExportInput input({
+  String locale = 'en',
+  TimeUnit unit = TimeUnit.seconds,
+  String notes = '',
+}) => ExportInput(
+  study: Study(
+    id: 1,
+    name: 'Line; "200"',
+    description: 'Früh',
+    notes: notes,
+    mode: StudyMode.timeStudy,
+    createdAt: DateTime(2026),
+    lastActiveAt: DateTime(2026),
+  ),
+  steps: const [
+    StepDefinition(id: 1, studyId: 1, position: 0, name: 'Pick'),
+    StepDefinition(id: 2, studyId: 1, position: 1, name: 'Place; fast'),
+  ],
+  measurements: [
+    m(1, 1, 1, 100 * s, 1500000),
+    m(2, 1, 2, 101500000, 2 * s),
+    m(3, 2, 1, 103500000, 1 * s),
+    m(4, 2, 1, 104 * s, 3 * s, special: true, note: 'Jam'),
+    m(5, 2, 2, 104500000, 2500000),
+  ],
+  unit: unit,
+  method: CycleTimeMethod.median,
+  locale: locale,
+  exportedAt: DateTime(2026, 11, 11, 10, 30),
+  labels: labels,
+);
 
 /// Numeric value of a decoded cell (whole numbers come back as int cells).
 num? numOf(CellValue? v) => switch (v) {
@@ -159,6 +164,23 @@ void main() {
       );
       // Cycles 3.5 s and 3.5 s → median 3.5 s.
       expect(numOf(real[1]!.value), 3.5);
+    });
+  });
+
+  group('study notes', () {
+    test('CSV lists the notes in the header block', () {
+      final csv = buildCsv(input(notes: 'Night shift, new fixture'));
+      final lines = csv.substring(1).trimRight().split('\r\n');
+      expect(lines, contains('Notes,"Night shift, new fixture"'));
+      expect(buildCsv(input()), isNot(contains('Notes,')));
+    });
+
+    test('Excel lists the notes on the analysis sheet', () {
+      final book = Excel.decodeBytes(buildXlsx(input(notes: 'Night shift')));
+      final row = book.tables['Analysis']!.rows.firstWhere(
+        (r) => r.isNotEmpty && r[0]?.value.toString() == 'Notes',
+      );
+      expect(row[1]!.value.toString(), 'Night shift');
     });
   });
 }

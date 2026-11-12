@@ -270,6 +270,8 @@
   },
   "exportStudy": "Study",
   "exportDescription": "Description",
+  "studyNotes": "Notes",
+  "studyNotesHint": "e.g. workplace, shift, special conditions",
   "exportDate": "Exported",
   "exportUnit": "Unit",
   "exportCycle": "Cycle",

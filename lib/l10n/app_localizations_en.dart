@@ -564,6 +564,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportDescription => 'Description';
 
   @override
+  String get studyNotes => 'Notes';
+
+  @override
+  String get studyNotesHint => 'e.g. workplace, shift, special conditions';
+
+  @override
   String get exportDate => 'Exported';
 
   @override
