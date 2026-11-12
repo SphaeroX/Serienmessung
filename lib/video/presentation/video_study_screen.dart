@@ -59,7 +59,7 @@ class VideoStudyScreen extends ConsumerStatefulWidget {
 }
 
 class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final VideoPlayback playback;
   late final RecordingController controller;
   late final Ticker _ticker;
@@ -80,6 +80,18 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
   Uint8List? _frame;
   Timer? _prefetchTimer;
   bool _wasPlaying = false;
+
+  /// Marking (video), cycles and analysis; only the marking tab shows the
+  /// video so the lists get the whole screen.
+  late final TabController _tabs = TabController(length: 3, vsync: this)
+    ..addListener(_onTab);
+  int _tab = 0;
+
+  void _onTab() {
+    if (_tabs.index == _tab) return;
+    if (_tabs.index != 0 && playback.playing) unawaited(playback.pause());
+    setState(() => _tab = _tabs.index);
+  }
 
   /// Smooth video position used as the time base and for the timeline.
   int get position => _interpolator.estimate(_mono.nowMicros());
@@ -243,6 +255,7 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
     _keySub?.cancel();
     _interpreter.dispose();
     _ticker.dispose();
+    _tabs.dispose();
     _prefetchTimer?.cancel();
     _cache?.clear();
     unawaited(_frameSource.close());
@@ -359,6 +372,43 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
     await controller.load();
   }
 
+  /// Video, transport, timeline, current step and the marker buttons.
+  Widget _markTab(RecordingController c) => Column(
+    children: [
+      Expanded(
+        child: _VideoArea(playback: playback, frame: _frame),
+      ),
+      _Transport(
+        playback: playback,
+        now: _now,
+        onToggle: _togglePlay,
+        onStep: _step,
+      ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: VideoTimeline(
+          position: _now,
+          durationMicros: playback.durationMicros,
+          measurements: c.measurements,
+          steps: c.steps,
+          onSeek: _seek,
+          onMoveBoundary: _moveMarker,
+          onScrubStart: () {
+            if (playback.playing) playback.pause();
+          },
+        ),
+      ),
+      StepOverlay(controller: c, now: _now),
+      _MarkBar(
+        controller: c,
+        onMark: () => _mark(),
+        onCloseCycle: _closeCycle,
+        onSpecialDown: () => c.beginSpecial(at: position),
+        onSpecialUp: () => c.endSpecial(at: position),
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -401,55 +451,24 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
           ? const Center(child: CircularProgressIndicator())
           : !hasVideo
           ? _NoVideo(missing: _videoMissing, onChoose: _chooseVideo)
-          : DefaultTabController(
-              length: 2,
-              child: Column(
-                children: [
-                  _VideoArea(playback: playback, frame: _frame),
-                  _Transport(
-                    playback: playback,
-                    now: _now,
-                    onToggle: _togglePlay,
-                    onStep: _step,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: VideoTimeline(
-                      position: _now,
-                      durationMicros: playback.durationMicros,
-                      measurements: c.measurements,
-                      steps: c.steps,
-                      onSeek: _seek,
-                      onMoveBoundary: _moveMarker,
-                      onScrubStart: () {
-                        if (playback.playing) playback.pause();
-                      },
-                    ),
-                  ),
-                  StepOverlay(controller: c, now: _now),
-                  TabBar(
-                    tabs: [
-                      Tab(text: l.tabCycles),
-                      Tab(key: const Key('analysisTab'), text: l.tabAnalysis),
-                    ],
-                  ),
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        CyclesView(controller: c),
-                        AnalysisView(controller: c),
-                      ],
-                    ),
-                  ),
-                  _MarkBar(
-                    controller: c,
-                    onMark: () => _mark(),
-                    onCloseCycle: _closeCycle,
-                    onSpecialDown: () => c.beginSpecial(at: position),
-                    onSpecialUp: () => c.endSpecial(at: position),
-                  ),
-                ],
-              ),
+          : Column(
+              children: [
+                TabBar(
+                  controller: _tabs,
+                  tabs: [
+                    Tab(key: const Key('markTab'), text: l.tabMark),
+                    Tab(key: const Key('cyclesTab'), text: l.tabCycles),
+                    Tab(key: const Key('analysisTab'), text: l.tabAnalysis),
+                  ],
+                ),
+                Expanded(
+                  child: switch (_tab) {
+                    0 => _markTab(c),
+                    1 => CyclesView(controller: c),
+                    _ => AnalysisView(controller: c),
+                  },
+                ),
+              ],
             ),
     );
   }
@@ -531,10 +550,8 @@ class _VideoAreaState extends State<_VideoArea> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final maxHeight = MediaQuery.sizeOf(context).height * 0.32;
     return Container(
       color: Colors.black,
-      constraints: BoxConstraints(maxHeight: maxHeight),
       width: double.infinity,
       child: Stack(
         children: [

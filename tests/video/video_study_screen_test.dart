@@ -6,6 +6,8 @@ import 'package:cyclescope/recording/domain/key_interpreter.dart';
 import 'package:cyclescope/study/data/study_repository.dart';
 import 'package:cyclescope/study/domain/study.dart';
 import 'package:cyclescope/video/domain/frame_cache.dart';
+import 'package:cyclescope/analysis/presentation/analysis_view.dart';
+import 'package:cyclescope/recording/presentation/cycles_view.dart';
 import 'package:cyclescope/video/presentation/video_study_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -171,6 +173,67 @@ void main() {
     await tester.tap(find.byKey(const Key('speed-0.5')));
     await pumpFrames(tester, count: 4);
     expect(video.currentSpeed, 0.5);
+  });
+
+  testWidgets('marking, cycles and analysis are separate tabs', (tester) async {
+    await tester.runAsync(
+      () => StudyRepository(db).setVideoPath(studyId, 'fake:v.mp4'),
+    );
+    await pump(tester);
+    final videoParts = [
+      find.byKey(const Key('fakeVideo')),
+      find.byKey(const Key('playPause')),
+      find.byKey(const Key('markButton')),
+      find.byKey(const Key('closeCycleButton')),
+      find.byKey(const Key('currentStepName')),
+    ];
+
+    // The marking tab is open first and holds video, transport and markers.
+    for (final part in videoParts) {
+      expect(part, findsOneWidget);
+    }
+    expect(find.byType(CyclesView), findsNothing);
+    expect(find.byType(AnalysisView), findsNothing);
+    final videoHeight = tester
+        .getSize(find.byKey(const Key('videoZoom')))
+        .height;
+
+    // Playing video pauses when another tab opens; the video gives way.
+    await tester.tap(find.byKey(const Key('playPause')));
+    await settle(tester);
+    expect(video.playing, isTrue);
+    await tester.tap(find.byKey(const Key('cyclesTab')));
+    await settle(tester);
+    expect(video.playing, isFalse);
+    expect(find.byType(CyclesView), findsOneWidget);
+    for (final part in videoParts) {
+      expect(part, findsNothing);
+    }
+
+    await tester.tap(find.byKey(const Key('analysisTab')));
+    await settle(tester);
+    expect(find.byType(AnalysisView), findsOneWidget);
+    for (final part in videoParts) {
+      expect(part, findsNothing);
+    }
+
+    // Swiping must not switch tabs: on the marking tab it pans the video.
+    await tester.tap(find.byKey(const Key('markTab')));
+    await settle(tester);
+    expect(find.byKey(const Key('fakeVideo')), findsOneWidget);
+    await tester.fling(
+      find.byKey(const Key('videoZoom')),
+      const Offset(-400, 0),
+      1000,
+    );
+    await settle(tester);
+    expect(find.byKey(const Key('fakeVideo')), findsOneWidget);
+
+    // Without the lists below, the video gets more room than before.
+    final screenHeight =
+        tester.view.physicalSize.height / tester.view.devicePixelRatio;
+    expect(videoHeight, greaterThan(screenHeight * 0.4));
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('the video can be zoomed, panned and reset', (tester) async {

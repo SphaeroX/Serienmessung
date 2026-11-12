@@ -255,6 +255,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tabLive => 'Live';
 
   @override
+  String get tabMark => 'Markieren';
+
+  @override
   String get tabCycles => 'Zyklen';
 
   @override

@@ -524,6 +524,12 @@ abstract class AppLocalizations {
   /// **'Live'**
   String get tabLive;
 
+  /// No description provided for @tabMark.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark'**
+  String get tabMark;
+
   /// No description provided for @tabCycles.
   ///
   /// In en, this message translates to:
