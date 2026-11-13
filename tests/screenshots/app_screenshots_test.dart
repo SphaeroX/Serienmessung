@@ -7,14 +7,20 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:cyclescope/analysis/domain/statistics.dart';
 import 'package:cyclescope/app.dart';
 import 'package:cyclescope/core/clock.dart';
 import 'package:cyclescope/core/database.dart';
 import 'package:cyclescope/core/providers.dart';
+import 'package:cyclescope/core/time_format.dart';
+import 'package:cyclescope/group/data/group_repository.dart';
+import 'package:cyclescope/group/presentation/group_screen.dart';
 import 'package:cyclescope/l10n/app_localizations.dart';
 import 'package:cyclescope/recording/data/measurement_repository.dart';
 import 'package:cyclescope/recording/domain/measurement.dart';
 import 'package:cyclescope/recording/presentation/recording_screen.dart';
+import 'package:cyclescope/revision/data/revision_repository.dart';
+import 'package:cyclescope/revision/presentation/revisions_screen.dart';
 import 'package:cyclescope/settings/presentation/settings_screen.dart';
 import 'package:cyclescope/study/data/study_repository.dart';
 import 'package:cyclescope/study/domain/study.dart';
@@ -48,6 +54,8 @@ class _Texts {
     required this.timerStudy,
     required this.timerSteps,
     required this.note,
+    required this.line,
+    required this.lineDescription,
   });
 
   final String study;
@@ -57,6 +65,8 @@ class _Texts {
   final String timerStudy;
   final List<String> timerSteps;
   final String note;
+  final String line;
+  final String lineDescription;
 }
 
 const _texts = {
@@ -68,6 +78,8 @@ const _texts = {
     timerStudy: 'Set-up workshop',
     timerSteps: ['Change tool', 'Measure', 'Clean'],
     note: 'Material missing',
+    line: 'Assembly line 3',
+    lineDescription: 'Housing, from blank to packed part',
   ),
   'de': _Texts(
     study: 'Montagelinie 3 – Gehäuse',
@@ -82,6 +94,8 @@ const _texts = {
     timerStudy: 'Rüstwerkstatt',
     timerSteps: ['Werkzeug wechseln', 'Messen', 'Reinigen'],
     note: 'Material fehlt',
+    line: 'Montagelinie 3',
+    lineDescription: 'Gehäuse, vom Rohteil bis zum Packen',
   ),
 };
 
@@ -207,18 +221,30 @@ void main() {
   }
 
   /// Time study with [cycles] recorded cycles (one with a special time).
-  Future<int> seedTimeStudy(_Texts t, {int cycles = 6}) async {
+  Future<int> seedTimeStudy(
+    _Texts t, {
+    int cycles = 6,
+    double scale = 1,
+    int? into,
+  }) async {
     final repo = StudyRepository(db);
-    final id = await repo.createStudy(
-      name: t.study,
-      description: t.description,
-      mode: StudyMode.timeStudy,
-      steps: t.steps,
-      now: DateTime(2026, 11, 10, 7, 30),
-    );
+    final id =
+        into ??
+        await repo.createStudy(
+          name: t.study,
+          description: t.description,
+          mode: StudyMode.timeStudy,
+          steps: t.steps,
+          now: DateTime(2026, 11, 10, 7, 30),
+        );
     final steps = await repo.getSteps(id);
-    final measurements = MeasurementRepository(db);
-    const base = [4.2, 7.8, 11.5, 3.1];
+    final measurements = MeasurementRepository(
+      db,
+      now: () => DateTime(2026, 11, 10, 8, 15),
+    );
+    final base = [
+      for (final b in [4.2, 7.8, 11.5, 3.1]) b * scale,
+    ];
     const jitter = [0.0, 0.4, -0.3, 0.7, -0.5, 0.2, 0.1, -0.2];
     var at = 0;
     for (var c = 1; c <= cycles; c++) {
@@ -364,6 +390,49 @@ void main() {
       video.moveTo(31 * _s);
       await pumpFrames(tester);
       await shot(tester, lang, '06_video_study');
+    });
+
+    screenshotTest('$lang: group and revisions', (tester) async {
+      late int lineId;
+      late int studyId;
+      await tester.runAsync(() async {
+        // Last year's measurement, archived as revision 1.
+        studyId = await seedTimeStudy(t, scale: 0.93);
+        await RevisionRepository(db)
+            .startNewRevision(studyId, now: DateTime(2026, 11, 10, 7));
+        await seedTimeStudy(t, into: studyId);
+        final video = await seedVideoStudy(t);
+        final timer = await StudyRepository(db).createStudy(
+          name: t.timerStudy,
+          mode: StudyMode.stepTimer,
+          steps: t.timerSteps,
+          now: DateTime(2026, 11, 8, 10),
+        );
+        final groups = GroupRepository(db);
+        lineId = await groups.createGroup(
+          name: t.line,
+          description: t.lineDescription,
+          now: DateTime(2026, 11, 1),
+        );
+        for (final id in [video, studyId, timer]) {
+          await groups.moveToGroup(id, lineId);
+        }
+      });
+      await show(tester, lang, GroupScreen(groupId: lineId));
+      await shot(tester, lang, '08_group');
+
+      await show(
+        tester,
+        lang,
+        RevisionsScreen(
+          studyId: studyId,
+          unit: TimeUnit.hm,
+          method: CycleTimeMethod.median,
+        ),
+      );
+      await tester.tap(find.byKey(const Key('revision_1')));
+      await pumpFrames(tester);
+      await shot(tester, lang, '09_revisions');
     });
 
     screenshotTest('$lang: settings', (tester) async {

@@ -63,7 +63,7 @@ A change is done when all of these hold:
 - `tests/screenshots/app_screenshots_test.dart` renders the main screens (EN + DE) with seeded sample data into `screenshots/<lang>/`. It is skipped in normal runs and enabled with `flutter test tests/screenshots --dart-define=SCREENSHOTS=true`.
 - Real fonts (Roboto, Material Icons) are loaded from `$FLUTTER_ROOT/bin/cache/artifacts/material_fonts`; shadows are switched on per test (`debugDisableShadows`) and switched off again before the test ends.
 - CI: `.github/workflows/screenshots.yml` runs the full suite and the generator on every push to `main` (Ubuntu, Flutter pinned to the local version) and commits changed images. Do not commit locally rendered screenshots; CI is the single source.
-- New screens or major UI changes: add a scene to the generator.
+- New screens or major UI changes: add a scene to the generator (scenes 08 group and 09 revisions since Task_23).
 
 ---
 Maintenance: update this file immediately when the test suite or strategy changes.

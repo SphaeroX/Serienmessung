@@ -49,8 +49,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
 
 ## Offene Fragen / Annahmen
 
@@ -64,15 +64,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `backupVersion = 2`; Export von `groups`, `groupRef`, `groupPosition`, `revision`, `recordedAt`, `revisions` (Schritte + Zeiten); Import/Validierung für v1 und v2; Ersetzen löscht Gruppen und Revisionen mit. Screenshot-Szenen `08_group` und `09_revisions`. Doku (`docs/architecture.md`, `docs/testing.md`, README) aktualisiert. Zusätzlich: Revisionsvergleich zeigt eine Nachkommastelle mehr als die Live-Anzeige (sonst erschien "+0 HM" rot) – gefunden bei der Sichtprüfung der Screenshots.
+- **Learnings & Stolpersteine:** Lokal erzeugte Screenshots nicht committen (`git checkout -- screenshots`), CI erzeugt sie.
+- **Wichtige Entscheidungen und ihre Gründe:** Gruppen werden beim Zusammenführen über den exakten Namen wiederverwendet; importierte Studien kommen mit ihrer relativen Reihenfolge hinter die vorhandenen. Schritt-Bezüge gelöschter Schritte in Revisionen bekommen negative IDs (keine Kollision mit echten Schritten).
+- **Auswirkungen auf Folge-Tasks:** Keine – letzter Task.
+- **Hinweise zu Tests und Befehlen:** `tests/backup/backup_v2_test.dart` (Version, Round-Trip inkl. Gruppen/Reihenfolge/Revisionen/Zeitstempel, doppelter Import, Zusammenführen in bestehende Gruppe, Ersetzen, v1-Import, defekte Revision). Screenshots: `flutter test tests/screenshots --dart-define=SCREENSHOTS=true`. Manuell offen: Geräteprüfung von Gruppen-Report (Teilen-Dialog, Öffnen in Excel/PDF-Viewer) und Revisions-Ablauf.

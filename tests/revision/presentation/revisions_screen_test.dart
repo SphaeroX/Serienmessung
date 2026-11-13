@@ -163,4 +163,49 @@ void main() {
       isEmpty,
     );
   });
+
+  testWidgets('small deviations show one decimal more than the live unit', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      await cycle(1, 10, 30);
+      await RevisionRepository(db)
+          .startNewRevision(studyId, now: DateTime(2026));
+      // Load: 10 s → 10.24 s = +0.4 HM.
+      final repo = MeasurementRepository(db, now: () => now);
+      for (final (i, us) in [(0, 10240000), (1, 30000000)]) {
+        await repo.insert(
+          studyId,
+          MeasurementDraft(
+            cycle: 1,
+            stepId: stepIds[i],
+            kind: MeasurementKind.normal,
+            startMicros: 0,
+            endMicros: us,
+            durationMicros: us,
+          ),
+        );
+      }
+    });
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          ...fakePlatformOverrides(),
+        ],
+        child: localizedApp(
+          RevisionsScreen(
+            studyId: studyId,
+            unit: TimeUnit.hm,
+            method: CycleTimeMethod.mean,
+          ),
+        ),
+      ),
+    );
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('revision_1')));
+    await tester.pumpAndSettle();
+    expect(find.text('+0.4 HM'), findsWidgets);
+    expect(find.text('16.7 HM'), findsOneWidget);
+  });
 }

@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-13 – Roadmap 01–18 abgeschlossen, Feedback-Runde 1 erledigt. **Erweiterung 2 (Gruppen, Revisionen, Gruppen-Reports) läuft: Task_19–23.** Offen sind außerdem manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
+Stand: 2026-11-13 – **Roadmap abgeschlossen**: Tasks 01–18, Feedback-Runde 1 und Erweiterung 2 (Gruppen, Revisionen, Nachfrage bei alter Messung, Gruppen-Reports, Backup v2; Task_19–23) erledigt. 297 Tests grün, `flutter analyze` ohne Befunde. Offen sind nur manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
 
 | Task | Titel | Status |
 |---|---|---|
@@ -40,7 +40,7 @@ Stand: 2026-11-13 – Roadmap 01–18 abgeschlossen, Feedback-Runde 1 erledigt. 
 | 20 | Messzeitpunkt & Revisionen | erledigt |
 | 21 | Nachfrage bei veralteter Messung | erledigt |
 | 22 | Gruppen-Report PDF + Excel | erledigt |
-| 23 | Backup v2, Screenshots & Doku | offen |
+| 23 | Backup v2, Screenshots & Doku | erledigt |
 
 Status ist `offen`, `läuft` (Datei trägt das Präfix `RUN_`) oder `erledigt` (Datei liegt in `Archiv/`). Die Tabelle wird beim Archivieren eines Tasks aktualisiert.
 
@@ -90,6 +90,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_20] Revisionen:** Feature-Ordner `lib/revision/`. Migration v10: `measurement.recorded_at`, `study.revision`, Tabellen `revision`, `revision_step`, `revision_measurement`. Alle bestehenden Abfragen sehen weiterhin nur die aktuelle Revision (Tabelle `measurement`) – archivierte Zeiten liegen getrennt und werden nur über `RevisionRepository` gelesen. Zeitdifferenzen formatiert `formatDelta`/`formatRatioDelta` (`core/time_format.dart`). "Neue Messung" archiviert, statt zu löschen.
 - **[Task_21] Veraltete Messung:** Einstellung `staleDays` (Standard 10, 0 = nie; Auswahl 0/3/7/10/14/30/60/90/180/365). Nachfrage zentral in `openStudy` – jeder Weg, eine Studie zu öffnen, sollte über `openStudy` laufen.
 - **[Task_22] Gruppen-Report:** `buildGroupXlsx`/`buildGroupPdf` (`lib/export/domain/`), Export-Knopf im Gruppen-Bildschirm. Einzel-Exporte enthalten jetzt Revision und letzte Messung, das PDF zusätzlich die Abweichung zur letzten archivierten Revision. Neue Export-Texte als optionale Labels (`ExportLabels.revision`), damit bestehende Aufrufer/Tests unverändert bleiben.
+- **[Task_23] Backup v2:** Format-Version 2 (Gruppen, Reihenfolge, Revisionen, `recordedAt`), v1 bleibt importierbar. Neue Tabellen mit Studienbezug müssen in `BackupService` (Export, Import, Ersetzen, Validierung) und in `StudyRepository.copyStudy` ergänzt werden.
 
 ## Auffälligkeiten & Details
 

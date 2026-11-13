@@ -258,10 +258,18 @@ class _RevisionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    String t(double? micros) =>
-        micros == null ? '–' : formatTime(micros.round(), unit, locale: locale);
-    String d(double? micros) =>
-        micros == null ? '–' : formatDelta(micros, unit, locale: locale);
+    // One decimal more than the live displays: deviations are often small.
+    final decimals = switch (unit) {
+      TimeUnit.hm => 1,
+      TimeUnit.seconds => 2,
+      _ => 0,
+    };
+    String t(double? micros) => micros == null
+        ? '–'
+        : formatTime(micros.round(), unit, decimals: decimals, locale: locale);
+    String d(double? micros) => micros == null
+        ? '–'
+        : formatDelta(micros, unit, decimals: decimals, locale: locale);
     Color? color(double? delta) => delta == null || delta.round() == 0
         ? null
         : delta > 0
