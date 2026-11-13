@@ -32,6 +32,7 @@ class Study {
     this.notes = '',
     this.groupId,
     this.groupPosition = 0,
+    this.revision = 1,
   });
 
   final int id;
@@ -59,6 +60,10 @@ class Study {
 
   /// 0-based place of the study within its group.
   final int groupPosition;
+
+  /// Number of the current revision (measurement round); earlier rounds are
+  /// archived as revisions.
+  final int revision;
 }
 
 /// One defined work step of a study.

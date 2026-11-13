@@ -100,6 +100,51 @@ final List<Migration> migrations = [
       'ALTER TABLE study ADD COLUMN group_position INTEGER NOT NULL DEFAULT 0',
     );
   },
+  // v10: wall-clock time of each measurement and archived revisions.
+  (db) async {
+    await db.execute('ALTER TABLE measurement ADD COLUMN recorded_at INTEGER');
+    await db.execute(
+      'ALTER TABLE study ADD COLUMN revision INTEGER NOT NULL DEFAULT 1',
+    );
+    await db.execute('''
+      CREATE TABLE revision (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        study_id INTEGER NOT NULL REFERENCES study(id) ON DELETE CASCADE,
+        number INTEGER NOT NULL,
+        closed_at INTEGER NOT NULL,
+        first_recorded_at INTEGER,
+        last_recorded_at INTEGER,
+        cycle_time_method TEXT,
+        notes TEXT NOT NULL DEFAULT ''
+      )''');
+    // step_id is the id the step had in the study (no foreign key: the step
+    // may be deleted later); it links times to steps and revisions to the
+    // current steps.
+    await db.execute('''
+      CREATE TABLE revision_step (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        revision_id INTEGER NOT NULL REFERENCES revision(id) ON DELETE CASCADE,
+        step_id INTEGER NOT NULL,
+        position INTEGER NOT NULL,
+        name TEXT NOT NULL
+      )''');
+    await db.execute('''
+      CREATE TABLE revision_measurement (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        revision_id INTEGER NOT NULL REFERENCES revision(id) ON DELETE CASCADE,
+        cycle INTEGER NOT NULL,
+        step_id INTEGER,
+        kind TEXT NOT NULL,
+        start_us INTEGER NOT NULL,
+        end_us INTEGER NOT NULL,
+        duration_us INTEGER NOT NULL,
+        note TEXT NOT NULL DEFAULT '',
+        recorded_at INTEGER
+      )''');
+    await db.execute(
+      'CREATE INDEX idx_revision_study ON revision(study_id, number)',
+    );
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.

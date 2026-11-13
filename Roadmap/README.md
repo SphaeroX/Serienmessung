@@ -37,7 +37,7 @@ Stand: 2026-11-13 – Roadmap 01–18 abgeschlossen, Feedback-Runde 1 erledigt. 
 | 17 | Export PDF-Bericht | erledigt |
 | 18 | Backup & Wiederherstellen | erledigt |
 | 19 | Gruppen: Datenmodell & Verwaltung | erledigt |
-| 20 | Messzeitpunkt & Revisionen | offen |
+| 20 | Messzeitpunkt & Revisionen | erledigt |
 | 21 | Nachfrage bei veralteter Messung | offen |
 | 22 | Gruppen-Report PDF + Excel | offen |
 | 23 | Backup v2, Screenshots & Doku | offen |
@@ -87,6 +87,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Nach Task_18] Feedback-Runde 1:** Spracheingabe-Button breit unter dem Feld; Aufrufe der Erkennung werden serialisiert (zweite Aufnahme ging vorher nicht zuverlässig). Video-Studien starten ohne Schritte (`study.steps_open`, Migration v7): Marker im ersten Zyklus legen Schritte an, "Zyklus fertig" benennt und fixiert sie; "Schritte als Live-Zeitstudie übernehmen" kopiert sie in eine neue Zeitstudie. Messbildschirm: Kopf (Zeiten, Schritt-Overlay) und Steuerleiste nur im Tab "Live". `lib/` und `lib/l10n/` tragen unter Windows das Attribut "Schreibgeschützt" – `flutter gen-l10n` verweigert dann; Workaround: in einer Kopie generieren und die `app_localizations*.dart` zurückkopieren.
 
 - **[Task_19] Gruppen:** Feature-Ordner `lib/group/`. Migration v9: `study_group`, `study.group_id` (`ON DELETE SET NULL`), `study.group_position`. Eine Studie gehört zu höchstens einer Gruppe; Kopieren (`StudyRepository.copyStudy`) für "mehrere Gruppen". Gruppen-Liste über das Ordner-Symbol der Startseite; Studienkarten haben ein Menü (Verschieben, Kopieren, Löschen) und zeigen die Gruppe. `copyStudy` kopiert Schritte und Messungen – neue Tabellen mit Studienbezug (z. B. Revisionen) müssen dort mitkopiert werden.
+- **[Task_20] Revisionen:** Feature-Ordner `lib/revision/`. Migration v10: `measurement.recorded_at`, `study.revision`, Tabellen `revision`, `revision_step`, `revision_measurement`. Alle bestehenden Abfragen sehen weiterhin nur die aktuelle Revision (Tabelle `measurement`) – archivierte Zeiten liegen getrennt und werden nur über `RevisionRepository` gelesen. Zeitdifferenzen formatiert `formatDelta`/`formatRatioDelta` (`core/time_format.dart`). "Neue Messung" archiviert, statt zu löschen.
 
 ## Auffälligkeiten & Details
 

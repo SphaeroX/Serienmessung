@@ -1507,6 +1507,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Drag the handle to change the order.'**
   String get reorderHint;
+
+  /// No description provided for @revisions.
+  ///
+  /// In en, this message translates to:
+  /// **'Revisions'**
+  String get revisions;
+
+  /// No description provided for @revisionCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Revision {number} (current)'**
+  String revisionCurrent(int number);
+
+  /// No description provided for @revisionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Revision {number}'**
+  String revisionTitle(int number);
+
+  /// No description provided for @lastMeasured.
+  ///
+  /// In en, this message translates to:
+  /// **'Last measurement: {date}'**
+  String lastMeasured(String date);
+
+  /// No description provided for @measuredRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Measured {from} – {to}'**
+  String measuredRange(String from, String to);
+
+  /// No description provided for @newRevision.
+  ///
+  /// In en, this message translates to:
+  /// **'Start new measurement'**
+  String get newRevision;
+
+  /// No description provided for @newRevisionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Measure the study again (e.g. a year later). The current times are archived as a revision and stay available for comparison.'**
+  String get newRevisionHint;
+
+  /// No description provided for @newRevisionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'The current times are kept as revision {number} for comparison. The study then starts empty with the same steps.'**
+  String newRevisionConfirm(int number);
+
+  /// No description provided for @newRevisionStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Revision {number} started'**
+  String newRevisionStarted(int number);
+
+  /// No description provided for @stopRecordingFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the recording first.'**
+  String get stopRecordingFirst;
+
+  /// No description provided for @noRevisions.
+  ///
+  /// In en, this message translates to:
+  /// **'No earlier revisions yet.'**
+  String get noRevisions;
+
+  /// No description provided for @revisionThen.
+  ///
+  /// In en, this message translates to:
+  /// **'Then'**
+  String get revisionThen;
+
+  /// No description provided for @revisionNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get revisionNow;
+
+  /// No description provided for @revisionDelta.
+  ///
+  /// In en, this message translates to:
+  /// **'Δ'**
+  String get revisionDelta;
+
+  /// No description provided for @deleteRevision.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete revision'**
+  String get deleteRevision;
+
+  /// No description provided for @deleteRevisionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete revision {number} with all its times?'**
+  String deleteRevisionConfirm(int number);
+
+  /// No description provided for @removedStep.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (removed)'**
+  String removedStep(String name);
+
+  /// No description provided for @revisionNoTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'No times recorded yet.'**
+  String get revisionNoTimes;
 }
 
 class _AppLocalizationsDelegate

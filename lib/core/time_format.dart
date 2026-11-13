@@ -50,6 +50,38 @@ String formatTime(
   return '$number ${unit.label}';
 }
 
+/// Formats a deviation with its sign ("+5.00 s", "-3.00 s", "±0.00 s").
+String formatDelta(
+  num micros,
+  TimeUnit unit, {
+  int? decimals,
+  String locale = 'en',
+}) {
+  final rounded = micros.round();
+  final body = formatTime(
+    rounded.abs(),
+    unit,
+    decimals: decimals,
+    locale: locale,
+  );
+  final sign = rounded > 0
+      ? '+'
+      : rounded < 0
+      ? '-'
+      : '±';
+  return '$sign$body';
+}
+
+/// Formats a relative change (0.05 → "+5.0 %").
+String formatRatioDelta(double ratio, {String locale = 'en'}) {
+  final sign = ratio > 0
+      ? '+'
+      : ratio < 0
+      ? '-'
+      : '±';
+  return '$sign${formatNumber(ratio.abs() * 100, 1, locale: locale)} %';
+}
+
 /// Formats a plain number with fixed [decimals] for [locale].
 String formatNumber(double value, int decimals, {String locale = 'en'}) {
   final f = NumberFormat.decimalPatternDigits(

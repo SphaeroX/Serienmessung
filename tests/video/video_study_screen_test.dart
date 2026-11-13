@@ -8,6 +8,7 @@ import 'package:cyclescope/study/domain/study.dart';
 import 'package:cyclescope/video/domain/frame_cache.dart';
 import 'package:cyclescope/analysis/presentation/analysis_view.dart';
 import 'package:cyclescope/recording/presentation/cycles_view.dart';
+import 'package:cyclescope/revision/presentation/revisions_screen.dart';
 import 'package:cyclescope/video/presentation/video_study_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -496,5 +497,16 @@ void main() {
     await g.up();
     await settle(tester);
     expect(await durations(tester), [3 * s, 2 * s]);
+  });
+
+  testWidgets('the study menu opens the revisions', (tester) async {
+    await pump(tester);
+    await tester.tap(find.byKey(const Key('studyMenu')));
+    await pumpFrames(tester);
+    await tester.tap(find.byKey(const Key('revisionsItem')));
+    await pumpFrames(tester);
+    await settle(tester);
+    expect(find.byType(RevisionsScreen), findsOneWidget);
+    expect(find.text('Revision 1 (current)'), findsOneWidget);
   });
 }

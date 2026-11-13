@@ -50,10 +50,15 @@ class Measurement extends MeasurementDraft {
     required super.endMicros,
     required super.durationMicros,
     super.note,
+    this.recordedAt,
   });
 
   final int id;
   final int studyId;
+
+  /// Wall-clock time the measurement was stored; null for data from before
+  /// schema 10.
+  final DateTime? recordedAt;
 
   bool get isSpecial => kind == MeasurementKind.special;
 }

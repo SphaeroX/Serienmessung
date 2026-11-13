@@ -11,6 +11,7 @@ import '../../core/providers.dart';
 import '../../core/time_format.dart';
 import '../../export/presentation/export_menu.dart';
 import '../../l10n/app_localizations.dart';
+import '../../revision/presentation/revisions_screen.dart';
 import '../../recording/domain/key_interpreter.dart';
 import '../../recording/domain/recording_engine.dart';
 import '../../recording/platform/hardware_keys.dart';
@@ -440,6 +441,23 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
     ],
   );
 
+  Future<void> _openRevisions() async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final number = await openRevisions(
+      context,
+      studyId: widget.studyId,
+      unit: controller.analysisUnit,
+      method: controller.cycleTimeMethod,
+      canStartNew: controller.status == EngineStatus.idle,
+    );
+    if (number == null) return;
+    await controller.load();
+    messenger.showSnackBar(
+      SnackBar(content: Text(l.newRevisionStarted(number))),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -468,6 +486,12 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
           PopupMenuButton<void>(
             key: const Key('studyMenu'),
             itemBuilder: (_) => [
+              PopupMenuItem<void>(
+                key: const Key('revisionsItem'),
+                enabled: c.loaded,
+                onTap: _openRevisions,
+                child: Text(l.revisions),
+              ),
               PopupMenuItem<void>(
                 key: const Key('useAsTimeStudy'),
                 enabled: c.steps.isNotEmpty && !c.stepsOpen,

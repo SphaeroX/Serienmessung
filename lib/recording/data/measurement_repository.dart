@@ -3,9 +3,12 @@ import '../domain/measurement.dart';
 
 /// Persistence of measurements.
 class MeasurementRepository {
-  MeasurementRepository(this._db);
+  MeasurementRepository(this._db, {this.now});
 
   final AppDatabase _db;
+
+  /// Wall clock for `recorded_at`; without it no timestamp is written.
+  final DateTime Function()? now;
 
   Future<int> insert(int studyId, MeasurementDraft m) =>
       _db.db.insert('measurement', {
@@ -17,6 +20,7 @@ class MeasurementRepository {
         'end_us': m.endMicros,
         'duration_us': m.durationMicros,
         'note': m.note,
+        'recorded_at': now?.call().millisecondsSinceEpoch,
       });
 
   Future<void> updateNote(int id, String note) => _db.db.update(
@@ -78,6 +82,7 @@ class MeasurementRepository {
           'end_us': m.endMicros,
           'duration_us': m.durationMicros,
           'note': m.note,
+          'recorded_at': m.recordedAt?.millisecondsSinceEpoch,
         });
       }
     });
@@ -114,5 +119,8 @@ class MeasurementRepository {
     endMicros: r['end_us'] as int,
     durationMicros: r['duration_us'] as int,
     note: r['note'] as String,
+    recordedAt: r['recorded_at'] == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(r['recorded_at'] as int),
   );
 }

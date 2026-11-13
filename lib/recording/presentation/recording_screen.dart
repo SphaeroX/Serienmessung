@@ -8,6 +8,7 @@ import '../../core/providers.dart';
 import '../../core/time_format.dart';
 import '../../export/presentation/export_menu.dart';
 import '../../l10n/app_localizations.dart';
+import '../../revision/presentation/revisions_screen.dart';
 import '../../settings/presentation/settings_controller.dart';
 import '../../study/presentation/edit_study_screen.dart';
 import '../../study/domain/study.dart';
@@ -169,6 +170,23 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
     await controller.load();
   }
 
+  Future<void> _openRevisions() async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final number = await openRevisions(
+      context,
+      studyId: widget.studyId,
+      unit: controller.analysisUnit,
+      method: controller.cycleTimeMethod,
+      canStartNew: controller.status == EngineStatus.idle,
+    );
+    if (number == null) return;
+    await controller.load();
+    messenger.showSnackBar(
+      SnackBar(content: Text(l.newRevisionStarted(number))),
+    );
+  }
+
   Future<void> _confirmReset() async {
     final l = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
@@ -200,6 +218,12 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
         title: Text(c.study?.name ?? ''),
         actions: [
           ExportButton(controller: controller),
+          IconButton(
+            key: const Key('revisionsButton'),
+            tooltip: l.revisions,
+            icon: const Icon(Icons.history),
+            onPressed: c.loaded ? _openRevisions : null,
+          ),
           IconButton(
             key: const Key('editStudyButton'),
             tooltip: l.editStudy,

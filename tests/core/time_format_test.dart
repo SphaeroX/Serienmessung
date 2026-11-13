@@ -51,4 +51,18 @@ void main() {
     expect(TimeUnit.seconds.fromMicros(1500000), 1.5);
     expect(TimeUnit.tmu.fromMicros(36000), 1);
   });
+
+  test('deviations carry a sign and a relative change', () {
+    expect(formatDelta(5000000, TimeUnit.seconds), '+5.00 s');
+    expect(formatDelta(-3000000, TimeUnit.seconds), '-3.00 s');
+    expect(formatDelta(0, TimeUnit.seconds), '±0.00 s');
+    expect(formatDelta(1500000, TimeUnit.stopwatch), '+00:01.500');
+    expect(formatDelta(-600000, TimeUnit.hm, decimals: 1), '-1.0 HM');
+    expect(
+      formatDelta(6000, TimeUnit.hm, decimals: 2, locale: 'de'),
+      '+0,01 HM',
+    );
+    expect(formatRatioDelta(0.05), '+5.0 %');
+    expect(formatRatioDelta(-0.125, locale: 'de'), '-12,5 %');
+  });
 }

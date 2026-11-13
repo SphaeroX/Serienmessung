@@ -253,8 +253,65 @@ class StudyRepository {
         ..['step_id'] = stepIds[m['step_id']];
       await txn.insert('measurement', row);
     }
+    await _copyRevisions(txn, id, copy, stepIds);
     return copy;
   });
+
+  /// Copies the archived revisions of [from] to [to]. Step ids still in use
+  /// are mapped via [stepIds]; ids of deleted steps get fresh negative ids,
+  /// so they cannot collide with the copy's steps.
+  static Future<void> _copyRevisions(
+    DatabaseExecutor txn,
+    int from,
+    int to,
+    Map<int, int> stepIds,
+  ) async {
+    final mapped = Map<int, int>.of(stepIds);
+    int map(int id) => mapped.putIfAbsent(id, () => -(mapped.length + 1));
+    for (final r in await txn.query(
+      'revision',
+      where: 'study_id = ?',
+      whereArgs: [from],
+      orderBy: 'number',
+    )) {
+      final revisionId = r['id'] as int;
+      final copy = await txn.insert(
+        'revision',
+        Map<String, Object?>.of(r)
+          ..remove('id')
+          ..['study_id'] = to,
+      );
+      for (final st in await txn.query(
+        'revision_step',
+        where: 'revision_id = ?',
+        whereArgs: [revisionId],
+        orderBy: 'position',
+      )) {
+        await txn.insert(
+          'revision_step',
+          Map<String, Object?>.of(st)
+            ..remove('id')
+            ..['revision_id'] = copy
+            ..['step_id'] = map(st['step_id'] as int),
+        );
+      }
+      for (final m in await txn.query(
+        'revision_measurement',
+        where: 'revision_id = ?',
+        whereArgs: [revisionId],
+        orderBy: 'id',
+      )) {
+        final stepId = m['step_id'] as int?;
+        await txn.insert(
+          'revision_measurement',
+          Map<String, Object?>.of(m)
+            ..remove('id')
+            ..['revision_id'] = copy
+            ..['step_id'] = stepId == null ? null : map(stepId),
+        );
+      }
+    }
+  }
 
   /// Position behind the last study of group [groupId].
   static Future<int> nextGroupPosition(DatabaseExecutor db, int groupId) async {
@@ -311,6 +368,7 @@ class StudyRepository {
     notes: r['notes'] as String? ?? '',
     groupId: r['group_id'] as int?,
     groupPosition: r['group_position'] as int? ?? 0,
+    revision: r['revision'] as int? ?? 1,
   );
 
   static StepDefinition stepFromRow(Map<String, Object?> r) => StepDefinition(

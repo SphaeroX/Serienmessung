@@ -407,5 +407,82 @@
       }
     }
   },
-  "reorderHint": "Drag the handle to change the order."
+  "reorderHint": "Drag the handle to change the order.",
+  "revisions": "Revisions",
+  "revisionCurrent": "Revision {number} (current)",
+  "@revisionCurrent": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "revisionTitle": "Revision {number}",
+  "@revisionTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "lastMeasured": "Last measurement: {date}",
+  "@lastMeasured": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "measuredRange": "Measured {from} – {to}",
+  "@measuredRange": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "newRevision": "Start new measurement",
+  "newRevisionHint": "Measure the study again (e.g. a year later). The current times are archived as a revision and stay available for comparison.",
+  "newRevisionConfirm": "The current times are kept as revision {number} for comparison. The study then starts empty with the same steps.",
+  "@newRevisionConfirm": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "newRevisionStarted": "Revision {number} started",
+  "@newRevisionStarted": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "stopRecordingFirst": "Stop the recording first.",
+  "noRevisions": "No earlier revisions yet.",
+  "revisionThen": "Then",
+  "revisionNow": "Now",
+  "revisionDelta": "Δ",
+  "deleteRevision": "Delete revision",
+  "deleteRevisionConfirm": "Delete revision {number} with all its times?",
+  "@deleteRevisionConfirm": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "removedStep": "{name} (removed)",
+  "@removedStep": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "revisionNoTimes": "No times recorded yet."
 }

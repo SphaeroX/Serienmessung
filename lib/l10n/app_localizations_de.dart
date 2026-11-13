@@ -829,4 +829,75 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get reorderHint => 'Am Griff ziehen, um die Reihenfolge zu ändern.';
+
+  @override
+  String get revisions => 'Revisionen';
+
+  @override
+  String revisionCurrent(int number) {
+    return 'Revision $number (aktuell)';
+  }
+
+  @override
+  String revisionTitle(int number) {
+    return 'Revision $number';
+  }
+
+  @override
+  String lastMeasured(String date) {
+    return 'Letzte Messung: $date';
+  }
+
+  @override
+  String measuredRange(String from, String to) {
+    return 'Gemessen $from – $to';
+  }
+
+  @override
+  String get newRevision => 'Neue Messung beginnen';
+
+  @override
+  String get newRevisionHint =>
+      'Die Studie erneut messen (z. B. ein Jahr später). Die aktuellen Zeiten werden als Revision archiviert und bleiben zum Vergleich erhalten.';
+
+  @override
+  String newRevisionConfirm(int number) {
+    return 'Die aktuellen Zeiten bleiben als Revision $number zum Vergleich erhalten. Die Studie beginnt danach leer mit denselben Schritten.';
+  }
+
+  @override
+  String newRevisionStarted(int number) {
+    return 'Revision $number begonnen';
+  }
+
+  @override
+  String get stopRecordingFirst => 'Zuerst die Aufnahme beenden.';
+
+  @override
+  String get noRevisions => 'Noch keine früheren Revisionen.';
+
+  @override
+  String get revisionThen => 'Damals';
+
+  @override
+  String get revisionNow => 'Jetzt';
+
+  @override
+  String get revisionDelta => 'Δ';
+
+  @override
+  String get deleteRevision => 'Revision löschen';
+
+  @override
+  String deleteRevisionConfirm(int number) {
+    return 'Revision $number mit allen Zeiten löschen?';
+  }
+
+  @override
+  String removedStep(String name) {
+    return '$name (entfernt)';
+  }
+
+  @override
+  String get revisionNoTimes => 'Noch keine Zeiten erfasst.';
 }

@@ -6,6 +6,7 @@ import '../recording/data/measurement_repository.dart';
 import '../recording/data/run_state_repository.dart';
 import '../recording/platform/hardware_keys.dart';
 import '../recording/platform/recording_notifier.dart';
+import '../revision/data/revision_repository.dart';
 import '../settings/presentation/settings_controller.dart';
 import '../study/data/study_repository.dart';
 import '../study/domain/study.dart';
@@ -23,7 +24,14 @@ final studyRepositoryProvider = Provider<StudyRepository>(
 );
 
 final measurementRepositoryProvider = Provider<MeasurementRepository>(
-  (ref) => MeasurementRepository(ref.watch(databaseProvider)),
+  (ref) => MeasurementRepository(
+    ref.watch(databaseProvider),
+    now: ref.watch(wallClockProvider),
+  ),
+);
+
+final revisionRepositoryProvider = Provider<RevisionRepository>(
+  (ref) => RevisionRepository(ref.watch(databaseProvider)),
 );
 
 final runStateRepositoryProvider = Provider<RunStateRepository>(

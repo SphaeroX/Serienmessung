@@ -54,8 +54,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
 
 ## Offene Fragen / Annahmen
 
@@ -70,15 +70,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Migration v10; `Measurement.recordedAt`, `MeasurementRepository(now:)` (Provider übergibt `wallClockProvider`); `Study.revision`; `Revision`, `RevisionComparison`/`StepDeviation`, `RevisionRepository` (`startNewRevision`, `listRevisions`, `latestRevision`, `deleteRevision`, `lastRecordedAt`); `copyStudy` kopiert Revisionen mit. `RevisionsScreen` + `openRevisions()`: Verlauf-Symbol im Messbildschirm, Menüpunkt "Revisionen" im Video-Bildschirm; nach neuer Revision Snackbar "Revision N begonnen". Archivierte Revisionen lassen sich löschen.
+- **Learnings & Stolpersteine:** Bei `LEFT JOIN` + `COUNT(*)` zählt die leere Seite mit – `COUNT(m.id)` verwenden. Nach ARB-Änderungen `flutter gen-l10n` erneut laufen lassen (sonst fehlen Getter).
+- **Wichtige Entscheidungen und ihre Gründe:** Archiv als eigene Tabellen statt einer Revisionsspalte in `measurement` – so mussten keine bestehenden Abfragen (Zyklen, Auswertung, Export, Laufzustand) angepasst werden. Revision speichert Schritte als Schnappschuss (Namen zum damaligen Zeitpunkt). Vergleich nutzt die aktuelle Methode der Studie für beide Seiten. Positive Δ (länger) rot, negative grün.
+- **Auswirkungen auf Folge-Tasks:** Task_21 nutzt `lastRecordedAt` und `startNewRevision`. Task_22 nutzt `latestRevision` + `RevisionComparison` für Δ im Report. Task_23: Backup muss `revision`, `recorded_at` und die Revisionstabellen enthalten.
+- **Hinweise zu Tests und Befehlen:** `tests/revision/data/revision_repository_test.dart`, `tests/revision/domain/revision_comparison_test.dart`, `tests/revision/presentation/revisions_screen_test.dart`, `tests/revision/presentation/revisions_entry_test.dart`, Video-Menü in `tests/video/video_study_screen_test.dart`, `formatDelta` in `tests/core/time_format_test.dart`.

@@ -822,4 +822,75 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reorderHint => 'Drag the handle to change the order.';
+
+  @override
+  String get revisions => 'Revisions';
+
+  @override
+  String revisionCurrent(int number) {
+    return 'Revision $number (current)';
+  }
+
+  @override
+  String revisionTitle(int number) {
+    return 'Revision $number';
+  }
+
+  @override
+  String lastMeasured(String date) {
+    return 'Last measurement: $date';
+  }
+
+  @override
+  String measuredRange(String from, String to) {
+    return 'Measured $from – $to';
+  }
+
+  @override
+  String get newRevision => 'Start new measurement';
+
+  @override
+  String get newRevisionHint =>
+      'Measure the study again (e.g. a year later). The current times are archived as a revision and stay available for comparison.';
+
+  @override
+  String newRevisionConfirm(int number) {
+    return 'The current times are kept as revision $number for comparison. The study then starts empty with the same steps.';
+  }
+
+  @override
+  String newRevisionStarted(int number) {
+    return 'Revision $number started';
+  }
+
+  @override
+  String get stopRecordingFirst => 'Stop the recording first.';
+
+  @override
+  String get noRevisions => 'No earlier revisions yet.';
+
+  @override
+  String get revisionThen => 'Then';
+
+  @override
+  String get revisionNow => 'Now';
+
+  @override
+  String get revisionDelta => 'Δ';
+
+  @override
+  String get deleteRevision => 'Delete revision';
+
+  @override
+  String deleteRevisionConfirm(int number) {
+    return 'Delete revision $number with all its times?';
+  }
+
+  @override
+  String removedStep(String name) {
+    return '$name (removed)';
+  }
+
+  @override
+  String get revisionNoTimes => 'No times recorded yet.';
 }
