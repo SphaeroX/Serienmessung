@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-13 – **Roadmap abgeschlossen** (inkl. Erweiterung 3, Task_24–25: Linienbetrachtung, vollständiger Gruppen-Report). Davor abgeschlossen: Tasks 01–18, Feedback-Runde 1 und Erweiterung 2 (Gruppen, Revisionen, Nachfrage bei alter Messung, Gruppen-Reports, Backup v2; Task_19–23) erledigt. 312 Tests grün, `flutter analyze` ohne Befunde. Offen sind nur manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
+Stand: 2026-11-13 – **Erweiterung 4 läuft (Task_26–28: parallele Maschinen, Ausfallrisiko).** Davor abgeschlossen: Erweiterung 3 (Task_24–25: Linienbetrachtung, vollständiger Gruppen-Report), Tasks 01–18, Feedback-Runde 1 und Erweiterung 2 (Gruppen, Revisionen, Nachfrage bei alter Messung, Gruppen-Reports, Backup v2; Task_19–23) erledigt. 312 Tests grün, `flutter analyze` ohne Befunde. Offen sind nur manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
 
 | Task | Titel | Status |
 |---|---|---|
@@ -43,6 +43,9 @@ Stand: 2026-11-13 – **Roadmap abgeschlossen** (inkl. Erweiterung 3, Task_24–
 | 23 | Backup v2, Screenshots & Doku | erledigt |
 | 24 | Linienbetrachtung der Gruppe | erledigt |
 | 25 | Gruppen-Report: Deckblatt, Inhaltsverzeichnis, verknüpftes Excel | erledigt |
+| 26 | Parallele Maschinen in der Gruppe | offen |
+| 27 | Linie mit Parallelstationen und Ausfallrisiko | offen |
+| 28 | Reports mit Parallelstationen und Ausfallrisiko | offen |
 
 Status ist `offen`, `läuft` (Datei trägt das Präfix `RUN_`) oder `erledigt` (Datei liegt in `Archiv/`). Die Tabelle wird beim Archivieren eines Tasks aktualisiert.
 
