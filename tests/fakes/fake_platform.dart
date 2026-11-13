@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cyclescope/core/platform.dart';
 import 'package:cyclescope/core/providers.dart';
+import 'package:cyclescope/core/url_opener.dart';
 import 'package:cyclescope/recording/domain/key_interpreter.dart';
 import 'package:cyclescope/recording/platform/hardware_keys.dart';
 import 'package:cyclescope/recording/platform/recording_notifier.dart';
@@ -65,11 +66,26 @@ class FakeRecordingNotifier implements RecordingNotifier {
   void press(String action) => _actions.add(action);
 }
 
+/// Records opened links instead of starting a browser.
+class FakeUrlOpener implements UrlOpener {
+  final opened = <Uri>[];
+
+  /// What [open] reports back.
+  bool result = true;
+
+  @override
+  Future<bool> open(Uri url) async {
+    opened.add(url);
+    return result;
+  }
+}
+
 List<Override> fakePlatformOverrides({
   FakeDeviceFeedback? feedback,
   FakeHardwareKeys? keys,
   FakeRecordingNotifier? notifier,
   FakeVideoFiles? videoFiles,
+  FakeUrlOpener? urlOpener,
 }) => [
   recordingNotifierProvider.overrideWithValue(
     notifier ?? FakeRecordingNotifier(),
@@ -78,4 +94,5 @@ List<Override> fakePlatformOverrides({
   hardwareKeysProvider.overrideWithValue(keys ?? FakeHardwareKeys()),
   // Tests never delete real files.
   videoFilesProvider.overrideWithValue(videoFiles ?? FakeVideoFiles()),
+  urlOpenerProvider.overrideWithValue(urlOpener ?? FakeUrlOpener()),
 ];

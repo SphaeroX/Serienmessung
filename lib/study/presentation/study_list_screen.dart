@@ -8,6 +8,7 @@ import '../../l10n/app_localizations.dart';
 import '../../video/data/video_cleanup.dart';
 import '../domain/study.dart';
 import 'create_study_screen.dart';
+import 'github_logo.dart';
 import 'mode_texts.dart';
 
 /// Opens a study by id. Replaced by the study screen once it exists.
@@ -122,6 +123,13 @@ class _StudyListScreenState extends ConsumerState<StudyListScreen> {
     }
   }
 
+  Future<void> _openRepository(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final failed = AppLocalizations.of(context).linkOpenFailed;
+    final opened = await ref.read(urlOpenerProvider).open(repositoryUrl);
+    if (!opened) messenger.showSnackBar(SnackBar(content: Text(failed)));
+  }
+
   Future<void> _cardAction(
     BuildContext context,
     StudyCardAction action,
@@ -146,6 +154,12 @@ class _StudyListScreenState extends ConsumerState<StudyListScreen> {
       appBar: AppBar(
         title: Text(l.appTitle),
         actions: [
+          IconButton(
+            key: const Key('githubButton'),
+            tooltip: l.sourceCodeOnGitHub,
+            icon: const GitHubLogo(),
+            onPressed: () => _openRepository(context),
+          ),
           if (widget.onOpenGroups != null)
             IconButton(
               key: const Key('groupsButton'),

@@ -901,5 +901,7 @@
   "demoStepRemoveFixture": "Remove fixture",
   "demoStepCleanTable": "Clean table",
   "demoStepMountFixture": "Mount fixture",
-  "demoStepFirstPart": "First-part check"
+  "demoStepFirstPart": "First-part check",
+  "sourceCodeOnGitHub": "Source code on GitHub",
+  "linkOpenFailed": "Could not open the link."
 }

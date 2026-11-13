@@ -5,11 +5,13 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
@@ -75,6 +77,7 @@ class MainActivity : FlutterActivity() {
                     notificationManager().cancel(NOTIFICATION_ID)
                     result.success(null)
                 }
+                "openUrl" -> result.success(openUrl(call.arguments as? String))
                 else -> result.notImplemented()
             }
         }
@@ -130,6 +133,18 @@ class MainActivity : FlutterActivity() {
             return true
         }
         return super.dispatchKeyEvent(event)
+    }
+
+    /** Opens an https link in the browser; false when no app can handle it. */
+    private fun openUrl(url: String?): Boolean {
+        val uri = url?.let(Uri::parse) ?: return false
+        if (uri.scheme != "https") return false
+        return try {
+            startActivity(Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE))
+            true
+        } catch (e: ActivityNotFoundException) {
+            false
+        }
     }
 
     private fun notificationManager() =

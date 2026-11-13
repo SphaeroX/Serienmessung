@@ -418,5 +418,7 @@
   "demoStepRemoveFixture": "Vorrichtung abbauen",
   "demoStepCleanTable": "Tisch reinigen",
   "demoStepMountFixture": "Vorrichtung aufbauen",
-  "demoStepFirstPart": "Erstteilprüfung"
+  "demoStepFirstPart": "Erstteilprüfung",
+  "sourceCodeOnGitHub": "Quellcode auf GitHub",
+  "linkOpenFailed": "Der Link konnte nicht geöffnet werden."
 }

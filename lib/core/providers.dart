@@ -16,6 +16,7 @@ import '../video/platform/video_files.dart';
 import 'clock.dart';
 import 'database.dart';
 import 'platform.dart';
+import 'url_opener.dart';
 
 /// The opened app database. Overridden in `main()` and in tests.
 final databaseProvider = Provider<AppDatabase>(
@@ -86,6 +87,11 @@ final deviceFeedbackProvider = Provider<DeviceFeedback>((ref) {
 /// Copied video files of the video studies.
 final videoFilesProvider = Provider<VideoFiles>(
   (ref) => const LocalVideoFiles(),
+);
+
+/// Opens web links in the browser (Android platform channel).
+final urlOpenerProvider = Provider<UrlOpener>(
+  (ref) => const AndroidUrlOpener(),
 );
 
 /// Volume keys (Android platform channel).

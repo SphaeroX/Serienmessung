@@ -2611,6 +2611,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'First-part check'**
   String get demoStepFirstPart;
+
+  /// No description provided for @sourceCodeOnGitHub.
+  ///
+  /// In en, this message translates to:
+  /// **'Source code on GitHub'**
+  String get sourceCodeOnGitHub;
+
+  /// No description provided for @linkOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the link.'**
+  String get linkOpenFailed;
 }
 
 class _AppLocalizationsDelegate

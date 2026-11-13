@@ -1488,4 +1488,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get demoStepFirstPart => 'Erstteilprüfung';
+
+  @override
+  String get sourceCodeOnGitHub => 'Quellcode auf GitHub';
+
+  @override
+  String get linkOpenFailed => 'Der Link konnte nicht geöffnet werden.';
 }
