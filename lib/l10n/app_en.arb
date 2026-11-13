@@ -354,5 +354,58 @@
       }
     }
   },
-  "closeCycleRejected": "The cycle can only be completed after the last marker, on the last step."
+  "closeCycleRejected": "The cycle can only be completed after the last marker, on the last step.",
+  "groups": "Groups",
+  "emptyGroups": "No groups yet",
+  "emptyGroupsHint": "Groups collect studies, for example the machines of a production line, in a fixed order.",
+  "newGroup": "New group",
+  "editGroup": "Edit group",
+  "deleteGroup": "Delete group",
+  "deleteGroupConfirm": "Delete the group \"{name}\"? Its studies are kept without a group.",
+  "@deleteGroupConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupStudyCount": "{count, plural, =1{1 study} other{{count} studies}}",
+  "@groupStudyCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "emptyGroupStudies": "No studies in this group yet",
+  "addStudies": "Add studies",
+  "addNewStudy": "Create a new study",
+  "addExistingStudies": "Add existing studies",
+  "addExistingHint": "Studies from other groups are moved here.",
+  "noStudiesToAdd": "All studies are already in this group.",
+  "add": "Add",
+  "moveUp": "Move up",
+  "moveDown": "Move down",
+  "moveToGroup": "Move to group…",
+  "copyToGroup": "Copy to group…",
+  "removeFromGroup": "Remove from group",
+  "chooseGroup": "Choose group",
+  "noGroup": "No group",
+  "copyName": "{name} (copy)",
+  "@copyName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "studyCopied": "Copy created: {name}",
+  "@studyCopied": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reorderHint": "Drag the handle to change the order."
 }

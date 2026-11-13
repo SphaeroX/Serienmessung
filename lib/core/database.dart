@@ -83,6 +83,23 @@ final List<Migration> migrations = [
       "ALTER TABLE study ADD COLUMN notes TEXT NOT NULL DEFAULT ''",
     );
   },
+  // v9: optional groups of studies (e.g. a production line) in a set order.
+  (db) async {
+    await db.execute('''
+      CREATE TABLE study_group (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        created_at INTEGER NOT NULL
+      )''');
+    await db.execute(
+      'ALTER TABLE study ADD COLUMN group_id INTEGER '
+      'REFERENCES study_group(id) ON DELETE SET NULL',
+    );
+    await db.execute(
+      'ALTER TABLE study ADD COLUMN group_position INTEGER NOT NULL DEFAULT 0',
+    );
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.

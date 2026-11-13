@@ -1,3 +1,5 @@
+import 'package:sqflite/sqflite.dart';
+
 import '../../core/database.dart';
 import '../domain/study.dart';
 
@@ -52,10 +54,15 @@ class StudyRepository {
     return rows.map(stepFromRow).toList();
   }
 
-  Future<List<StudySummary>> listStudies() async {
-    final rows = await _db.db.query(
-      'study',
-      orderBy: 'last_active_at DESC, id DESC',
+  /// All studies, newest activity first; with [groupId] only the studies of
+  /// that group in group order.
+  Future<List<StudySummary>> listStudies({int? groupId}) async {
+    final rows = await _db.db.rawQuery(
+      'SELECT s.*, g.name AS group_name FROM study s '
+      'LEFT JOIN study_group g ON g.id = s.group_id '
+      '${groupId == null ? '' : 'WHERE s.group_id = ? '}'
+      'ORDER BY ${groupId == null ? 's.last_active_at DESC, s.id DESC' : 's.group_position, s.id'}',
+      [?groupId],
     );
     final running = {
       for (final r in await _db.db.query('run_state', columns: ['study_id']))
@@ -69,6 +76,7 @@ class StudyRepository {
           study: study,
           cycleCount: await countCycles(study),
           isRecording: running.contains(study.id),
+          groupName: row['group_name'] as String?,
         ),
       );
     }
@@ -200,6 +208,64 @@ class StudyRepository {
     );
   }
 
+  /// Duplicates study [id] with its steps and times as a new study named
+  /// [name] and returns its id. With [groupId] the copy is appended to that
+  /// group.
+  Future<int> copyStudy(
+    int id, {
+    required String name,
+    int? groupId,
+    required DateTime now,
+  }) => _db.db.transaction((txn) async {
+    final rows = await txn.query('study', where: 'id = ?', whereArgs: [id]);
+    final source = Map<String, Object?>.of(rows.single)
+      ..remove('id')
+      ..['name'] = name
+      ..['created_at'] = now.millisecondsSinceEpoch
+      ..['last_active_at'] = now.millisecondsSinceEpoch
+      ..['group_id'] = groupId
+      ..['group_position'] = groupId == null
+          ? 0
+          : await nextGroupPosition(txn, groupId);
+    final copy = await txn.insert('study', source);
+    final stepIds = <int, int>{};
+    for (final st in await txn.query(
+      'step_definition',
+      where: 'study_id = ?',
+      whereArgs: [id],
+      orderBy: 'position',
+    )) {
+      stepIds[st['id'] as int] = await txn.insert('step_definition', {
+        'study_id': copy,
+        'position': st['position'],
+        'name': st['name'],
+      });
+    }
+    for (final m in await txn.query(
+      'measurement',
+      where: 'study_id = ?',
+      whereArgs: [id],
+      orderBy: 'id',
+    )) {
+      final row = Map<String, Object?>.of(m)
+        ..remove('id')
+        ..['study_id'] = copy
+        ..['step_id'] = stepIds[m['step_id']];
+      await txn.insert('measurement', row);
+    }
+    return copy;
+  });
+
+  /// Position behind the last study of group [groupId].
+  static Future<int> nextGroupPosition(DatabaseExecutor db, int groupId) async {
+    final r = await db.rawQuery(
+      'SELECT COALESCE(MAX(group_position), -1) + 1 AS p FROM study '
+      'WHERE group_id = ?',
+      [groupId],
+    );
+    return r.first['p'] as int;
+  }
+
   Future<void> setVideoPath(int id, String path) => _db.db.update(
     'study',
     {'video_path': path},
@@ -243,6 +309,8 @@ class StudyRepository {
     videoPath: r['video_path'] as String?,
     stepsOpen: (r['steps_open'] as int? ?? 0) == 1,
     notes: r['notes'] as String? ?? '',
+    groupId: r['group_id'] as int?,
+    groupPosition: r['group_position'] as int? ?? 0,
   );
 
   static StepDefinition stepFromRow(Map<String, Object?> r) => StepDefinition(

@@ -732,4 +732,94 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get closeCycleRejected =>
       'The cycle can only be completed after the last marker, on the last step.';
+
+  @override
+  String get groups => 'Groups';
+
+  @override
+  String get emptyGroups => 'No groups yet';
+
+  @override
+  String get emptyGroupsHint =>
+      'Groups collect studies, for example the machines of a production line, in a fixed order.';
+
+  @override
+  String get newGroup => 'New group';
+
+  @override
+  String get editGroup => 'Edit group';
+
+  @override
+  String get deleteGroup => 'Delete group';
+
+  @override
+  String deleteGroupConfirm(String name) {
+    return 'Delete the group \"$name\"? Its studies are kept without a group.';
+  }
+
+  @override
+  String groupStudyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count studies',
+      one: '1 study',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get emptyGroupStudies => 'No studies in this group yet';
+
+  @override
+  String get addStudies => 'Add studies';
+
+  @override
+  String get addNewStudy => 'Create a new study';
+
+  @override
+  String get addExistingStudies => 'Add existing studies';
+
+  @override
+  String get addExistingHint => 'Studies from other groups are moved here.';
+
+  @override
+  String get noStudiesToAdd => 'All studies are already in this group.';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get moveUp => 'Move up';
+
+  @override
+  String get moveDown => 'Move down';
+
+  @override
+  String get moveToGroup => 'Move to group…';
+
+  @override
+  String get copyToGroup => 'Copy to group…';
+
+  @override
+  String get removeFromGroup => 'Remove from group';
+
+  @override
+  String get chooseGroup => 'Choose group';
+
+  @override
+  String get noGroup => 'No group';
+
+  @override
+  String copyName(String name) {
+    return '$name (copy)';
+  }
+
+  @override
+  String studyCopied(String name) {
+    return 'Copy created: $name';
+  }
+
+  @override
+  String get reorderHint => 'Drag the handle to change the order.';
 }

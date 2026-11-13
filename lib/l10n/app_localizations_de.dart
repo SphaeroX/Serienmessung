@@ -738,4 +738,95 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get closeCycleRejected =>
       'Der Zyklus kann nur nach dem letzten Marker im letzten Schritt abgeschlossen werden.';
+
+  @override
+  String get groups => 'Gruppen';
+
+  @override
+  String get emptyGroups => 'Noch keine Gruppen';
+
+  @override
+  String get emptyGroupsHint =>
+      'Gruppen fassen Studien zusammen, zum Beispiel die Maschinen einer Fertigungslinie, in fester Reihenfolge.';
+
+  @override
+  String get newGroup => 'Neue Gruppe';
+
+  @override
+  String get editGroup => 'Gruppe bearbeiten';
+
+  @override
+  String get deleteGroup => 'Gruppe löschen';
+
+  @override
+  String deleteGroupConfirm(String name) {
+    return 'Gruppe \"$name\" löschen? Ihre Studien bleiben ohne Gruppe erhalten.';
+  }
+
+  @override
+  String groupStudyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Studien',
+      one: '1 Studie',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get emptyGroupStudies => 'Noch keine Studien in dieser Gruppe';
+
+  @override
+  String get addStudies => 'Studien hinzufügen';
+
+  @override
+  String get addNewStudy => 'Neue Studie anlegen';
+
+  @override
+  String get addExistingStudies => 'Vorhandene Studien hinzufügen';
+
+  @override
+  String get addExistingHint =>
+      'Studien aus anderen Gruppen werden hierher verschoben.';
+
+  @override
+  String get noStudiesToAdd => 'Alle Studien sind bereits in dieser Gruppe.';
+
+  @override
+  String get add => 'Hinzufügen';
+
+  @override
+  String get moveUp => 'Nach oben';
+
+  @override
+  String get moveDown => 'Nach unten';
+
+  @override
+  String get moveToGroup => 'In Gruppe verschieben …';
+
+  @override
+  String get copyToGroup => 'In Gruppe kopieren …';
+
+  @override
+  String get removeFromGroup => 'Aus Gruppe entfernen';
+
+  @override
+  String get chooseGroup => 'Gruppe wählen';
+
+  @override
+  String get noGroup => 'Keine Gruppe';
+
+  @override
+  String copyName(String name) {
+    return '$name (Kopie)';
+  }
+
+  @override
+  String studyCopied(String name) {
+    return 'Kopie angelegt: $name';
+  }
+
+  @override
+  String get reorderHint => 'Am Griff ziehen, um die Reihenfolge zu ändern.';
 }

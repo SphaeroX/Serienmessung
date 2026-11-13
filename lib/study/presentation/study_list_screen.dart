@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/providers.dart';
+import '../../group/presentation/group_dialogs.dart';
 import '../../l10n/app_localizations.dart';
 import '../domain/study.dart';
 import 'create_study_screen.dart';
@@ -20,11 +21,15 @@ class StudyListScreen extends ConsumerStatefulWidget {
     super.key,
     this.onOpenStudy,
     this.onOpenSettings,
+    this.onOpenGroups,
     this.checkActiveRuns = true,
   });
 
   final OpenStudy? onOpenStudy;
   final void Function(BuildContext context)? onOpenSettings;
+
+  /// Opens the group list.
+  final Future<void> Function(BuildContext context)? onOpenGroups;
   final bool checkActiveRuns;
 
   @override
@@ -110,6 +115,21 @@ class _StudyListScreenState extends ConsumerState<StudyListScreen> {
     }
   }
 
+  Future<void> _cardAction(
+    BuildContext context,
+    StudyCardAction action,
+    Study study,
+  ) async {
+    switch (action) {
+      case StudyCardAction.move:
+        await moveStudyToGroup(context, ref, study);
+      case StudyCardAction.copy:
+        await copyStudyToGroup(context, ref, study);
+      case StudyCardAction.delete:
+        await _confirmDelete(context, study);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -119,6 +139,16 @@ class _StudyListScreenState extends ConsumerState<StudyListScreen> {
       appBar: AppBar(
         title: Text(l.appTitle),
         actions: [
+          if (widget.onOpenGroups != null)
+            IconButton(
+              key: const Key('groupsButton'),
+              tooltip: l.groups,
+              icon: const Icon(Icons.folder_outlined),
+              onPressed: () async {
+                await widget.onOpenGroups!(context);
+                ref.invalidate(studyListProvider);
+              },
+            ),
           if (widget.onOpenSettings != null)
             IconButton(
               key: const Key('settingsButton'),
@@ -152,6 +182,7 @@ class _StudyListScreenState extends ConsumerState<StudyListScreen> {
                       ? null
                       : () => onOpenStudy(context, list[i].study.id),
                   onLongPress: () => _confirmDelete(context, list[i].study),
+                  onAction: (a) => _cardAction(context, a, list[i].study),
                 ),
               ),
       ),
@@ -159,12 +190,21 @@ class _StudyListScreenState extends ConsumerState<StudyListScreen> {
   }
 }
 
+/// Actions of the menu on a study card.
+enum StudyCardAction { move, copy, delete }
+
 class _StudyCard extends StatelessWidget {
-  const _StudyCard({required this.summary, this.onTap, this.onLongPress});
+  const _StudyCard({
+    required this.summary,
+    this.onTap,
+    this.onLongPress,
+    this.onAction,
+  });
 
   final StudySummary summary;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final ValueChanged<StudyCardAction>? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -211,22 +251,61 @@ class _StudyCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.secondaryContainer,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            study.mode.badge(l),
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSecondaryContainer,
-                              letterSpacing: 1,
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.secondaryContainer,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                study.mode.badge(l),
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSecondaryContainer,
+                                  letterSpacing: 1,
+                                ),
+                              ),
                             ),
-                          ),
+                            if (summary.groupName != null)
+                              Container(
+                                key: Key('groupLabel_${study.id}'),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.tertiaryContainer,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.folder_outlined,
+                                      size: 12,
+                                      color:
+                                          theme.colorScheme.onTertiaryContainer,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      summary.groupName!,
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onTertiaryContainer,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ),
@@ -251,7 +330,30 @@ class _StudyCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                  const Icon(Icons.chevron_right),
+                  if (onAction == null)
+                    const Icon(Icons.chevron_right)
+                  else
+                    PopupMenuButton<StudyCardAction>(
+                      key: Key('studyMenu_${study.id}'),
+                      onSelected: onAction,
+                      itemBuilder: (_) => [
+                        PopupMenuItem(
+                          key: const Key('moveStudy'),
+                          value: StudyCardAction.move,
+                          child: Text(l.moveToGroup),
+                        ),
+                        PopupMenuItem(
+                          key: const Key('copyStudy'),
+                          value: StudyCardAction.copy,
+                          child: Text(l.copyToGroup),
+                        ),
+                        PopupMenuItem(
+                          key: const Key('deleteStudyItem'),
+                          value: StudyCardAction.delete,
+                          child: Text(l.delete),
+                        ),
+                      ],
+                    ),
                 ],
               ),
               const SizedBox(height: 12),

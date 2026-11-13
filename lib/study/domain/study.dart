@@ -30,6 +30,8 @@ class Study {
     this.videoPath,
     this.stepsOpen = false,
     this.notes = '',
+    this.groupId,
+    this.groupPosition = 0,
   });
 
   final int id;
@@ -51,6 +53,12 @@ class Study {
 
   /// Free notes on the study (analysis tab), printed in the reports.
   final String notes;
+
+  /// Group the study belongs to (optional, at most one).
+  final int? groupId;
+
+  /// 0-based place of the study within its group.
+  final int groupPosition;
 }
 
 /// One defined work step of a study.
@@ -74,9 +82,13 @@ class StudySummary {
     required this.study,
     required this.cycleCount,
     this.isRecording = false,
+    this.groupName,
   });
 
   final Study study;
+
+  /// Name of the study's group, null if it has none.
+  final String? groupName;
 
   /// Number of cycles (laps / measurements for modes without cycles).
   final int cycleCount;

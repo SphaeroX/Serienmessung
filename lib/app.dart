@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/providers.dart';
+import 'group/presentation/group_list_screen.dart';
 import 'l10n/app_localizations.dart';
 import 'recording/presentation/recording_screen.dart';
 import 'study/domain/study.dart';
@@ -55,6 +56,11 @@ class CycleScopeApp extends ConsumerWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       home: StudyListScreen(
         onOpenStudy: openStudy,
+        onOpenGroups: (context) => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const GroupListScreen(onOpenStudy: openStudy),
+          ),
+        ),
         onOpenSettings: (context) => Navigator.of(
           context,
         ).push(MaterialPageRoute<void>(builder: (_) => const SettingsScreen())),

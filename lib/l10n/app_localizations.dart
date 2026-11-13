@@ -1357,6 +1357,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The cycle can only be completed after the last marker, on the last step.'**
   String get closeCycleRejected;
+
+  /// No description provided for @groups.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get groups;
+
+  /// No description provided for @emptyGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'No groups yet'**
+  String get emptyGroups;
+
+  /// No description provided for @emptyGroupsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups collect studies, for example the machines of a production line, in a fixed order.'**
+  String get emptyGroupsHint;
+
+  /// No description provided for @newGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'New group'**
+  String get newGroup;
+
+  /// No description provided for @editGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit group'**
+  String get editGroup;
+
+  /// No description provided for @deleteGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group'**
+  String get deleteGroup;
+
+  /// No description provided for @deleteGroupConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the group \"{name}\"? Its studies are kept without a group.'**
+  String deleteGroupConfirm(String name);
+
+  /// No description provided for @groupStudyCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 study} other{{count} studies}}'**
+  String groupStudyCount(int count);
+
+  /// No description provided for @emptyGroupStudies.
+  ///
+  /// In en, this message translates to:
+  /// **'No studies in this group yet'**
+  String get emptyGroupStudies;
+
+  /// No description provided for @addStudies.
+  ///
+  /// In en, this message translates to:
+  /// **'Add studies'**
+  String get addStudies;
+
+  /// No description provided for @addNewStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new study'**
+  String get addNewStudy;
+
+  /// No description provided for @addExistingStudies.
+  ///
+  /// In en, this message translates to:
+  /// **'Add existing studies'**
+  String get addExistingStudies;
+
+  /// No description provided for @addExistingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Studies from other groups are moved here.'**
+  String get addExistingHint;
+
+  /// No description provided for @noStudiesToAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'All studies are already in this group.'**
+  String get noStudiesToAdd;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @moveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get moveUp;
+
+  /// No description provided for @moveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get moveDown;
+
+  /// No description provided for @moveToGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to group…'**
+  String get moveToGroup;
+
+  /// No description provided for @copyToGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy to group…'**
+  String get copyToGroup;
+
+  /// No description provided for @removeFromGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from group'**
+  String get removeFromGroup;
+
+  /// No description provided for @chooseGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose group'**
+  String get chooseGroup;
+
+  /// No description provided for @noGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'No group'**
+  String get noGroup;
+
+  /// No description provided for @copyName.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (copy)'**
+  String copyName(String name);
+
+  /// No description provided for @studyCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy created: {name}'**
+  String studyCopied(String name);
+
+  /// No description provided for @reorderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag the handle to change the order.'**
+  String get reorderHint;
 }
 
 class _AppLocalizationsDelegate

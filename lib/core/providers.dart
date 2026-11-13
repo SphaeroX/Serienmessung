@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../group/data/group_repository.dart';
+import '../group/domain/study_group.dart';
 import '../recording/data/measurement_repository.dart';
 import '../recording/data/run_state_repository.dart';
 import '../recording/platform/hardware_keys.dart';
@@ -26,6 +28,15 @@ final measurementRepositoryProvider = Provider<MeasurementRepository>(
 
 final runStateRepositoryProvider = Provider<RunStateRepository>(
   (ref) => RunStateRepository(ref.watch(databaseProvider)),
+);
+
+final groupRepositoryProvider = Provider<GroupRepository>(
+  (ref) => GroupRepository(ref.watch(databaseProvider)),
+);
+
+/// Groups for the group list. Invalidate after changes.
+final groupListProvider = FutureProvider<List<GroupSummary>>(
+  (ref) => ref.watch(groupRepositoryProvider).listGroups(),
 );
 
 /// Studies for the home screen. Invalidate after changes.

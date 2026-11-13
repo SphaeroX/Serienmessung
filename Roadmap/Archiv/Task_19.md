@@ -53,8 +53,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
 
 ## Offene Fragen / Annahmen
 
@@ -69,15 +69,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Migration v9; `GroupRepository` (`lib/group/data/`), `StudyGroup`/`GroupSummary` (`lib/group/domain/`); `StudyRepository.listStudies(groupId:)`, `copyStudy`, `nextGroupPosition`; `StudySummary.groupName`. UI: `GroupListScreen`, `GroupScreen` (Ziehen am Griff + "Nach oben/unten" im Menü, Hinzufügen neu/vorhanden, Verschieben, Kopieren, Entfernen, Gruppe bearbeiten/löschen), `group_dialogs.dart`; Startseite: Ordner-Knopf (`onOpenGroups`), Kartenmenü statt Chevron, Gruppen-Label. Beim Verschieben/Kopieren kann direkt eine neue Gruppe angelegt werden.
+- **Learnings & Stolpersteine:** `ReorderableListView.onReorder` ist ab Flutter 3.41 veraltet → `onReorderItem` (Index bereits um das entfernte Element korrigiert). UI-Nachladen nach mehreren sqflite-Schreibvorgängen dauert in Widget-Tests länger als `settle` – `settleUntil` mit Bedingung verwenden.
+- **Wichtige Entscheidungen und ihre Gründe:** Höchstens eine Gruppe pro Studie (einfache Reihenfolge je Gruppe); Gruppe löschen löscht keine Studien; "Vorhandene hinzufügen" bietet auch Studien anderer Gruppen an (werden verschoben). Kopie heißt "<Name> (Kopie)", bekommt das aktuelle Datum und landet am Ende der Zielgruppe.
+- **Auswirkungen auf Folge-Tasks:** Task_20 muss Revisionen in `copyStudy` mitkopieren. Task_22 nutzt `listStudies(groupId:)` für die Reihenfolge. Task_23 muss Gruppen ins Backup aufnehmen.
+- **Hinweise zu Tests und Befehlen:** `tests/group/data/group_repository_test.dart` (Repository, Kopie, Migration v9), `tests/group/presentation/group_screens_test.dart` (Anlegen, Liste, Reihenfolge per Menü und Ziehen, Hinzufügen, Entfernen, Kopieren, Bearbeiten/Löschen, Startseiten-Menü).
