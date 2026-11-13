@@ -1001,4 +1001,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String lineVsPrevious(String delta) {
     return 'vs. previous revision: $delta';
   }
+
+  @override
+  String get reportContents => 'Contents';
+
+  @override
+  String get reportStation => 'Station';
+
+  @override
+  String get reportWaiting => 'Waiting';
+
+  @override
+  String get reportSheet => 'Sheet';
+
+  @override
+  String get reportBackToContents => 'Back to contents';
+
+  @override
+  String get reportStudies => 'Studies';
+
+  @override
+  String get groupFullPdf => 'PDF report (complete)';
+
+  @override
+  String get groupFullPdfHint =>
+      'Cover with contents, line analysis, overview and all studies';
+
+  @override
+  String get groupFullXlsx => 'Excel (linked)';
+
+  @override
+  String get groupFullXlsxHint =>
+      'Contents with links, line analysis with formulas, overview, one sheet per study';
+
+  @override
+  String get groupCompactPdf => 'PDF (compact)';
+
+  @override
+  String get groupCompactXlsx => 'Excel (compact)';
 }

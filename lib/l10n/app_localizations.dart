@@ -1801,6 +1801,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'vs. previous revision: {delta}'**
   String lineVsPrevious(String delta);
+
+  /// No description provided for @reportContents.
+  ///
+  /// In en, this message translates to:
+  /// **'Contents'**
+  String get reportContents;
+
+  /// No description provided for @reportStation.
+  ///
+  /// In en, this message translates to:
+  /// **'Station'**
+  String get reportStation;
+
+  /// No description provided for @reportWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get reportWaiting;
+
+  /// No description provided for @reportSheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Sheet'**
+  String get reportSheet;
+
+  /// No description provided for @reportBackToContents.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to contents'**
+  String get reportBackToContents;
+
+  /// No description provided for @reportStudies.
+  ///
+  /// In en, this message translates to:
+  /// **'Studies'**
+  String get reportStudies;
+
+  /// No description provided for @groupFullPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF report (complete)'**
+  String get groupFullPdf;
+
+  /// No description provided for @groupFullPdfHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover with contents, line analysis, overview and all studies'**
+  String get groupFullPdfHint;
+
+  /// No description provided for @groupFullXlsx.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel (linked)'**
+  String get groupFullXlsx;
+
+  /// No description provided for @groupFullXlsxHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Contents with links, line analysis with formulas, overview, one sheet per study'**
+  String get groupFullXlsxHint;
+
+  /// No description provided for @groupCompactPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF (compact)'**
+  String get groupCompactPdf;
+
+  /// No description provided for @groupCompactXlsx.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel (compact)'**
+  String get groupCompactXlsx;
 }
 
 class _AppLocalizationsDelegate

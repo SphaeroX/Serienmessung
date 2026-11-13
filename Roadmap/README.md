@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-13 – **Erweiterung 3 läuft (Task_24–25: Linienbetrachtung, Report-Ausbau).** Davor abgeschlossen: Tasks 01–18, Feedback-Runde 1 und Erweiterung 2 (Gruppen, Revisionen, Nachfrage bei alter Messung, Gruppen-Reports, Backup v2; Task_19–23) erledigt. 297 Tests grün, `flutter analyze` ohne Befunde. Offen sind nur manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
+Stand: 2026-11-13 – **Roadmap abgeschlossen** (inkl. Erweiterung 3, Task_24–25: Linienbetrachtung, vollständiger Gruppen-Report). Davor abgeschlossen: Tasks 01–18, Feedback-Runde 1 und Erweiterung 2 (Gruppen, Revisionen, Nachfrage bei alter Messung, Gruppen-Reports, Backup v2; Task_19–23) erledigt. 312 Tests grün, `flutter analyze` ohne Befunde. Offen sind nur manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
 
 | Task | Titel | Status |
 |---|---|---|
@@ -42,7 +42,7 @@ Stand: 2026-11-13 – **Erweiterung 3 läuft (Task_24–25: Linienbetrachtung, R
 | 22 | Gruppen-Report PDF + Excel | erledigt |
 | 23 | Backup v2, Screenshots & Doku | erledigt |
 | 24 | Linienbetrachtung der Gruppe | erledigt |
-| 25 | Gruppen-Report: Deckblatt, Inhaltsverzeichnis, verknüpftes Excel | offen |
+| 25 | Gruppen-Report: Deckblatt, Inhaltsverzeichnis, verknüpftes Excel | erledigt |
 
 Status ist `offen`, `läuft` (Datei trägt das Präfix `RUN_`) oder `erledigt` (Datei liegt in `Archiv/`). Die Tabelle wird beim Archivieren eines Tasks aktualisiert.
 
@@ -94,6 +94,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_22] Gruppen-Report:** `buildGroupXlsx`/`buildGroupPdf` (`lib/export/domain/`), Export-Knopf im Gruppen-Bildschirm. Einzel-Exporte enthalten jetzt Revision und letzte Messung, das PDF zusätzlich die Abweichung zur letzten archivierten Revision. Neue Export-Texte als optionale Labels (`ExportLabels.revision`), damit bestehende Aufrufer/Tests unverändert bleiben.
 - **[Task_23] Backup v2:** Format-Version 2 (Gruppen, Reihenfolge, Revisionen, `recordedAt`), v1 bleibt importierbar. Neue Tabellen mit Studienbezug müssen in `BackupService` (Export, Import, Ersetzen, Validierung) und in `StudyRepository.copyStudy` ergänzt werden.
 - **[Task_24] Linienbetrachtung:** `LineAnalysis` (reines Dart) + `LineScreen` mit Yamazumi-Diagramm. Gruppendaten (Report und Linie) lädt einheitlich `loadGroupReport()`; Einheit = Standardeinheit der Einstellungen.
+- **[Task_25] Vollständiger Gruppen-Report:** `buildGroupReportPdf` (Deckblatt, klickbares Inhaltsverzeichnis mit Seitenzahlen über zwei Layout-Durchläufe, Lesezeichen, Linienkapitel) und `buildGroupReportXlsx` (Inhalt mit Hyperlinks, Linienblatt mit Formeln auf die Studienblätter, Rück-Links). Export-Menü der Gruppe: vollständig (Standard) und kompakt. Formeln wurden mit LibreOffice (`soffice --headless --convert-to csv`, alle Blätter) nachgerechnet.
 
 ## Auffälligkeiten & Details
 

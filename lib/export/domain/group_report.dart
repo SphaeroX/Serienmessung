@@ -30,6 +30,41 @@ class GroupReportLabels {
   final String total;
 }
 
+/// Texts of the full group report (contents, line analysis, links).
+class LineReportLabels {
+  const LineReportLabels({
+    required this.contents,
+    required this.lineAnalysis,
+    required this.station,
+    required this.totalTime,
+    required this.lineCycleTime,
+    required this.bottleneck,
+    required this.balance,
+    required this.outputPerHour,
+    required this.waiting,
+    required this.share,
+    required this.sheet,
+    required this.backToContents,
+    required this.studies,
+  });
+
+  final String contents;
+  final String lineAnalysis;
+  final String station;
+  final String totalTime;
+  final String lineCycleTime;
+  final String bottleneck;
+  final String balance;
+  final String outputPerHour;
+  final String waiting;
+  final String share;
+
+  /// Overview column with the link to the study sheet.
+  final String sheet;
+  final String backToContents;
+  final String studies;
+}
+
 /// Everything a group report needs; one [ExportInput] per study in group
 /// order. Independent of Flutter.
 class GroupReportInput {
@@ -68,8 +103,15 @@ class GroupReportInput {
 
 /// Excel sheet names: at most 31 characters, none of `[]:*?/\`, unique
 /// (case-insensitive). Each name is the position and the study name.
-List<String> studySheetNames(List<String> studyNames, {String reserved = ''}) {
-  final used = <String>{reserved.toLowerCase()};
+List<String> studySheetNames(
+  List<String> studyNames, {
+  String reserved = '',
+  List<String> alsoReserved = const [],
+}) {
+  final used = <String>{
+    reserved.toLowerCase(),
+    for (final r in alsoReserved) r.toLowerCase(),
+  };
   final result = <String>[];
   for (var i = 0; i < studyNames.length; i++) {
     final clean = '${i + 1} ${studyNames[i]}'

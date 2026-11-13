@@ -570,5 +570,17 @@
         "type": "String"
       }
     }
-  }
+  },
+  "reportContents": "Contents",
+  "reportStation": "Station",
+  "reportWaiting": "Waiting",
+  "reportSheet": "Sheet",
+  "reportBackToContents": "Back to contents",
+  "reportStudies": "Studies",
+  "groupFullPdf": "PDF report (complete)",
+  "groupFullPdfHint": "Cover with contents, line analysis, overview and all studies",
+  "groupFullXlsx": "Excel (linked)",
+  "groupFullXlsxHint": "Contents with links, line analysis with formulas, overview, one sheet per study",
+  "groupCompactPdf": "PDF (compact)",
+  "groupCompactXlsx": "Excel (compact)"
 }

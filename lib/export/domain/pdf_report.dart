@@ -9,6 +9,7 @@ import '../../recording/domain/measurement.dart';
 import '../../study/domain/study.dart';
 import '../../revision/domain/revision_comparison.dart';
 import 'export_data.dart';
+import '../../group/domain/line_analysis.dart';
 import 'group_report.dart';
 
 /// Texts only the PDF report needs.
@@ -64,6 +65,361 @@ Future<Uint8List> buildGroupPdf(
     doc.addPage(_page(footer, _studyWidgets(x, p)));
   }
   return doc.save();
+}
+
+/// Builds the full group report: a cover with the line key figures and a
+/// clickable table of contents (with page numbers and PDF bookmarks), the
+/// line analysis (bar chart and station table), the overview and every
+/// study from a new page.
+///
+/// The document is laid out twice: the first pass finds the page of every
+/// section, the second prints these numbers in the contents. [onSections]
+/// receives the section pages (`line`, `overview`, `study0` ...).
+Future<Uint8List> buildGroupReportPdf(
+  GroupReportInput g,
+  PdfLabels p,
+  LineReportLabels ll, {
+  bool compress = true,
+  void Function(Map<String, int> sections)? onSections,
+}) async {
+  final date = DateFormat('yyyy-MM-dd HH:mm').format(g.exportedAt);
+  final footer = _footer(p, g.labels.title, date);
+  final line = g.line;
+
+  (pw.Document, Map<String, int>) build(Map<String, int> pages) {
+    final doc = pw.Document(compress: compress, title: g.group.name);
+    final found = <String, int>{};
+    int next() => doc.document.pdfPageList.pages.length + 1;
+    doc.addPage(_page(footer, _cover(g, p, ll, line, pages, date)));
+    found['line'] = next();
+    doc.addPage(_page(footer, _lineSection(g, ll, line)));
+    found['overview'] = next();
+    doc.addPage(
+      _page(footer, [
+        ..._groupOverview(g, p, date).skipWhile((w) => w is! _Marker),
+      ]),
+    );
+    for (var k = 0; k < g.entries.length; k++) {
+      found['study$k'] = next();
+      doc.addPage(
+        _page(footer, [
+          pw.Outline(
+            name: 'study$k',
+            title: _latin1('${k + 1}. ${g.entries[k].study.name}'),
+            level: 1,
+            child: pw.SizedBox(),
+          ),
+          ..._studyWidgets(g.entries[k], p),
+        ]),
+      );
+    }
+    return (doc, found);
+  }
+
+  final (_, pages) = build(const {});
+  final (doc, found) = build(pages);
+  onSections?.call(found);
+  return doc.save();
+}
+
+/// Marks where the overview section starts in [_groupOverview], so the full
+/// report can use the overview without the group header.
+class _Marker extends pw.StatelessWidget {
+  _Marker(this.child);
+
+  final pw.Widget child;
+
+  @override
+  pw.Widget build(pw.Context context) => child;
+}
+
+String _fmt(GroupReportInput g, num micros) => formatTime(
+  micros.round(),
+  g.unit,
+  decimals: _decimals(g.unit),
+  locale: g.locale,
+);
+
+/// Line key figures as label/value rows.
+List<List<String>> _lineFigures(
+  GroupReportInput g,
+  LineReportLabels ll,
+  LineAnalysis line,
+) {
+  String delta(double? d, double? ratio) => d == null
+      ? ''
+      : '  (${formatDelta(d, g.unit, decimals: _decimals(g.unit), locale: g.locale)}'
+            '${ratio == null ? '' : ', ${formatRatioDelta(ratio, locale: g.locale)}'})';
+  return [
+    [
+      ll.totalTime,
+      '${_fmt(g, line.totalTime)}${delta(line.totalDelta, line.totalDeltaRatio)}',
+    ],
+    [
+      ll.lineCycleTime,
+      line.lineCycleTime == null
+          ? '-'
+          : '${_fmt(g, line.lineCycleTime!)}${delta(line.lineCycleDelta, null)}',
+    ],
+    [ll.bottleneck, line.bottleneck?.name ?? '-'],
+    [
+      ll.balance,
+      line.balance == null
+          ? '-'
+          : '${formatNumber(line.balance! * 100, 1, locale: g.locale)} %',
+    ],
+    [
+      ll.outputPerHour,
+      line.outputPerHour == null
+          ? '-'
+          : formatNumber(line.outputPerHour!, 1, locale: g.locale),
+    ],
+  ];
+}
+
+List<pw.Widget> _cover(
+  GroupReportInput g,
+  PdfLabels p,
+  LineReportLabels ll,
+  LineAnalysis line,
+  Map<String, int> pages,
+  String date,
+) {
+  final gl = g.labels;
+  final el = g.exportLabels;
+  pw.Widget entry(String key, String title, {int level = 0}) => pw.Link(
+    destination: key,
+    child: pw.Padding(
+      padding: pw.EdgeInsets.only(left: 14.0 * level, bottom: 4),
+      child: pw.Row(
+        children: [
+          pw.Text(
+            _latin1(title),
+            style: pw.TextStyle(
+              fontSize: level == 0 ? 11 : 10,
+              fontWeight: level == 0 ? pw.FontWeight.bold : null,
+            ),
+          ),
+          pw.SizedBox(width: 6),
+          pw.Expanded(
+            child: pw.Divider(
+              borderStyle: pw.BorderStyle.dotted,
+              thickness: 0.5,
+              color: PdfColors.grey600,
+            ),
+          ),
+          pw.SizedBox(width: 6),
+          pw.Text(
+            '${pages[key] ?? 0}',
+            style: const pw.TextStyle(fontSize: 10),
+          ),
+        ],
+      ),
+    ),
+  );
+  return [
+    pw.SizedBox(height: 60),
+    pw.Text(
+      _latin1(gl.title),
+      style: pw.TextStyle(fontSize: 14, color: PdfColors.grey700),
+    ),
+    pw.SizedBox(height: 6),
+    pw.Text(
+      _latin1(g.group.name),
+      style: pw.TextStyle(fontSize: 30, fontWeight: pw.FontWeight.bold),
+    ),
+    if (g.group.description.isNotEmpty) ...[
+      pw.SizedBox(height: 6),
+      pw.Text(
+        _latin1(g.group.description),
+        style: const pw.TextStyle(fontSize: 13),
+      ),
+    ],
+    pw.SizedBox(height: 10),
+    pw.Container(height: 2, color: PdfColors.blueGrey700),
+    pw.SizedBox(height: 10),
+    pw.Text(
+      _latin1(
+        '${el.date}: $date   ${el.unit}: ${g.unit.label}   '
+        '${ll.studies}: ${g.entries.length}',
+      ),
+      style: const pw.TextStyle(fontSize: 10),
+    ),
+    pw.SizedBox(height: 24),
+    if (line.measuredCount > 0)
+      pw.Container(
+        padding: const pw.EdgeInsets.all(10),
+        decoration: pw.BoxDecoration(
+          color: PdfColors.grey100,
+          border: pw.Border.all(color: PdfColors.grey400, width: 0.5),
+        ),
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(
+              _latin1(ll.lineAnalysis),
+              style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 6),
+            for (final f in _lineFigures(g, ll, line))
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(bottom: 2),
+                child: pw.Row(
+                  children: [
+                    pw.SizedBox(
+                      width: 180,
+                      child: pw.Text(
+                        _latin1(f[0]),
+                        style: const pw.TextStyle(fontSize: 10),
+                      ),
+                    ),
+                    pw.Text(
+                      _latin1(f[1]),
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    pw.SizedBox(height: 28),
+    pw.Text(
+      _latin1(ll.contents),
+      style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+    ),
+    pw.SizedBox(height: 10),
+    entry('line', ll.lineAnalysis),
+    entry('overview', gl.overview),
+    pw.SizedBox(height: 4),
+    pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 4),
+      child: pw.Text(
+        _latin1(ll.studies),
+        style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+      ),
+    ),
+    for (var k = 0; k < g.entries.length; k++)
+      entry('study$k', '${k + 1}. ${g.entries[k].study.name}', level: 1),
+  ];
+}
+
+const _barColors = [
+  PdfColors.blueGrey700,
+  PdfColors.teal400,
+  PdfColors.indigo300,
+  PdfColors.blueGrey400,
+  PdfColors.teal200,
+  PdfColors.indigo100,
+];
+
+List<pw.Widget> _lineSection(
+  GroupReportInput g,
+  LineReportLabels ll,
+  LineAnalysis line,
+) {
+  final gl = g.labels;
+  final el = g.exportLabels;
+  final max = line.lineCycleTime;
+  const barWidth = 260.0;
+  String opt(double? v) => v == null ? '' : _fmt(g, v);
+  return [
+    pw.Outline(
+      name: 'line',
+      title: _latin1(ll.lineAnalysis),
+      child: pw.Text(
+        _latin1(ll.lineAnalysis),
+        style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+      ),
+    ),
+    pw.Text(
+      _latin1(g.group.name),
+      style: pw.TextStyle(fontSize: 11, color: PdfColors.grey700),
+    ),
+    pw.SizedBox(height: 8),
+    _table(['', ''], _lineFigures(g, ll, line)),
+    if (max != null && max > 0) ...[
+      _section(el.realCycleTime),
+      for (final st in line.stations)
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(bottom: 3),
+          child: pw.Row(
+            children: [
+              pw.SizedBox(
+                width: 150,
+                child: pw.Text(
+                  _latin1('${st.position + 1}. ${st.name}'),
+                  style: _small,
+                  maxLines: 1,
+                ),
+              ),
+              pw.Container(
+                decoration: st.isBottleneck
+                    ? pw.BoxDecoration(
+                        border: pw.Border.all(color: PdfColors.red, width: 1.2),
+                      )
+                    : null,
+                child: pw.Row(
+                  children: [
+                    for (var k = 0; k < st.segments.length; k++)
+                      pw.Container(
+                        width: barWidth * st.segments[k].micros / max,
+                        height: 12,
+                        color: _barColors[k % _barColors.length],
+                      ),
+                  ],
+                ),
+              ),
+              pw.SizedBox(width: 4),
+              pw.Text(
+                _latin1(st.cycleTime == null ? '-' : _fmt(g, st.cycleTime!)),
+                style: pw.TextStyle(
+                  fontSize: 8,
+                  color: st.isBottleneck ? PdfColors.red : null,
+                  fontWeight: st.isBottleneck ? pw.FontWeight.bold : null,
+                ),
+              ),
+            ],
+          ),
+        ),
+    ],
+    _section(ll.station),
+    _table(
+      [
+        gl.position,
+        ll.station,
+        el.realCycleTime,
+        ll.share,
+        ll.waiting,
+        gl.previous,
+        el.revision?.delta ?? '',
+      ],
+      [
+        for (final st in line.stations)
+          [
+            '${st.position + 1}',
+            st.isBottleneck ? '${st.name} (${ll.bottleneck})' : st.name,
+            opt(st.cycleTime),
+            st.cycleTime == null
+                ? ''
+                : '${formatNumber(st.share * 100, 1, locale: g.locale)} %',
+            opt(st.idle),
+            opt(st.previousCycleTime),
+            st.cycleTime == null || st.previousCycleTime == null
+                ? ''
+                : formatDelta(
+                    st.cycleTime! - st.previousCycleTime!,
+                    g.unit,
+                    decimals: _decimals(g.unit),
+                    locale: g.locale,
+                  ),
+          ],
+      ],
+    ),
+  ];
 }
 
 const _small = pw.TextStyle(fontSize: 8);
@@ -128,7 +484,6 @@ int _decimals(TimeUnit unit) => switch (unit) {
 List<pw.Widget> _groupOverview(GroupReportInput g, PdfLabels p, String date) {
   final gl = g.labels;
   final el = g.exportLabels;
-  final rl = el.revision;
   final unit = g.unit;
   String t(num? micros) => micros == null
       ? ''
@@ -180,7 +535,37 @@ List<pw.Widget> _groupOverview(GroupReportInput g, PdfLabels p, String date) {
       _latin1('${el.date}: $date   ${el.unit}: ${unit.label}'),
       style: _small,
     ),
-    _section(gl.overview),
+    ..._overviewTable(
+      g,
+      p,
+      rows,
+      total,
+      t,
+      _Marker(
+        pw.Outline(
+          name: 'overview',
+          title: _latin1(gl.overview),
+          child: _section(gl.overview),
+        ),
+      ),
+    ),
+  ];
+}
+
+/// Overview heading and table (studies in group order and their total).
+List<pw.Widget> _overviewTable(
+  GroupReportInput g,
+  PdfLabels p,
+  List<List<String>> rows,
+  double total,
+  String Function(num?) t,
+  pw.Widget heading,
+) {
+  final gl = g.labels;
+  final el = g.exportLabels;
+  final rl = el.revision;
+  return [
+    heading,
     if (g.entries.isEmpty)
       pw.Text(_latin1(p.noData), style: _small)
     else

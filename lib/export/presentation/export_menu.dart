@@ -88,6 +88,23 @@ RevisionLabels revisionLabels(AppLocalizations l) => RevisionLabels(
   delta: l.revisionDelta,
 );
 
+/// Texts of the complete group report in the current language.
+LineReportLabels lineReportLabels(AppLocalizations l) => LineReportLabels(
+  contents: l.reportContents,
+  lineAnalysis: l.lineAnalysis,
+  station: l.reportStation,
+  totalTime: l.lineTotalLabel,
+  lineCycleTime: l.lineCycleLabel,
+  bottleneck: l.lineBottleneckLabel,
+  balance: l.lineBalanceLabel,
+  outputPerHour: l.lineOutputLabel,
+  waiting: l.reportWaiting,
+  share: l.exportShare,
+  sheet: l.reportSheet,
+  backToContents: l.reportBackToContents,
+  studies: l.reportStudies,
+);
+
 /// Group report texts in the current language.
 GroupReportLabels groupReportLabels(AppLocalizations l) => GroupReportLabels(
   title: l.groupReportTitle,
@@ -299,11 +316,13 @@ class GroupExportButton extends ConsumerWidget {
   Future<void> _export(
     BuildContext context,
     WidgetRef ref,
-    ExportFormat format,
-  ) async {
+    ExportFormat format, {
+    bool complete = false,
+  }) async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final labels = pdfLabels(l, null);
+    final line = lineReportLabels(l);
     try {
       final input = await loadGroupReport(
         ref,
@@ -315,12 +334,14 @@ class GroupExportButton extends ConsumerWidget {
       final dir = await ref.read(exportDirectoryProvider)();
       final (List<int> bytes, ext, mime) = switch (format) {
         ExportFormat.pdf => (
-          await buildGroupPdf(input, labels),
+          complete
+              ? await buildGroupReportPdf(input, labels, line)
+              : await buildGroupPdf(input, labels),
           'pdf',
           'application/pdf',
         ),
         _ => (
-          buildGroupXlsx(input),
+          complete ? buildGroupReportXlsx(input, line) : buildGroupXlsx(input),
           'xlsx',
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ),
@@ -350,31 +371,55 @@ class GroupExportButton extends ConsumerWidget {
       onPressed: () => showModalBottomSheet<void>(
         context: context,
         showDragHandle: true,
+        isScrollControlled: true,
         builder: (sheet) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                key: const Key('groupExportPdf'),
-                leading: const Icon(Icons.picture_as_pdf_outlined),
-                title: Text(l.exportPdf),
-                subtitle: Text(l.groupPdfHint),
-                onTap: () {
-                  Navigator.pop(sheet);
-                  _export(context, ref, ExportFormat.pdf);
-                },
-              ),
-              ListTile(
-                key: const Key('groupExportXlsx'),
-                leading: const Icon(Icons.grid_on),
-                title: Text(l.exportXlsx),
-                subtitle: Text(l.groupXlsxHint),
-                onTap: () {
-                  Navigator.pop(sheet);
-                  _export(context, ref, ExportFormat.xlsx);
-                },
-              ),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  key: const Key('groupReportPdf'),
+                  leading: const Icon(Icons.picture_as_pdf),
+                  title: Text(l.groupFullPdf),
+                  subtitle: Text(l.groupFullPdfHint),
+                  onTap: () {
+                    Navigator.pop(sheet);
+                    _export(context, ref, ExportFormat.pdf, complete: true);
+                  },
+                ),
+                ListTile(
+                  key: const Key('groupReportXlsx'),
+                  leading: const Icon(Icons.table_chart),
+                  title: Text(l.groupFullXlsx),
+                  subtitle: Text(l.groupFullXlsxHint),
+                  onTap: () {
+                    Navigator.pop(sheet);
+                    _export(context, ref, ExportFormat.xlsx, complete: true);
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  key: const Key('groupExportPdf'),
+                  leading: const Icon(Icons.picture_as_pdf_outlined),
+                  title: Text(l.groupCompactPdf),
+                  subtitle: Text(l.groupPdfHint),
+                  onTap: () {
+                    Navigator.pop(sheet);
+                    _export(context, ref, ExportFormat.pdf);
+                  },
+                ),
+                ListTile(
+                  key: const Key('groupExportXlsx'),
+                  leading: const Icon(Icons.grid_on),
+                  title: Text(l.groupCompactXlsx),
+                  subtitle: Text(l.groupXlsxHint),
+                  onTap: () {
+                    Navigator.pop(sheet);
+                    _export(context, ref, ExportFormat.xlsx);
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
