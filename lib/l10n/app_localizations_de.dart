@@ -1116,4 +1116,39 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get reportLoss => 'Verlust';
+
+  @override
+  String get addBuffer => 'Puffer davor einfügen';
+
+  @override
+  String get editBuffer => 'Puffer';
+
+  @override
+  String get removeBuffer => 'Entfernen';
+
+  @override
+  String get bufferHint =>
+      'Lagert Teile nur ein, wenn die nächste Station belegt ist; sonst laufen sie auf dem Band weiter. Ein- und Auslagern kosten die Zeit des Puffers.';
+
+  @override
+  String get bufferCapacity => 'Plätze';
+
+  @override
+  String get bufferStoreTime => 'Einlagerzeit je Teil';
+
+  @override
+  String get bufferRetrieveTime => 'Auslagerzeit je Teil';
+
+  @override
+  String get invalidCount => 'Eine ganze Zahl größer als 0 eingeben';
+
+  @override
+  String bufferPlaces(int count) {
+    return 'Puffer · $count Plätze';
+  }
+
+  @override
+  String bufferTimes(String store, String retrieve) {
+    return 'Ein $store · aus $retrieve';
+  }
 }

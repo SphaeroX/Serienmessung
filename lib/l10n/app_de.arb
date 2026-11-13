@@ -313,5 +313,15 @@
   "noLoss": "Kein Verlust",
   "reportMachine": "Maschine",
   "reportOutputDuring": "Ausbringung bei Ausfall",
-  "reportLoss": "Verlust"
+  "reportLoss": "Verlust",
+  "addBuffer": "Puffer davor einfügen",
+  "editBuffer": "Puffer",
+  "removeBuffer": "Entfernen",
+  "bufferHint": "Lagert Teile nur ein, wenn die nächste Station belegt ist; sonst laufen sie auf dem Band weiter. Ein- und Auslagern kosten die Zeit des Puffers.",
+  "bufferCapacity": "Plätze",
+  "bufferStoreTime": "Einlagerzeit je Teil",
+  "bufferRetrieveTime": "Auslagerzeit je Teil",
+  "invalidCount": "Eine ganze Zahl größer als 0 eingeben",
+  "bufferPlaces": "Puffer · {count} Plätze",
+  "bufferTimes": "Ein {store} · aus {retrieve}"
 }

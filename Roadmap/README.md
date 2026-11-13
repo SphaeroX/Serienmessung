@@ -46,7 +46,7 @@ Stand: 2026-11-13 – **Erweiterung 5 läuft (Task_29–32: Puffer, Simulation).
 | 26 | Parallele Maschinen in der Gruppe | erledigt |
 | 27 | Linie mit Parallelstationen und Ausfallrisiko | erledigt |
 | 28 | Reports mit Parallelstationen und Ausfallrisiko | erledigt |
-| 29 | Puffer in der Gruppe | offen |
+| 29 | Puffer in der Gruppe | erledigt |
 | 30 | Simulation der Linie mit Puffern und Störungen | offen |
 | 31 | Simulationsbildschirm | offen |
 | 32 | Reports mit Puffern und simuliertem Ausfallrisiko | offen |
@@ -105,6 +105,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_26] Parallele Maschinen:** Migration v11 `study.parallel` (parallel zum Gruppenmitglied davor). Maschinen mit fester Taktzeit sind Einfach-Studien mit genau einer Runde – keine neue `StudyMode`, damit alle Auswertungen, Exporte, Revisionen und das Backup ohne Sonderfälle funktionieren.
 - **[Task_27] Parallelstationen & Ausfallrisiko:** `LineAnalysis` arbeitet stationsweise (`LineStation.machines`); `line.stations` ist damit **nicht** mehr 1:1 zu den Gruppenmitgliedern – Code, der nach Mitgliedsindex auf Stationen zugreift, muss über die Maschinen gehen. `FailureRisk` = Ausfallszenarien je Maschine.
 - **[Task_28] Reports:** Excel-Linienblatt stationsweise mit Formel 1/(Σ 1/t) für Parallelstationen; Blatt/Kapitel "Ausfallrisiko" (`RiskReportLabels`) – in der App nur, wenn die Linie eine Parallelstation hat (ein bestehender UI-Test legt die Blattliste ohne Parallelstation fest; immer anzeigen bräuchte die Freigabe, diesen Test anzupassen).
+- **[Task_29] Puffer:** Migration v12; Puffer liegt am ersten Mitglied der Station *dahinter* (wandert beim Umsortieren mit). Parallel schalten, Verschieben und Kopieren entfernen ihn.
 
 ## Auffälligkeiten & Details
 

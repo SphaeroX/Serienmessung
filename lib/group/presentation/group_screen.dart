@@ -10,6 +10,7 @@ import '../../study/presentation/mode_texts.dart';
 import '../../study/presentation/study_list_screen.dart' show OpenStudy;
 import '../domain/study_group.dart';
 import '../../settings/presentation/settings_controller.dart';
+import '../../core/time_format.dart';
 import '../domain/stations.dart';
 import 'group_dialogs.dart';
 import 'machine_dialogs.dart';
@@ -32,6 +33,7 @@ enum _StudyAction {
   moveDown,
   parallel,
   cycleTime,
+  buffer,
   moveToGroup,
   copyToGroup,
   remove,
@@ -114,6 +116,8 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         if (micros == null) return;
         await ref.read(machineServiceProvider).setCycleTime(study.id, micros);
         await _changed();
+      case _StudyAction.buffer:
+        await _editBuffer(study);
       case _StudyAction.moveToGroup:
         if (await moveStudyToGroup(context, ref, study)) await _changed();
       case _StudyAction.copyToGroup:
@@ -212,6 +216,34 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     if (choice == 'new') await _addNew();
     if (choice == 'existing') await _addExisting();
     if (choice == 'machine') await _addMachine();
+  }
+
+  /// Adds, edits or removes the buffer before the station of [study].
+  Future<void> _editBuffer(Study study) async {
+    final fields = await showBufferDialog(
+      context,
+      ref.read(settingsProvider).defaultUnit,
+      existing: study.hasBuffer
+          ? (
+              capacity: study.bufferCapacity,
+              storeMicros: study.bufferStoreMicros,
+              retrieveMicros: study.bufferRetrieveMicros,
+            )
+          : null,
+    );
+    if (fields == null) return;
+    final groups = ref.read(groupRepositoryProvider);
+    if (fields.remove) {
+      await groups.removeBuffer(study.id);
+    } else {
+      await groups.setBuffer(
+        study.id,
+        capacity: fields.capacity,
+        storeMicros: fields.storeMicros,
+        retrieveMicros: fields.retrieveMicros,
+      );
+    }
+    await _changed();
   }
 
   Future<void> _addMachine() async {
@@ -357,6 +389,8 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         summary: _members[i],
         onTap: () => _open(_members[i].study.id),
         onAction: (a) => _studyAction(a, i),
+        onBuffer: () => _editBuffer(_members[i].study),
+        unit: ref.read(settingsProvider).defaultUnit,
       ),
     );
   }
@@ -372,8 +406,12 @@ class _MemberTile extends StatelessWidget {
     required this.summary,
     required this.onTap,
     required this.onAction,
+    required this.onBuffer,
+    required this.unit,
   });
 
+  final VoidCallback onBuffer;
+  final TimeUnit unit;
   final int index;
   final int count;
 
@@ -391,6 +429,47 @@ class _MemberTile extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final study = summary.study;
     final theme = Theme.of(context);
+    // A buffer sits before the first machine of a station (not the first).
+    final showBuffer = study.hasBuffer && index > 0 && !study.parallel;
+    final card = _card(context, l, study, theme);
+    if (!showBuffer) return card;
+    String t(int micros) => formatTime(
+      micros,
+      unit,
+      locale: Localizations.localeOf(context).languageCode,
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Card(
+          key: Key('buffer_${study.id}'),
+          margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 32),
+          color: theme.colorScheme.secondaryContainer,
+          child: ListTile(
+            dense: true,
+            onTap: onBuffer,
+            leading: const Icon(Icons.inventory_2_outlined),
+            title: Text(l.bufferPlaces(study.bufferCapacity)),
+            subtitle: Text(
+              l.bufferTimes(
+                t(study.bufferStoreMicros),
+                t(study.bufferRetrieveMicros),
+              ),
+            ),
+            trailing: const Icon(Icons.edit_outlined, size: 18),
+          ),
+        ),
+        card,
+      ],
+    );
+  }
+
+  Widget _card(
+    BuildContext context,
+    AppLocalizations l,
+    Study study,
+    ThemeData theme,
+  ) {
     return Card(
       margin: EdgeInsets.only(
         top: 4,
@@ -446,6 +525,12 @@ class _MemberTile extends StatelessWidget {
                 value: _StudyAction.parallel,
                 checked: study.parallel,
                 child: Text(l.parallelToPrevious),
+              ),
+            if (index > 0 && !study.parallel && !study.hasBuffer)
+              PopupMenuItem(
+                key: const Key('addBuffer'),
+                value: _StudyAction.buffer,
+                child: Text(l.addBuffer),
               ),
             if (study.mode == StudyMode.simple)
               PopupMenuItem(

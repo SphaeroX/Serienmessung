@@ -225,6 +225,9 @@ class StudyRepository {
       ..['last_active_at'] = now.millisecondsSinceEpoch
       ..['group_id'] = groupId
       ..['parallel'] = 0
+      ..['buffer_capacity'] = 0
+      ..['buffer_store_us'] = 0
+      ..['buffer_retrieve_us'] = 0
       ..['group_position'] = groupId == null
           ? 0
           : await nextGroupPosition(txn, groupId);
@@ -371,6 +374,9 @@ class StudyRepository {
     groupPosition: r['group_position'] as int? ?? 0,
     revision: r['revision'] as int? ?? 1,
     parallel: (r['parallel'] as int? ?? 0) == 1,
+    bufferCapacity: r['buffer_capacity'] as int? ?? 0,
+    bufferStoreMicros: r['buffer_store_us'] as int? ?? 0,
+    bufferRetrieveMicros: r['buffer_retrieve_us'] as int? ?? 0,
   );
 
   static StepDefinition stepFromRow(Map<String, Object?> r) => StepDefinition(

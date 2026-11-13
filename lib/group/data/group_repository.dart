@@ -67,7 +67,12 @@ class GroupRepository {
             : await StudyRepository.nextGroupPosition(txn, groupId);
         await txn.update(
           'study',
-          {'group_id': groupId, 'group_position': position, 'parallel': 0},
+          {
+            'group_id': groupId,
+            'group_position': position,
+            'parallel': 0,
+            ..._noBuffer,
+          },
           where: 'id = ?',
           whereArgs: [studyId],
         );
@@ -75,12 +80,41 @@ class GroupRepository {
 
   /// Marks study [studyId] as working in parallel with the group member
   /// before it.
+  ///
+  /// A member working in parallel is no station of its own, so it loses
+  /// its buffer.
   Future<void> setParallel(int studyId, bool parallel) => _db.db.update(
     'study',
-    {'parallel': parallel ? 1 : 0},
+    {'parallel': parallel ? 1 : 0, if (parallel) ..._noBuffer},
     where: 'id = ?',
     whereArgs: [studyId],
   );
+
+  /// Puts a buffer before the station of study [studyId].
+  Future<void> setBuffer(
+    int studyId, {
+    required int capacity,
+    required int storeMicros,
+    required int retrieveMicros,
+  }) => _db.db.update(
+    'study',
+    {
+      'buffer_capacity': capacity,
+      'buffer_store_us': storeMicros,
+      'buffer_retrieve_us': retrieveMicros,
+    },
+    where: 'id = ?',
+    whereArgs: [studyId],
+  );
+
+  Future<void> removeBuffer(int studyId) =>
+      _db.db.update('study', _noBuffer, where: 'id = ?', whereArgs: [studyId]);
+
+  static const _noBuffer = {
+    'buffer_capacity': 0,
+    'buffer_store_us': 0,
+    'buffer_retrieve_us': 0,
+  };
 
   /// Sets the group order to [studyIdsInOrder].
   Future<void> reorder(int groupId, List<int> studyIdsInOrder) =>

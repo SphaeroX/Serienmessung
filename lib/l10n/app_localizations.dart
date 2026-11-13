@@ -1981,6 +1981,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loss'**
   String get reportLoss;
+
+  /// No description provided for @addBuffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert buffer before'**
+  String get addBuffer;
+
+  /// No description provided for @editBuffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Buffer'**
+  String get editBuffer;
+
+  /// No description provided for @removeBuffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get removeBuffer;
+
+  /// No description provided for @bufferHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stores parts only when the next station is busy; otherwise they pass on the conveyor. Storing and retrieving take the buffer\'s own time.'**
+  String get bufferHint;
+
+  /// No description provided for @bufferCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Places'**
+  String get bufferCapacity;
+
+  /// No description provided for @bufferStoreTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Store time per part'**
+  String get bufferStoreTime;
+
+  /// No description provided for @bufferRetrieveTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Retrieve time per part'**
+  String get bufferRetrieveTime;
+
+  /// No description provided for @invalidCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number greater than 0'**
+  String get invalidCount;
+
+  /// No description provided for @bufferPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Buffer · {count} places'**
+  String bufferPlaces(int count);
+
+  /// No description provided for @bufferTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'In {store} · out {retrieve}'**
+  String bufferTimes(String store, String retrieve);
 }
 
 class _AppLocalizationsDelegate

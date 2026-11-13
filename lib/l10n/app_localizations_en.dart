@@ -1109,4 +1109,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportLoss => 'Loss';
+
+  @override
+  String get addBuffer => 'Insert buffer before';
+
+  @override
+  String get editBuffer => 'Buffer';
+
+  @override
+  String get removeBuffer => 'Remove';
+
+  @override
+  String get bufferHint =>
+      'Stores parts only when the next station is busy; otherwise they pass on the conveyor. Storing and retrieving take the buffer\'s own time.';
+
+  @override
+  String get bufferCapacity => 'Places';
+
+  @override
+  String get bufferStoreTime => 'Store time per part';
+
+  @override
+  String get bufferRetrieveTime => 'Retrieve time per part';
+
+  @override
+  String get invalidCount => 'Enter a whole number greater than 0';
+
+  @override
+  String bufferPlaces(int count) {
+    return 'Buffer · $count places';
+  }
+
+  @override
+  String bufferTimes(String store, String retrieve) {
+    return 'In $store · out $retrieve';
+  }
 }

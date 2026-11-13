@@ -88,6 +88,9 @@ class BackupService {
         'groupRef': s['group_id'],
         'groupPosition': s['group_position'],
         'parallel': s['parallel'] == 1,
+        'bufferCapacity': s['buffer_capacity'],
+        'bufferStore': s['buffer_store_us'],
+        'bufferRetrieve': s['buffer_retrieve_us'],
         'revision': s['revision'],
         'steps': [
           for (final st in steps)
@@ -252,6 +255,11 @@ class BackupService {
               : await position(groupId, s['groupPosition']),
           'revision': s['revision'] as int? ?? 1,
           'parallel': groupId != null && s['parallel'] == true ? 1 : 0,
+          if (groupId != null) ...{
+            'buffer_capacity': s['bufferCapacity'] as int? ?? 0,
+            'buffer_store_us': s['bufferStore'] as int? ?? 0,
+            'buffer_retrieve_us': s['bufferRetrieve'] as int? ?? 0,
+          },
         });
         final stepIds = <Object?, int>{};
         for (final st in s['steps'] as List) {

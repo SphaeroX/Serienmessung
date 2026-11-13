@@ -34,6 +34,9 @@ class Study {
     this.groupPosition = 0,
     this.revision = 1,
     this.parallel = false,
+    this.bufferCapacity = 0,
+    this.bufferStoreMicros = 0,
+    this.bufferRetrieveMicros = 0,
   });
 
   final int id;
@@ -69,6 +72,15 @@ class Study {
   /// Works in parallel with the group member before it (same station of
   /// the line, e.g. one of several identical machines).
   final bool parallel;
+
+  /// Places of the buffer before this station of the group (0 = none). The
+  /// buffer stores parts only when this station is busy (jam), its own time
+  /// per part is [bufferStoreMicros] / [bufferRetrieveMicros].
+  final int bufferCapacity;
+  final int bufferStoreMicros;
+  final int bufferRetrieveMicros;
+
+  bool get hasBuffer => bufferCapacity > 0;
 }
 
 /// One defined work step of a study.

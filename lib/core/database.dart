@@ -151,6 +151,18 @@ final List<Migration> migrations = [
       'ALTER TABLE study ADD COLUMN parallel INTEGER NOT NULL DEFAULT 0',
     );
   },
+  // v12: buffer (intermediate storage) before a station of a group.
+  (db) async {
+    for (final column in [
+      'buffer_capacity',
+      'buffer_store_us',
+      'buffer_retrieve_us',
+    ]) {
+      await db.execute(
+        'ALTER TABLE study ADD COLUMN $column INTEGER NOT NULL DEFAULT 0',
+      );
+    }
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.

@@ -621,5 +621,32 @@
   "noLoss": "No loss",
   "reportMachine": "Machine",
   "reportOutputDuring": "Output during failure",
-  "reportLoss": "Loss"
+  "reportLoss": "Loss",
+  "addBuffer": "Insert buffer before",
+  "editBuffer": "Buffer",
+  "removeBuffer": "Remove",
+  "bufferHint": "Stores parts only when the next station is busy; otherwise they pass on the conveyor. Storing and retrieving take the buffer's own time.",
+  "bufferCapacity": "Places",
+  "bufferStoreTime": "Store time per part",
+  "bufferRetrieveTime": "Retrieve time per part",
+  "invalidCount": "Enter a whole number greater than 0",
+  "bufferPlaces": "Buffer · {count} places",
+  "@bufferPlaces": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bufferTimes": "In {store} · out {retrieve}",
+  "@bufferTimes": {
+    "placeholders": {
+      "store": {
+        "type": "String"
+      },
+      "retrieve": {
+        "type": "String"
+      }
+    }
+  }
 }
