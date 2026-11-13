@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-13 – **Erweiterung 4 läuft (Task_26–28: parallele Maschinen, Ausfallrisiko).** Davor abgeschlossen: Erweiterung 3 (Task_24–25: Linienbetrachtung, vollständiger Gruppen-Report), Tasks 01–18, Feedback-Runde 1 und Erweiterung 2 (Gruppen, Revisionen, Nachfrage bei alter Messung, Gruppen-Reports, Backup v2; Task_19–23) erledigt. 312 Tests grün, `flutter analyze` ohne Befunde. Offen sind nur manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
+Stand: 2026-11-13 – **Roadmap abgeschlossen** inkl. Erweiterung 4 (Task_26–28: parallele Maschinen, feste Taktzeiten, Ausfallrisiko). Davor abgeschlossen: Erweiterung 3 (Task_24–25: Linienbetrachtung, vollständiger Gruppen-Report), Tasks 01–18, Feedback-Runde 1 und Erweiterung 2 (Gruppen, Revisionen, Nachfrage bei alter Messung, Gruppen-Reports, Backup v2; Task_19–23) erledigt. 339 Tests grün, `flutter analyze` ohne Befunde. Offen sind nur manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
 
 | Task | Titel | Status |
 |---|---|---|
@@ -45,7 +45,7 @@ Stand: 2026-11-13 – **Erweiterung 4 läuft (Task_26–28: parallele Maschinen,
 | 25 | Gruppen-Report: Deckblatt, Inhaltsverzeichnis, verknüpftes Excel | erledigt |
 | 26 | Parallele Maschinen in der Gruppe | erledigt |
 | 27 | Linie mit Parallelstationen und Ausfallrisiko | erledigt |
-| 28 | Reports mit Parallelstationen und Ausfallrisiko | offen |
+| 28 | Reports mit Parallelstationen und Ausfallrisiko | erledigt |
 
 Status ist `offen`, `läuft` (Datei trägt das Präfix `RUN_`) oder `erledigt` (Datei liegt in `Archiv/`). Die Tabelle wird beim Archivieren eines Tasks aktualisiert.
 
@@ -100,6 +100,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_25] Vollständiger Gruppen-Report:** `buildGroupReportPdf` (Deckblatt, klickbares Inhaltsverzeichnis mit Seitenzahlen über zwei Layout-Durchläufe, Lesezeichen, Linienkapitel) und `buildGroupReportXlsx` (Inhalt mit Hyperlinks, Linienblatt mit Formeln auf die Studienblätter, Rück-Links). Export-Menü der Gruppe: vollständig (Standard) und kompakt. Formeln wurden mit LibreOffice (`soffice --headless --convert-to csv`, alle Blätter) nachgerechnet.
 - **[Task_26] Parallele Maschinen:** Migration v11 `study.parallel` (parallel zum Gruppenmitglied davor). Maschinen mit fester Taktzeit sind Einfach-Studien mit genau einer Runde – keine neue `StudyMode`, damit alle Auswertungen, Exporte, Revisionen und das Backup ohne Sonderfälle funktionieren.
 - **[Task_27] Parallelstationen & Ausfallrisiko:** `LineAnalysis` arbeitet stationsweise (`LineStation.machines`); `line.stations` ist damit **nicht** mehr 1:1 zu den Gruppenmitgliedern – Code, der nach Mitgliedsindex auf Stationen zugreift, muss über die Maschinen gehen. `FailureRisk` = Ausfallszenarien je Maschine.
+- **[Task_28] Reports:** Excel-Linienblatt stationsweise mit Formel 1/(Σ 1/t) für Parallelstationen; Blatt/Kapitel "Ausfallrisiko" (`RiskReportLabels`) – in der App nur, wenn die Linie eine Parallelstation hat (ein bestehender UI-Test legt die Blattliste ohne Parallelstation fest; immer anzeigen bräuchte die Freigabe, diesen Test anzupassen).
 
 ## Auffälligkeiten & Details
 

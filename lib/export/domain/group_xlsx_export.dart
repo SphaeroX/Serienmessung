@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../../core/time_format.dart';
 import '../../recording/domain/measurement.dart';
 import '../../study/domain/study.dart';
+import '../../group/domain/failure_risk.dart';
+import '../../group/domain/stations.dart';
 import 'group_report.dart';
 
 /// Builds the compact group workbook: an overview sheet (all studies in
@@ -71,10 +73,13 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
   // last because they refer to the study sheets.
   final contents = ll == null ? null : excel[ll.contents];
   final lineSheet = ll == null ? null : excel[ll.lineAnalysis];
+  final riskSheet = ll?.risk == null ? null : excel[ll!.risk!.title];
   final names = studySheetNames(
     [for (final x in g.entries) x.study.name],
     reserved: gl.overview,
-    alsoReserved: ll == null ? const [] : [ll.contents, ll.lineAnalysis],
+    alsoReserved: ll == null
+        ? const []
+        : [ll.contents, ll.lineAnalysis, ?ll.risk?.title],
   );
 
   // Overview.
@@ -243,6 +248,7 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
 
   if (ll != null) {
     _writeLine(lineSheet!, g, ll, names, cycleRows, numericUnit, header, kv);
+    if (riskSheet != null) _writeRisk(riskSheet, g, ll, header, kv);
     _writeContents(contents!, g, ll, names, kv);
   }
 
@@ -274,6 +280,9 @@ void _writeContents(
   sh.appendRow([]);
   sh.appendRow([t(ll.contents)]);
   sh.appendRow([FormulaCellValue(_link(ll.lineAnalysis, ll.lineAnalysis))]);
+  if (ll.risk != null) {
+    sh.appendRow([FormulaCellValue(_link(ll.risk!.title, ll.risk!.title))]);
+  }
   sh.appendRow([FormulaCellValue(_link(g.labels.overview, g.labels.overview))]);
   sh.appendRow([]);
   sh.appendRow([t(ll.studies)]);
@@ -319,23 +328,42 @@ void _writeLine(
     '${gl.previous} [${unit.label}]',
     '${el.revision?.delta ?? 'Δ'} [${unit.label}]',
   ]);
-  final first = sh.maxRows + 1; // 1-based row of the first station
-  final last = first + g.entries.length - 1;
   final line = g.line;
+  final groups = stationGroups([for (final x in g.entries) x.study.parallel]);
+  final first = sh.maxRows + 1; // 1-based row of the first station
+  final last = first + line.stations.length - 1;
   String range(int col) => '${_col(col)}$first:${_col(col)}$last';
   // Sum and maximum follow directly behind the stations (the excel package
   // does not write empty rows); their values are in column B.
   final sumCell = '\$B\$${last + 1}';
   final maxCell = '\$B\$${last + 2}';
-  for (var k = 0; k < g.entries.length; k++) {
+  for (var k = 0; k < line.stations.length; k++) {
     final row = first + k;
-    final cycleRow = cycleRows[k];
-    final measured = cycleRow != null && line.stations[k].cycleTime != null;
-    final prev = line.stations[k].previousCycleTime;
+    final station = line.stations[k];
+    // Members of the station whose sheet holds a real cycle time.
+    final refs = [
+      for (final e in groups[k])
+        if (cycleRows[e] != null &&
+            station.machines[groups[k].indexOf(e)].measured)
+          '${_ref(names[e])}!B${cycleRows[e]}',
+    ];
+    final measured = refs.isNotEmpty && station.cycleTime != null;
+    final prev = station.previousCycleTime;
+    // Parallel machines add their capacities: 1 / (1/t1 + 1/t2 + ...).
+    final cycleFormula = refs.length == 1
+        ? refs.single
+        : '1/(${[for (final r in refs) '1/$r'].join('+')})';
     sh.appendRow([
       IntCellValue(k + 1),
-      FormulaCellValue(_link(names[k], g.entries[k].study.name)),
-      measured ? FormulaCellValue('${_ref(names[k])}!B$cycleRow') : null,
+      groups[k].length == 1
+          ? FormulaCellValue(
+              _link(
+                names[groups[k].single],
+                g.entries[groups[k].single].study.name,
+              ),
+            )
+          : t('${station.name} (×${groups[k].length})'),
+      measured ? FormulaCellValue(cycleFormula) : null,
       measured ? FormulaCellValue('ROUND(C$row/$sumCell*100,1)') : null,
       measured ? FormulaCellValue('ROUND($maxCell-C$row,$decimals)') : null,
       prev == null
@@ -369,6 +397,45 @@ void _writeLine(
     ll.outputPerHour,
     FormulaCellValue('ROUND(3600/($maxCell*$secondsPerUnit),1)'),
   );
+}
+
+/// Failure scenarios: line output while each machine is down.
+void _writeRisk(
+  Sheet sh,
+  GroupReportInput g,
+  LineReportLabels ll,
+  void Function(Sheet, List<String>) header,
+  void Function(Sheet, String, CellValue?) kv,
+) {
+  CellValue t(String s) => TextCellValue(s);
+  final rl = ll.risk!;
+  final risk = FailureRisk.of(g.line);
+  final gl = g.labels;
+  kv(sh, gl.group, t(g.group.name));
+  kv(sh, rl.title, t(rl.hint));
+  final base = risk.baseOutput;
+  if (base != null) {
+    kv(sh, ll.outputPerHour, DoubleCellValue(_round(base, 1)));
+  }
+  if (risk.singlePoints.isNotEmpty) {
+    sh.appendRow([t(rl.singlePoints(risk.singlePoints.length))]);
+  }
+  header(sh, [
+    gl.position,
+    rl.machine,
+    '${rl.outputDuring} [1/h]',
+    '${rl.loss} [%]',
+    rl.standstill,
+  ]);
+  for (final f in risk.failures) {
+    sh.appendRow([
+      IntCellValue(f.station.position + 1),
+      t(f.machine),
+      DoubleCellValue(_round(f.outputAfter, 1)),
+      DoubleCellValue(_round(f.loss * 100, 1)),
+      t(f.standstill ? rl.standstill : (f.loss == 0 ? rl.noLoss : '')),
+    ]);
+  }
 }
 
 double _round(double v, int decimals) {

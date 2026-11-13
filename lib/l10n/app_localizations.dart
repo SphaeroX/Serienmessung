@@ -1963,6 +1963,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No loss'**
   String get noLoss;
+
+  /// No description provided for @reportMachine.
+  ///
+  /// In en, this message translates to:
+  /// **'Machine'**
+  String get reportMachine;
+
+  /// No description provided for @reportOutputDuring.
+  ///
+  /// In en, this message translates to:
+  /// **'Output during failure'**
+  String get reportOutputDuring;
+
+  /// No description provided for @reportLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Loss'**
+  String get reportLoss;
 }
 
 class _AppLocalizationsDelegate

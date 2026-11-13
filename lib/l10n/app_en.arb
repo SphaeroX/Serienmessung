@@ -618,5 +618,8 @@
     }
   },
   "standstill": "Standstill",
-  "noLoss": "No loss"
+  "noLoss": "No loss",
+  "reportMachine": "Machine",
+  "reportOutputDuring": "Output during failure",
+  "reportLoss": "Loss"
 }

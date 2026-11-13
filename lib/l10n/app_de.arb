@@ -310,5 +310,8 @@
   "singlePointsOfFailure": "{count, plural, =1{1 Station ohne Ersatzmaschine: ihr Ausfall legt die Linie still} other{{count} Stationen ohne Ersatzmaschine: jeder Ausfall legt die Linie still}}",
   "outputDuringFailure": "Ausbringung während des Ausfalls: {output} / h",
   "standstill": "Stillstand",
-  "noLoss": "Kein Verlust"
+  "noLoss": "Kein Verlust",
+  "reportMachine": "Maschine",
+  "reportOutputDuring": "Ausbringung bei Ausfall",
+  "reportLoss": "Verlust"
 }

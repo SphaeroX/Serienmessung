@@ -105,6 +105,18 @@ LineReportLabels lineReportLabels(AppLocalizations l) => LineReportLabels(
   studies: l.reportStudies,
 );
 
+/// Texts of the failure risk chapter in the current language.
+RiskReportLabels riskReportLabels(AppLocalizations l) => RiskReportLabels(
+  title: l.failureRisk,
+  hint: l.failureRiskHint,
+  machine: l.reportMachine,
+  outputDuring: l.reportOutputDuring,
+  loss: l.reportLoss,
+  standstill: l.standstill,
+  noLoss: l.noLoss,
+  singlePoints: l.singlePointsOfFailure,
+);
+
 /// Group report texts in the current language.
 GroupReportLabels groupReportLabels(AppLocalizations l) => GroupReportLabels(
   title: l.groupReportTitle,
@@ -322,7 +334,8 @@ class GroupExportButton extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final labels = pdfLabels(l, null);
-    final line = lineReportLabels(l);
+    final lineOnly = lineReportLabels(l);
+    final risk = riskReportLabels(l);
     try {
       final input = await loadGroupReport(
         ref,
@@ -331,6 +344,11 @@ class GroupExportButton extends ConsumerWidget {
         groupId,
       );
       if (input == null) return;
+      // The failure risk chapter is added when the line has parallel
+      // machines (otherwise every failure simply stops the line).
+      final line = input.line.stations.any((s) => s.isParallel)
+          ? lineOnly.withRisk(risk)
+          : lineOnly;
       final dir = await ref.read(exportDirectoryProvider)();
       final (List<int> bytes, ext, mime) = switch (format) {
         ExportFormat.pdf => (

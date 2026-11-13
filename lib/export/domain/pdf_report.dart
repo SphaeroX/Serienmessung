@@ -9,6 +9,7 @@ import '../../recording/domain/measurement.dart';
 import '../../study/domain/study.dart';
 import '../../revision/domain/revision_comparison.dart';
 import 'export_data.dart';
+import '../../group/domain/failure_risk.dart';
 import '../../group/domain/line_analysis.dart';
 import 'group_report.dart';
 
@@ -93,6 +94,10 @@ Future<Uint8List> buildGroupReportPdf(
     doc.addPage(_page(footer, _cover(g, p, ll, line, pages, date)));
     found['line'] = next();
     doc.addPage(_page(footer, _lineSection(g, ll, line)));
+    if (ll.risk != null) {
+      found['risk'] = next();
+      doc.addPage(_page(footer, _riskSection(g, ll, line)));
+    }
     found['overview'] = next();
     doc.addPage(
       _page(footer, [
@@ -293,6 +298,7 @@ List<pw.Widget> _cover(
     ),
     pw.SizedBox(height: 10),
     entry('line', ll.lineAnalysis),
+    if (ll.risk != null) entry('risk', ll.risk!.title),
     entry('overview', gl.overview),
     pw.SizedBox(height: 4),
     pw.Padding(
@@ -315,6 +321,74 @@ const _barColors = [
   PdfColors.teal200,
   PdfColors.indigo100,
 ];
+
+/// Failure scenarios: line output while each machine is down.
+List<pw.Widget> _riskSection(
+  GroupReportInput g,
+  LineReportLabels ll,
+  LineAnalysis line,
+) {
+  final rl = ll.risk!;
+  final risk = FailureRisk.of(line);
+  final singles = risk.singlePoints.length;
+  String number(double v) => formatNumber(v, 1, locale: g.locale);
+  return [
+    pw.Outline(
+      name: 'risk',
+      title: _latin1(rl.title),
+      child: pw.Text(
+        _latin1(rl.title),
+        style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+      ),
+    ),
+    pw.Text(
+      _latin1(g.group.name),
+      style: pw.TextStyle(fontSize: 11, color: PdfColors.grey700),
+    ),
+    pw.SizedBox(height: 6),
+    pw.Text(_latin1(rl.hint), style: const pw.TextStyle(fontSize: 9)),
+    if (risk.baseOutput != null)
+      pw.Padding(
+        padding: const pw.EdgeInsets.only(top: 6),
+        child: pw.Text(
+          _latin1('${ll.outputPerHour}: ${number(risk.baseOutput!)}'),
+          style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+        ),
+      ),
+    if (singles > 0)
+      pw.Padding(
+        padding: const pw.EdgeInsets.only(top: 4),
+        child: pw.Text(
+          _latin1(rl.singlePoints(singles)),
+          style: pw.TextStyle(
+            fontSize: 10,
+            color: PdfColors.red,
+            fontWeight: pw.FontWeight.bold,
+          ),
+        ),
+      ),
+    pw.SizedBox(height: 8),
+    if (risk.failures.isEmpty)
+      pw.Text(_latin1(ll.lineAnalysis), style: _small)
+    else
+      _table(
+        [g.labels.position, rl.machine, '${rl.outputDuring} / h', rl.loss],
+        [
+          for (final f in risk.failures)
+            [
+              '${f.station.position + 1}',
+              f.machine,
+              number(f.outputAfter),
+              f.standstill
+                  ? '100 % – ${rl.standstill}'
+                  : f.loss == 0
+                  ? rl.noLoss
+                  : '${number(f.loss * 100)} %',
+            ],
+        ],
+      ),
+  ];
+}
 
 List<pw.Widget> _lineSection(
   GroupReportInput g,

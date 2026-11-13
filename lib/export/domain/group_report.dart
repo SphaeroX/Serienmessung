@@ -46,7 +46,28 @@ class LineReportLabels {
     required this.sheet,
     required this.backToContents,
     required this.studies,
+    this.risk,
   });
+
+  /// Texts of the failure risk chapter/sheet; without them it is left out.
+  final RiskReportLabels? risk;
+
+  LineReportLabels withRisk(RiskReportLabels risk) => LineReportLabels(
+    contents: contents,
+    lineAnalysis: lineAnalysis,
+    station: station,
+    totalTime: totalTime,
+    lineCycleTime: lineCycleTime,
+    bottleneck: bottleneck,
+    balance: balance,
+    outputPerHour: outputPerHour,
+    waiting: waiting,
+    share: share,
+    sheet: sheet,
+    backToContents: backToContents,
+    studies: studies,
+    risk: risk,
+  );
 
   final String contents;
   final String lineAnalysis;
@@ -63,6 +84,33 @@ class LineReportLabels {
   final String sheet;
   final String backToContents;
   final String studies;
+}
+
+/// Texts of the failure risk chapter (PDF) and sheet (Excel).
+class RiskReportLabels {
+  const RiskReportLabels({
+    required this.title,
+    required this.hint,
+    required this.machine,
+    required this.outputDuring,
+    required this.loss,
+    required this.standstill,
+    required this.noLoss,
+    required this.singlePoints,
+  });
+
+  final String title;
+  final String hint;
+  final String machine;
+
+  /// Column: output of the line while the machine is down (per hour).
+  final String outputDuring;
+  final String loss;
+  final String standstill;
+  final String noLoss;
+
+  /// Summary of the stations without a spare machine.
+  final String Function(int count) singlePoints;
 }
 
 /// Everything a group report needs; one [ExportInput] per study in group

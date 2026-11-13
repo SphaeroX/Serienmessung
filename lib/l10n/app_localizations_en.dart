@@ -1100,4 +1100,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noLoss => 'No loss';
+
+  @override
+  String get reportMachine => 'Machine';
+
+  @override
+  String get reportOutputDuring => 'Output during failure';
+
+  @override
+  String get reportLoss => 'Loss';
 }

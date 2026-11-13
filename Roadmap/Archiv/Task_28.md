@@ -47,8 +47,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
 
 ## Offene Fragen / Annahmen
 
@@ -62,15 +62,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `RiskReportLabels`, `LineReportLabels.risk`/`withRisk`; Excel: Linienblatt stationsweise (Parallelstation = eine Zeile, Name "A / B (×n)", Formel 1/(1/…+1/…)), Blatt "Ausfallrisiko" (Ausbringung intakt, Stationen ohne Ersatz, je Maschine Ausbringung bei Ausfall, Verlust %, Stillstand) im Inhalt verlinkt; PDF: Kapitel "Ausfallrisiko" mit Eintrag im Inhaltsverzeichnis. Abweichung: Die App nimmt das Risikokapitel nur bei mindestens einer Parallelstation auf (siehe README).
+- **Learnings & Stolpersteine:** Klammern im PDF-Text erschweren die Textprüfung in Tests ("(Standstill)" wird escaped) – "100 % – Stillstand" geschrieben. Excel-Formeln wieder mit LibreOffice nachgerechnet (Parallelstation 4 × 40 s → 10 s, Ausbringung 300/h).
+- **Wichtige Entscheidungen und ihre Gründe:** Risikowerte sind feste Zahlen (Szenarien), Linienwerte Formeln. Bestehende Tests unverändert gelassen; deshalb die Bedingung "nur mit Parallelstation" für den Report.
+- **Auswirkungen auf Folge-Tasks:** Keine – letzter Task.
+- **Hinweise zu Tests und Befehlen:** `tests/export/group_report_parallel_test.dart` (Excel-Formel, Risikoblatt, PDF-Kapitel, ohne Risiko-Labels unverändert), `tests/export/group_risk_export_test.dart` (UI).

@@ -1107,4 +1107,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get noLoss => 'Kein Verlust';
+
+  @override
+  String get reportMachine => 'Maschine';
+
+  @override
+  String get reportOutputDuring => 'Ausbringung bei Ausfall';
+
+  @override
+  String get reportLoss => 'Verlust';
 }
