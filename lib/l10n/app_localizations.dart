@@ -2413,6 +2413,198 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'every {hours} h'**
   String specialEveryHoursRule(String hours);
+
+  /// No description provided for @loadDemoData.
+  ///
+  /// In en, this message translates to:
+  /// **'Load demo data'**
+  String get loadDemoData;
+
+  /// No description provided for @loadDemoDataHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A sample production line to try out all features'**
+  String get loadDemoDataHint;
+
+  /// No description provided for @loadDemoDataConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Adds a sample production line as a group – parallel machines, buffers, conveyors, special cycles, revisions and special times – plus a changeover study. Your own data stays untouched.'**
+  String get loadDemoDataConfirm;
+
+  /// No description provided for @load.
+  ///
+  /// In en, this message translates to:
+  /// **'Load'**
+  String get load;
+
+  /// No description provided for @demoDataLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo data loaded: see the group “{name}”.'**
+  String demoDataLoaded(String name);
+
+  /// No description provided for @demoGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo: housing line'**
+  String get demoGroupName;
+
+  /// No description provided for @demoGroupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample data – from the raw part to the packed housing'**
+  String get demoGroupDescription;
+
+  /// No description provided for @demoSaw.
+  ///
+  /// In en, this message translates to:
+  /// **'Saw'**
+  String get demoSaw;
+
+  /// No description provided for @demoBladeChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Blade change'**
+  String get demoBladeChange;
+
+  /// No description provided for @demoMillingCentre.
+  ///
+  /// In en, this message translates to:
+  /// **'Milling centre {n}'**
+  String demoMillingCentre(int n);
+
+  /// No description provided for @demoStepLoadPart.
+  ///
+  /// In en, this message translates to:
+  /// **'Load part'**
+  String get demoStepLoadPart;
+
+  /// No description provided for @demoStepMill.
+  ///
+  /// In en, this message translates to:
+  /// **'Mill contour'**
+  String get demoStepMill;
+
+  /// No description provided for @demoStepDrill.
+  ///
+  /// In en, this message translates to:
+  /// **'Drill holes'**
+  String get demoStepDrill;
+
+  /// No description provided for @demoStepUnload.
+  ///
+  /// In en, this message translates to:
+  /// **'Unload and deburr'**
+  String get demoStepUnload;
+
+  /// No description provided for @demoChipJam.
+  ///
+  /// In en, this message translates to:
+  /// **'Chip jam cleared'**
+  String get demoChipJam;
+
+  /// No description provided for @demoMeasurePart.
+  ///
+  /// In en, this message translates to:
+  /// **'Measure part'**
+  String get demoMeasurePart;
+
+  /// No description provided for @demoToolChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool change'**
+  String get demoToolChange;
+
+  /// No description provided for @demoWasher.
+  ///
+  /// In en, this message translates to:
+  /// **'Washer'**
+  String get demoWasher;
+
+  /// No description provided for @demoAssembly.
+  ///
+  /// In en, this message translates to:
+  /// **'Assembly'**
+  String get demoAssembly;
+
+  /// No description provided for @demoStepPickHousing.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick housing'**
+  String get demoStepPickHousing;
+
+  /// No description provided for @demoStepInsertSeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert seal'**
+  String get demoStepInsertSeal;
+
+  /// No description provided for @demoStepScrewCover.
+  ///
+  /// In en, this message translates to:
+  /// **'Screw cover'**
+  String get demoStepScrewCover;
+
+  /// No description provided for @demoStepVisualCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Visual check'**
+  String get demoStepVisualCheck;
+
+  /// No description provided for @demoMaterialMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Material missing'**
+  String get demoMaterialMissing;
+
+  /// No description provided for @demoTestBench.
+  ///
+  /// In en, this message translates to:
+  /// **'Test bench {n}'**
+  String demoTestBench(int n);
+
+  /// No description provided for @demoCalibration.
+  ///
+  /// In en, this message translates to:
+  /// **'Calibration'**
+  String get demoCalibration;
+
+  /// No description provided for @demoPacking.
+  ///
+  /// In en, this message translates to:
+  /// **'Packing'**
+  String get demoPacking;
+
+  /// No description provided for @demoChangeover.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo: changeover milling centre'**
+  String get demoChangeover;
+
+  /// No description provided for @demoStepRemoveFixture.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove fixture'**
+  String get demoStepRemoveFixture;
+
+  /// No description provided for @demoStepCleanTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean table'**
+  String get demoStepCleanTable;
+
+  /// No description provided for @demoStepMountFixture.
+  ///
+  /// In en, this message translates to:
+  /// **'Mount fixture'**
+  String get demoStepMountFixture;
+
+  /// No description provided for @demoStepFirstPart.
+  ///
+  /// In en, this message translates to:
+  /// **'First-part check'**
+  String get demoStepFirstPart;
 }
 
 class _AppLocalizationsDelegate

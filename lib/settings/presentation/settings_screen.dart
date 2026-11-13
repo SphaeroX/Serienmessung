@@ -5,12 +5,13 @@ import '../../analysis/domain/statistics.dart';
 import '../../backup/presentation/backup_tiles.dart';
 import '../../analysis/presentation/analysis_view.dart' show methodLabel;
 import '../../core/time_format.dart';
+import '../../demo/presentation/demo_data_tile.dart';
 import '../../l10n/app_localizations.dart';
 import '../domain/app_settings.dart';
 import 'settings_controller.dart';
 
 /// App version shown in the settings.
-const appVersion = '1.2.0';
+const appVersion = '1.3.0';
 
 /// Global settings.
 class SettingsScreen extends ConsumerWidget {
@@ -256,6 +257,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           header(l.data),
           const BackupTiles(),
+          const DemoDataTile(),
           header(l.about),
           ListTile(
             leading: const Icon(Icons.info_outline),

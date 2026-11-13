@@ -1373,4 +1373,109 @@ class AppLocalizationsEn extends AppLocalizations {
   String specialEveryHoursRule(String hours) {
     return 'every $hours h';
   }
+
+  @override
+  String get loadDemoData => 'Load demo data';
+
+  @override
+  String get loadDemoDataHint =>
+      'A sample production line to try out all features';
+
+  @override
+  String get loadDemoDataConfirm =>
+      'Adds a sample production line as a group – parallel machines, buffers, conveyors, special cycles, revisions and special times – plus a changeover study. Your own data stays untouched.';
+
+  @override
+  String get load => 'Load';
+
+  @override
+  String demoDataLoaded(String name) {
+    return 'Demo data loaded: see the group “$name”.';
+  }
+
+  @override
+  String get demoGroupName => 'Demo: housing line';
+
+  @override
+  String get demoGroupDescription =>
+      'Sample data – from the raw part to the packed housing';
+
+  @override
+  String get demoSaw => 'Saw';
+
+  @override
+  String get demoBladeChange => 'Blade change';
+
+  @override
+  String demoMillingCentre(int n) {
+    return 'Milling centre $n';
+  }
+
+  @override
+  String get demoStepLoadPart => 'Load part';
+
+  @override
+  String get demoStepMill => 'Mill contour';
+
+  @override
+  String get demoStepDrill => 'Drill holes';
+
+  @override
+  String get demoStepUnload => 'Unload and deburr';
+
+  @override
+  String get demoChipJam => 'Chip jam cleared';
+
+  @override
+  String get demoMeasurePart => 'Measure part';
+
+  @override
+  String get demoToolChange => 'Tool change';
+
+  @override
+  String get demoWasher => 'Washer';
+
+  @override
+  String get demoAssembly => 'Assembly';
+
+  @override
+  String get demoStepPickHousing => 'Pick housing';
+
+  @override
+  String get demoStepInsertSeal => 'Insert seal';
+
+  @override
+  String get demoStepScrewCover => 'Screw cover';
+
+  @override
+  String get demoStepVisualCheck => 'Visual check';
+
+  @override
+  String get demoMaterialMissing => 'Material missing';
+
+  @override
+  String demoTestBench(int n) {
+    return 'Test bench $n';
+  }
+
+  @override
+  String get demoCalibration => 'Calibration';
+
+  @override
+  String get demoPacking => 'Packing';
+
+  @override
+  String get demoChangeover => 'Demo: changeover milling centre';
+
+  @override
+  String get demoStepRemoveFixture => 'Remove fixture';
+
+  @override
+  String get demoStepCleanTable => 'Clean table';
+
+  @override
+  String get demoStepMountFixture => 'Mount fixture';
+
+  @override
+  String get demoStepFirstPart => 'First-part check';
 }

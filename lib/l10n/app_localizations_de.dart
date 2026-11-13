@@ -1380,4 +1380,109 @@ class AppLocalizationsDe extends AppLocalizations {
   String specialEveryHoursRule(String hours) {
     return 'alle $hours h';
   }
+
+  @override
+  String get loadDemoData => 'Demo-Daten laden';
+
+  @override
+  String get loadDemoDataHint =>
+      'Eine Beispiel-Produktionslinie zum Ausprobieren aller Funktionen';
+
+  @override
+  String get loadDemoDataConfirm =>
+      'Legt eine Beispiel-Produktionslinie als Gruppe an – mit parallelen Maschinen, Puffern, Transportbändern, Sonderzyklen, Revisionen und Sonderzeiten – und dazu eine Rüst-Studie. Deine eigenen Daten bleiben unverändert.';
+
+  @override
+  String get load => 'Laden';
+
+  @override
+  String demoDataLoaded(String name) {
+    return 'Demo-Daten geladen: siehe Gruppe „$name“.';
+  }
+
+  @override
+  String get demoGroupName => 'Demo: Gehäuselinie';
+
+  @override
+  String get demoGroupDescription =>
+      'Beispieldaten – vom Rohteil bis zum verpackten Gehäuse';
+
+  @override
+  String get demoSaw => 'Säge';
+
+  @override
+  String get demoBladeChange => 'Sägeblattwechsel';
+
+  @override
+  String demoMillingCentre(int n) {
+    return 'Bearbeitungszentrum $n';
+  }
+
+  @override
+  String get demoStepLoadPart => 'Teil einlegen';
+
+  @override
+  String get demoStepMill => 'Kontur fräsen';
+
+  @override
+  String get demoStepDrill => 'Bohrungen bohren';
+
+  @override
+  String get demoStepUnload => 'Entnehmen und entgraten';
+
+  @override
+  String get demoChipJam => 'Spänestau beseitigt';
+
+  @override
+  String get demoMeasurePart => 'Messteil prüfen';
+
+  @override
+  String get demoToolChange => 'Werkzeugwechsel';
+
+  @override
+  String get demoWasher => 'Waschanlage';
+
+  @override
+  String get demoAssembly => 'Montage';
+
+  @override
+  String get demoStepPickHousing => 'Gehäuse greifen';
+
+  @override
+  String get demoStepInsertSeal => 'Dichtung einlegen';
+
+  @override
+  String get demoStepScrewCover => 'Deckel verschrauben';
+
+  @override
+  String get demoStepVisualCheck => 'Sichtprüfung';
+
+  @override
+  String get demoMaterialMissing => 'Material fehlt';
+
+  @override
+  String demoTestBench(int n) {
+    return 'Prüfstand $n';
+  }
+
+  @override
+  String get demoCalibration => 'Kalibrierung';
+
+  @override
+  String get demoPacking => 'Verpacken';
+
+  @override
+  String get demoChangeover => 'Demo: Rüsten Bearbeitungszentrum';
+
+  @override
+  String get demoStepRemoveFixture => 'Vorrichtung abbauen';
+
+  @override
+  String get demoStepCleanTable => 'Tisch reinigen';
+
+  @override
+  String get demoStepMountFixture => 'Vorrichtung aufbauen';
+
+  @override
+  String get demoStepFirstPart => 'Erstteilprüfung';
 }

@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-13 – **Roadmap abgeschlossen** (Version 1.2.0) inkl. Task_33 (Transportbänder) und Task_34 (Sonderzyklen). Davor abgeschlossen: Erweiterung 5 (Task_29–32: Puffer, Simulation, simuliertes Ausfallrisiko). Davor abgeschlossen: Erweiterung 4 (Task_26–28: parallele Maschinen, feste Taktzeiten, Ausfallrisiko). Davor abgeschlossen: Erweiterung 3 (Task_24–25: Linienbetrachtung, vollständiger Gruppen-Report), Tasks 01–18, Feedback-Runde 1 und Erweiterung 2 (Gruppen, Revisionen, Nachfrage bei alter Messung, Gruppen-Reports, Backup v2; Task_19–23) erledigt. 396 Tests grün, `flutter analyze` ohne Befunde. Offen sind nur manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
+Stand: 2026-11-13 – **Roadmap abgeschlossen** (Version 1.3.0) inkl. Task_35 (Demo-Daten über die Einstellungen). Davor: Task_33 (Transportbänder) und Task_34 (Sonderzyklen). Davor abgeschlossen: Erweiterung 5 (Task_29–32: Puffer, Simulation, simuliertes Ausfallrisiko). Davor abgeschlossen: Erweiterung 4 (Task_26–28: parallele Maschinen, feste Taktzeiten, Ausfallrisiko). Davor abgeschlossen: Erweiterung 3 (Task_24–25: Linienbetrachtung, vollständiger Gruppen-Report), Tasks 01–18, Feedback-Runde 1 und Erweiterung 2 (Gruppen, Revisionen, Nachfrage bei alter Messung, Gruppen-Reports, Backup v2; Task_19–23) erledigt. 403 Tests grün, `flutter analyze` ohne Befunde. Offen sind nur manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
 
 | Task | Titel | Status |
 |---|---|---|
@@ -52,6 +52,7 @@ Stand: 2026-11-13 – **Roadmap abgeschlossen** (Version 1.2.0) inkl. Task_33 (T
 | 32 | Reports mit Puffern und simuliertem Ausfallrisiko | erledigt |
 | 33 | Transportbänder zwischen Stationen | erledigt |
 | 34 | Sonderzyklen und geplante Stillstände je Maschine | erledigt |
+| 35 | Demo-Daten über die Einstellungen laden | erledigt |
 
 Status ist `offen`, `läuft` (Datei trägt das Präfix `RUN_`) oder `erledigt` (Datei liegt in `Archiv/`). Die Tabelle wird beim Archivieren eines Tasks aktualisiert.
 
@@ -112,6 +113,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_31] Simulationsbildschirm:** Einstellungen `shiftMinutes` (Standard 480) und `failureMinutes` (Standard 30) – Task_32 nutzt beide für den Report. Lange Dauern mit `formatDuration` ("5 h 50 min"), nicht in HM.
 - **[Task_32] Reports mit Puffern:** Puffertabelle im Linienkapitel/-blatt, Ausfallrisiko mit simulierten Verlusten (mit/ohne Puffer) für die angenommene Störungsdauer in einer Schicht. Risikokapitel jetzt auch bei Puffern.
 - **[Task_33] Transportbänder:** Migration v13; Band = Warteschlange mit Kapazität und Transportzeit; ein Puffer an derselben Stelle lagert erst bei vollem Band ein. "Ohne Puffer"-Vergleiche behalten die Bänder.
+- **[Task_35] Demo-Daten:** `DemoDataService` (`lib/demo/`) legt eine Beispiel-Linie nur über die bestehenden Repositories an. Neue Gruppen-/Studien-Funktionen dort ergänzen, damit die Demo weiter „alle Möglichkeiten“ zeigt.
 - **[Task_34] Sonderzyklen:** Migration v14 (`special_cycle`). Linienanalyse rechnet mit der wirksamen Taktzeit (`LineMachine.cycleTime`), die Simulation mit der gemessenen plus den Regeln (`baseCycleTime`) – nicht verwechseln, sonst zählen Sonderzyklen doppelt.
 
 ## Auffälligkeiten & Details
@@ -120,7 +122,7 @@ Dinge, die global noch zu beachten sind: Besonderheiten, bekannte Einschränkung
 
 - Fachbegriffe im Code (siehe `docs/conventions.md`): Studie = `Study`, Schritt = `StepDefinition`, Zyklus = `Cycle`, Messung = `Measurement`, Sonderzeit = `SpecialTime`, Taktzeit = `CycleTime`.
 - Mindest-Android-Version: API 26 gesetzt (Annahme, vom Nutzer nicht bestätigt).
-- **Sandbox-Hinweis (nur für die KI-Umgebung, in der die Tasks bisher liefen):** `flutter gen-l10n`/Build-Zeit-Generierung hatte dort keine Schreibrechte auf `lib/l10n`; die Agenten generierten in einem Temp-Ordner und kopierten. Auf normalen Rechnern funktioniert `flutter gen-l10n` direkt.
+- **Sandbox-Hinweis (nur für die KI-Umgebung, in der die Tasks bisher liefen):** `flutter gen-l10n`/Build-Zeit-Generierung hatte dort keine Schreibrechte auf `lib/l10n`; die Agenten generierten in einem Temp-Ordner und kopierten. Auf normalen Rechnern funktioniert `flutter gen-l10n` direkt. **[Task_35]** Auf dem Windows-Rechner des Nutzers trugen `lib`, `lib/l10n` und `build/unit_test_assets` das Attribut „Schreibgeschützt“ (`flutter gen-l10n`/`flutter test` brachen ab); `attrib -R <ordner> /S /D` bzw. Löschen von `build/unit_test_assets` hilft.
 - PDF-Bericht: nur Latin-1-Zeichen (eingebaute Schriften). Gruppen-Report in Task_22 als PNG gerendert und geprüft (Übersicht + Studienseiten); `Δ` wird im PDF zu "Delta".
 - Lautstärketasten funktionieren nur bei eingeschaltetem Bildschirm mit geöffnetem Messbildschirm (Task_06).
 - Hardware-nahe Funktionen (Lautstärketasten, Mikrofon, Video, Hintergrunddienst) lassen sich nur teilweise automatisiert testen. Logik mit Fakes testen, zusätzlich eine kurze manuelle Geräteprüfung in den Task-Notizen protokollieren.
