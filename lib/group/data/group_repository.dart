@@ -110,10 +110,32 @@ class GroupRepository {
   Future<void> removeBuffer(int studyId) =>
       _db.db.update('study', _noBuffer, where: 'id = ?', whereArgs: [studyId]);
 
+  /// Puts a conveyor before the station of study [studyId].
+  Future<void> setConveyor(
+    int studyId, {
+    required int capacity,
+    required int transportMicros,
+  }) => _db.db.update(
+    'study',
+    {'conveyor_capacity': capacity, 'conveyor_transport_us': transportMicros},
+    where: 'id = ?',
+    whereArgs: [studyId],
+  );
+
+  Future<void> removeConveyor(int studyId) => _db.db.update(
+    'study',
+    {'conveyor_capacity': 0, 'conveyor_transport_us': 0},
+    where: 'id = ?',
+    whereArgs: [studyId],
+  );
+
+  /// Everything that connects a station to the one before it.
   static const _noBuffer = {
     'buffer_capacity': 0,
     'buffer_store_us': 0,
     'buffer_retrieve_us': 0,
+    'conveyor_capacity': 0,
+    'conveyor_transport_us': 0,
   };
 
   /// Sets the group order to [studyIdsInOrder].

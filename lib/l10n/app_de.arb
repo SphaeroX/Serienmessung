@@ -349,8 +349,17 @@
   "simUtilization": "Auslastung {value}",
   "simBlocked": "blockiert {time}",
   "simDown": "Ausfall {time}",
-  "reportBuffers": "Puffer",
+  "reportBuffers": "Verbindungen",
   "reportBufferBefore": "Vor Station",
   "simLostWithBuffers": "Verloren mit Puffer",
-  "simulationNote": "Simuliert: {minutes} min Ausfall in {period}"
+  "simulationNote": "Simuliert: {minutes} min Ausfall in {period}",
+  "addConveyor": "Transportband davor einfügen",
+  "conveyorTitle": "Transportband",
+  "conveyorHint": "Messen, wie lange ein Teil von der vorigen Station bis hierher braucht, und zählen, wie viele Teile sich auf dem Band stauen können. Ein Puffer an dieser Stelle lagert erst ein, wenn das Band voll ist.",
+  "conveyorTime": "Transportzeit",
+  "conveyorPlaces": "Teile, die sich stauen können",
+  "conveyorCard": "Transportband · {count} Plätze",
+  "conveyorTransport": "Transportzeit {time}",
+  "conveyorMaxLevel": "Höchstens {count} Teile darauf",
+  "reportConveyorPlaces": "Band-Plätze"
 }

@@ -163,6 +163,14 @@ final List<Migration> migrations = [
       );
     }
   },
+  // v13: conveyor before a station of a group.
+  (db) async {
+    for (final column in ['conveyor_capacity', 'conveyor_transport_us']) {
+      await db.execute(
+        'ALTER TABLE study ADD COLUMN $column INTEGER NOT NULL DEFAULT 0',
+      );
+    }
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.

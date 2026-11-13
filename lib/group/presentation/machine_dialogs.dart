@@ -250,3 +250,95 @@ Future<BufferFields?> showBufferDialog(
     ),
   );
 }
+
+/// Entered conveyor data; [remove] when the user removes the conveyor.
+typedef ConveyorFields = ({int capacity, int transportMicros, bool remove});
+
+/// Asks for the transport time (in [unit]) and the parts that can jam on a
+/// conveyor. With [existing] values the dialog edits and offers removing it.
+Future<ConveyorFields?> showConveyorDialog(
+  BuildContext context,
+  TimeUnit unit, {
+  ({int capacity, int transportMicros})? existing,
+}) {
+  final l = AppLocalizations.of(context);
+  final time = TextEditingController(
+    text: existing == null
+        ? ''
+        : formatNumber(
+            unit.fromMicros(existing.transportMicros),
+            unit == TimeUnit.hm ? 2 : 3,
+          ).replaceFirst(RegExp(r'\.?0+$'), ''),
+  );
+  final places = TextEditingController(
+    text: existing == null ? '' : '${existing.capacity}',
+  );
+  final formKey = GlobalKey<FormState>();
+  return showDialog<ConveyorFields>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(l.conveyorTitle),
+      content: Form(
+        key: formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l.conveyorHint, style: Theme.of(ctx).textTheme.bodySmall),
+              TextFormField(
+                key: const Key('conveyorTimeField'),
+                controller: time,
+                autofocus: true,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: InputDecoration(
+                  labelText: '${l.conveyorTime} [${inputUnitLabel(unit)}]',
+                ),
+                validator: (v) => parseTimeInput(v ?? '', unit) == null
+                    ? l.invalidTime
+                    : null,
+              ),
+              TextFormField(
+                key: const Key('conveyorPlacesField'),
+                controller: places,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: l.conveyorPlaces),
+                validator: (v) {
+                  final n = int.tryParse((v ?? '').trim());
+                  return n == null || n <= 0 ? l.invalidCount : null;
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        if (existing != null)
+          TextButton(
+            key: const Key('removeConveyorButton'),
+            onPressed: () => Navigator.pop(ctx, (
+              capacity: 0,
+              transportMicros: 0,
+              remove: true,
+            )),
+            child: Text(l.removeBuffer),
+          ),
+        TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
+        FilledButton(
+          key: const Key('saveConveyorButton'),
+          onPressed: () {
+            if (!formKey.currentState!.validate()) return;
+            Navigator.pop(ctx, (
+              capacity: int.parse(places.text.trim()),
+              transportMicros: parseTimeInput(time.text, unit)!,
+              remove: false,
+            ));
+          },
+          child: Text(l.save),
+        ),
+      ],
+    ),
+  );
+}

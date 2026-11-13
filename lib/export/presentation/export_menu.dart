@@ -109,6 +109,8 @@ LineReportLabels lineReportLabels(AppLocalizations l) => LineReportLabels(
     places: l.bufferCapacity,
     store: l.bufferStoreTime,
     retrieve: l.bufferRetrieveTime,
+    conveyorPlaces: l.reportConveyorPlaces,
+    conveyorTime: l.conveyorTime,
   ),
 );
 

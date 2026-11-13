@@ -34,6 +34,7 @@ enum _StudyAction {
   parallel,
   cycleTime,
   buffer,
+  conveyor,
   moveToGroup,
   copyToGroup,
   remove,
@@ -118,6 +119,8 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         await _changed();
       case _StudyAction.buffer:
         await _editBuffer(study);
+      case _StudyAction.conveyor:
+        await _editConveyor(study);
       case _StudyAction.moveToGroup:
         if (await moveStudyToGroup(context, ref, study)) await _changed();
       case _StudyAction.copyToGroup:
@@ -241,6 +244,32 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         capacity: fields.capacity,
         storeMicros: fields.storeMicros,
         retrieveMicros: fields.retrieveMicros,
+      );
+    }
+    await _changed();
+  }
+
+  /// Adds, edits or removes the conveyor before the station of [study].
+  Future<void> _editConveyor(Study study) async {
+    final fields = await showConveyorDialog(
+      context,
+      ref.read(settingsProvider).defaultUnit,
+      existing: study.hasConveyor
+          ? (
+              capacity: study.conveyorCapacity,
+              transportMicros: study.conveyorTransportMicros,
+            )
+          : null,
+    );
+    if (fields == null) return;
+    final groups = ref.read(groupRepositoryProvider);
+    if (fields.remove) {
+      await groups.removeConveyor(study.id);
+    } else {
+      await groups.setConveyor(
+        study.id,
+        capacity: fields.capacity,
+        transportMicros: fields.transportMicros,
       );
     }
     await _changed();
@@ -390,6 +419,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         onTap: () => _open(_members[i].study.id),
         onAction: (a) => _studyAction(a, i),
         onBuffer: () => _editBuffer(_members[i].study),
+        onConveyor: () => _editConveyor(_members[i].study),
         unit: ref.read(settingsProvider).defaultUnit,
       ),
     );
@@ -407,10 +437,12 @@ class _MemberTile extends StatelessWidget {
     required this.onTap,
     required this.onAction,
     required this.onBuffer,
+    required this.onConveyor,
     required this.unit,
   });
 
   final VoidCallback onBuffer;
+  final VoidCallback onConveyor;
   final TimeUnit unit;
   final int index;
   final int count;
@@ -430,9 +462,11 @@ class _MemberTile extends StatelessWidget {
     final study = summary.study;
     final theme = Theme.of(context);
     // A buffer sits before the first machine of a station (not the first).
-    final showBuffer = study.hasBuffer && index > 0 && !study.parallel;
+    final stationStart = index > 0 && !study.parallel;
+    final showBuffer = study.hasBuffer && stationStart;
+    final showConveyor = study.hasConveyor && stationStart;
     final card = _card(context, l, study, theme);
-    if (!showBuffer) return card;
+    if (!showBuffer && !showConveyor) return card;
     String t(int micros) => formatTime(
       micros,
       unit,
@@ -441,24 +475,41 @@ class _MemberTile extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Card(
-          key: Key('buffer_${study.id}'),
-          margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 32),
-          color: theme.colorScheme.secondaryContainer,
-          child: ListTile(
-            dense: true,
-            onTap: onBuffer,
-            leading: const Icon(Icons.inventory_2_outlined),
-            title: Text(l.bufferPlaces(study.bufferCapacity)),
-            subtitle: Text(
-              l.bufferTimes(
-                t(study.bufferStoreMicros),
-                t(study.bufferRetrieveMicros),
+        if (showConveyor)
+          Card(
+            key: Key('conveyor_${study.id}'),
+            margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 32),
+            color: theme.colorScheme.surfaceContainerHighest,
+            child: ListTile(
+              dense: true,
+              onTap: onConveyor,
+              leading: const Icon(Icons.linear_scale),
+              title: Text(l.conveyorCard(study.conveyorCapacity)),
+              subtitle: Text(
+                l.conveyorTransport(t(study.conveyorTransportMicros)),
               ),
+              trailing: const Icon(Icons.edit_outlined, size: 18),
             ),
-            trailing: const Icon(Icons.edit_outlined, size: 18),
           ),
-        ),
+        if (showBuffer)
+          Card(
+            key: Key('buffer_${study.id}'),
+            margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 32),
+            color: theme.colorScheme.secondaryContainer,
+            child: ListTile(
+              dense: true,
+              onTap: onBuffer,
+              leading: const Icon(Icons.inventory_2_outlined),
+              title: Text(l.bufferPlaces(study.bufferCapacity)),
+              subtitle: Text(
+                l.bufferTimes(
+                  t(study.bufferStoreMicros),
+                  t(study.bufferRetrieveMicros),
+                ),
+              ),
+              trailing: const Icon(Icons.edit_outlined, size: 18),
+            ),
+          ),
         card,
       ],
     );
@@ -525,6 +576,12 @@ class _MemberTile extends StatelessWidget {
                 value: _StudyAction.parallel,
                 checked: study.parallel,
                 child: Text(l.parallelToPrevious),
+              ),
+            if (index > 0 && !study.parallel && !study.hasConveyor)
+              PopupMenuItem(
+                key: const Key('addConveyor'),
+                value: _StudyAction.conveyor,
+                child: Text(l.addConveyor),
               ),
             if (index > 0 && !study.parallel && !study.hasBuffer)
               PopupMenuItem(

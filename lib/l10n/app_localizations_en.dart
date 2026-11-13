@@ -1236,7 +1236,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get reportBuffers => 'Buffers';
+  String get reportBuffers => 'Connections';
 
   @override
   String get reportBufferBefore => 'Before station';
@@ -1248,4 +1248,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String simulationNote(int minutes, String period) {
     return 'Simulated: $minutes min failure in $period';
   }
+
+  @override
+  String get addConveyor => 'Insert conveyor before';
+
+  @override
+  String get conveyorTitle => 'Conveyor';
+
+  @override
+  String get conveyorHint =>
+      'Measure how long a part needs from the station before to this one and count how many parts can jam on the conveyor. A buffer at this place only stores when the conveyor is full.';
+
+  @override
+  String get conveyorTime => 'Transport time';
+
+  @override
+  String get conveyorPlaces => 'Parts that can jam on it';
+
+  @override
+  String conveyorCard(int count) {
+    return 'Conveyor · $count places';
+  }
+
+  @override
+  String conveyorTransport(String time) {
+    return 'Transport time $time';
+  }
+
+  @override
+  String conveyorMaxLevel(int count) {
+    return 'At most $count parts on it';
+  }
+
+  @override
+  String get reportConveyorPlaces => 'Conveyor places';
 }

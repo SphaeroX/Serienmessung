@@ -729,7 +729,7 @@
       }
     }
   },
-  "reportBuffers": "Buffers",
+  "reportBuffers": "Connections",
   "reportBufferBefore": "Before station",
   "simLostWithBuffers": "Lost with buffers",
   "simulationNote": "Simulated: {minutes} min failure in {period}",
@@ -742,5 +742,35 @@
         "type": "String"
       }
     }
-  }
+  },
+  "addConveyor": "Insert conveyor before",
+  "conveyorTitle": "Conveyor",
+  "conveyorHint": "Measure how long a part needs from the station before to this one and count how many parts can jam on the conveyor. A buffer at this place only stores when the conveyor is full.",
+  "conveyorTime": "Transport time",
+  "conveyorPlaces": "Parts that can jam on it",
+  "conveyorCard": "Conveyor · {count} places",
+  "@conveyorCard": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "conveyorTransport": "Transport time {time}",
+  "@conveyorTransport": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "conveyorMaxLevel": "At most {count} parts on it",
+  "@conveyorMaxLevel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportConveyorPlaces": "Conveyor places"
 }

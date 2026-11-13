@@ -426,6 +426,9 @@ List<pw.Widget> _lineSection(
   final max = line.lineCycleTime;
   const barWidth = 260.0;
   String opt(double? v) => v == null ? '' : _fmt(g, v);
+  final conveyors = ll.buffers?.withConveyors ?? false;
+  bool listed(LineStation st) =>
+      st.bufferBefore != null || (conveyors && st.conveyorBefore != null);
   return [
     pw.Outline(
       name: 'line',
@@ -519,8 +522,7 @@ List<pw.Widget> _lineSection(
           ],
       ],
     ),
-    if (ll.buffers != null &&
-        line.stations.any((st) => st.bufferBefore != null)) ...[
+    if (ll.buffers != null && line.stations.any(listed)) ...[
       _section(ll.buffers!.title),
       _table(
         [
@@ -529,17 +531,30 @@ List<pw.Widget> _lineSection(
           ll.buffers!.places,
           ll.buffers!.store,
           ll.buffers!.retrieve,
+          if (conveyors) ...[
+            ll.buffers!.conveyorPlaces!,
+            ll.buffers!.conveyorTime!,
+          ],
         ],
         [
-          for (final st in line.stations)
-            if (st.bufferBefore != null)
-              [
-                '${st.position + 1}',
-                st.name,
-                '${st.bufferBefore!.capacity}',
-                _fmt(g, st.bufferBefore!.storeMicros),
-                _fmt(g, st.bufferBefore!.retrieveMicros),
+          for (final st in line.stations.where(listed))
+            [
+              '${st.position + 1}',
+              st.name,
+              '${st.bufferBefore?.capacity ?? ''}',
+              st.bufferBefore == null
+                  ? ''
+                  : _fmt(g, st.bufferBefore!.storeMicros),
+              st.bufferBefore == null
+                  ? ''
+                  : _fmt(g, st.bufferBefore!.retrieveMicros),
+              if (conveyors) ...[
+                '${st.conveyorBefore?.capacity ?? ''}',
+                st.conveyorBefore == null
+                    ? ''
+                    : _fmt(g, st.conveyorBefore!.transportMicros),
               ],
+            ],
         ],
       ),
     ],

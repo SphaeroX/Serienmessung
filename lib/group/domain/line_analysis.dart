@@ -11,7 +11,11 @@ class LineStationInput {
     this.previous,
     this.parallel = false,
     this.buffer,
+    this.conveyor,
   });
+
+  /// Conveyor before this member's station (first member only).
+  final LineConveyor? conveyor;
 
   final String name;
   final StudyMode mode;
@@ -39,6 +43,15 @@ class LineBuffer {
   final int capacity;
   final int storeMicros;
   final int retrieveMicros;
+}
+
+/// A conveyor before a station: parts that can jam on it and the time a
+/// part needs from the station before.
+class LineConveyor {
+  const LineConveyor({required this.capacity, required this.transportMicros});
+
+  final int capacity;
+  final int transportMicros;
 }
 
 /// Part of a station bar: one step (or the whole cycle without steps).
@@ -84,7 +97,11 @@ class LineStation {
     required this.segments,
     required this.isBottleneck,
     this.bufferBefore,
+    this.conveyorBefore,
   });
+
+  /// Conveyor between the previous station and this one.
+  final LineConveyor? conveyorBefore;
 
   /// Buffer between the previous station and this one.
   final LineBuffer? bufferBefore;
@@ -226,13 +243,19 @@ class LineAnalysis {
               : [LineSegment(machines[k].first.name, times[k]!)],
           isBottleneck: k == bottleneck,
           bufferBefore: k == 0 ? null : inputs[groups[k].first].buffer,
+          conveyorBefore: k == 0 ? null : inputs[groups[k].first].conveyor,
         ),
     ];
     return LineAnalysis(
       stations: stations,
       totalTime: total,
-      leadTime: [for (final s in stations) ?s.leadTime]
-          .fold<double>(0, (a, b) => a + b),
+      // One part: its machine in every station plus the transport times.
+      leadTime: [
+        for (final s in stations) ...[
+          ?s.leadTime,
+          if (s.conveyorBefore != null) s.conveyorBefore!.transportMicros,
+        ],
+      ].fold<double>(0, (a, b) => a + b),
       lineCycleTime: max,
       previousTotalTime: comparable
           ? prevTimes.fold<double>(0, (a, b) => a + b)

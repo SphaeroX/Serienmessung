@@ -198,6 +198,22 @@ class _LineBody extends StatelessWidget {
         const SizedBox(height: 16),
         Text(l.lineStations, style: theme.textTheme.titleMedium),
         for (final st in line.stations) ...[
+          if (st.conveyorBefore != null)
+            Card(
+              key: Key('lineConveyor_${st.position}'),
+              margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 32),
+              color: theme.colorScheme.surfaceContainerHighest,
+              child: ListTile(
+                dense: true,
+                leading: const Icon(Icons.linear_scale),
+                title: Text(l.conveyorCard(st.conveyorBefore!.capacity)),
+                subtitle: Text(
+                  l.conveyorTransport(
+                    t(st.conveyorBefore!.transportMicros.toDouble()),
+                  ),
+                ),
+              ),
+            ),
           if (st.bufferBefore != null)
             Card(
               key: Key('lineBuffer_${st.position}'),

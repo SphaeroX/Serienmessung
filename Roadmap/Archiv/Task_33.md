@@ -55,8 +55,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
 
 ## Offene Fragen / Annahmen
 
@@ -70,15 +70,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Migration v13, `Study.conveyorCapacity/conveyorTransportMicros/hasConveyor`, `GroupRepository.setConveyor/removeConveyor`, Backup; `LineConveyor`, Durchlaufzeit mit Transportzeiten; `SimConveyor`/`SimConveyorStats`, Band-Logik in `LineSimulation` (Puffer am Band); UI: "Transportband davor einfügen", Karten in Gruppe/Linie/Simulation; Report: Verbindungstabelle (früher "Puffer") mit Band-Spalten. Version 1.2.0 und Freigabe folgen nach Task_34 (Sonderzyklen, vom Nutzer während der Arbeit ergänzt).
+- **Learnings & Stolpersteine:** Beim Einfügen eines Elements in eine `for`-Collection-Schleife mit nur einem Element wird der Rest aus der Schleife herausgelöst – mehrere Elemente pro Durchlauf immer als `...[ ]` schreiben.
+- **Wichtige Entscheidungen und ihre Gründe:** So einfach wie möglich (Nutzerwunsch): nur Transportzeit und Plätze, kein Mindestabstand. Ausgelagertes Teil wird vorne am Band abgesetzt (sofort an der Station verfügbar).
+- **Auswirkungen auf Folge-Tasks:** Task_34 (Sonderzyklen) erweitert die Maschinen der Simulation.
+- **Hinweise zu Tests und Befehlen:** `tests/group/data/conveyor_test.dart`, `tests/group/domain/conveyor_simulation_test.dart`, `tests/group/presentation/conveyor_screen_test.dart`, `tests/export/group_report_conveyor_test.dart`.

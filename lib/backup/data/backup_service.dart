@@ -91,6 +91,8 @@ class BackupService {
         'bufferCapacity': s['buffer_capacity'],
         'bufferStore': s['buffer_store_us'],
         'bufferRetrieve': s['buffer_retrieve_us'],
+        'conveyorCapacity': s['conveyor_capacity'],
+        'conveyorTransport': s['conveyor_transport_us'],
         'revision': s['revision'],
         'steps': [
           for (final st in steps)
@@ -259,6 +261,8 @@ class BackupService {
             'buffer_capacity': s['bufferCapacity'] as int? ?? 0,
             'buffer_store_us': s['bufferStore'] as int? ?? 0,
             'buffer_retrieve_us': s['bufferRetrieve'] as int? ?? 0,
+            'conveyor_capacity': s['conveyorCapacity'] as int? ?? 0,
+            'conveyor_transport_us': s['conveyorTransport'] as int? ?? 0,
           },
         });
         final stepIds = <Object?, int>{};

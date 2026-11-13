@@ -173,7 +173,15 @@ class BufferReportLabels {
     required this.places,
     required this.store,
     required this.retrieve,
+    this.conveyorPlaces,
+    this.conveyorTime,
   });
+
+  /// Conveyor columns; without them conveyors are left out.
+  final String? conveyorPlaces;
+  final String? conveyorTime;
+
+  bool get withConveyors => conveyorPlaces != null && conveyorTime != null;
 
   final String title;
 
@@ -245,6 +253,12 @@ class GroupReportInput {
                 capacity: x.study.bufferCapacity,
                 storeMicros: x.study.bufferStoreMicros,
                 retrieveMicros: x.study.bufferRetrieveMicros,
+              )
+            : null,
+        conveyor: x.study.hasConveyor
+            ? LineConveyor(
+                capacity: x.study.conveyorCapacity,
+                transportMicros: x.study.conveyorTransportMicros,
               )
             : null,
       ),

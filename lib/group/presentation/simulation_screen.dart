@@ -351,7 +351,19 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
             ),
           ),
         ),
-      for (var si = 0; si < sim.stations.length; si++)
+      for (var si = 0; si < sim.stations.length; si++) ...[
+        if (shown.conveyors.length > si && shown.conveyors[si] != null)
+          Card(
+            key: Key('simConveyor_$si'),
+            child: ListTile(
+              leading: const Icon(Icons.linear_scale),
+              title: Text(
+                '${l.conveyorCard(shown.conveyors[si]!.capacity)} · '
+                '${si + 1}. ${sim.stations[si].name}',
+              ),
+              subtitle: Text(l.conveyorMaxLevel(shown.conveyors[si]!.maxLevel)),
+            ),
+          ),
         if (shown.buffers[si] != null)
           Card(
             key: Key('simBuffer_$si'),
@@ -379,6 +391,7 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
               ),
             ),
           ),
+      ],
       const SizedBox(height: 12),
       Text(l.lineStations, style: theme.textTheme.titleMedium),
       for (var si = 0; si < sim.stations.length; si++)

@@ -228,6 +228,8 @@ class StudyRepository {
       ..['buffer_capacity'] = 0
       ..['buffer_store_us'] = 0
       ..['buffer_retrieve_us'] = 0
+      ..['conveyor_capacity'] = 0
+      ..['conveyor_transport_us'] = 0
       ..['group_position'] = groupId == null
           ? 0
           : await nextGroupPosition(txn, groupId);
@@ -377,6 +379,8 @@ class StudyRepository {
     bufferCapacity: r['buffer_capacity'] as int? ?? 0,
     bufferStoreMicros: r['buffer_store_us'] as int? ?? 0,
     bufferRetrieveMicros: r['buffer_retrieve_us'] as int? ?? 0,
+    conveyorCapacity: r['conveyor_capacity'] as int? ?? 0,
+    conveyorTransportMicros: r['conveyor_transport_us'] as int? ?? 0,
   );
 
   static StepDefinition stepFromRow(Map<String, Object?> r) => StepDefinition(

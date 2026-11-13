@@ -37,6 +37,8 @@ class Study {
     this.bufferCapacity = 0,
     this.bufferStoreMicros = 0,
     this.bufferRetrieveMicros = 0,
+    this.conveyorCapacity = 0,
+    this.conveyorTransportMicros = 0,
   });
 
   final int id;
@@ -81,6 +83,13 @@ class Study {
   final int bufferRetrieveMicros;
 
   bool get hasBuffer => bufferCapacity > 0;
+
+  /// Conveyor before this station of the group: parts that can jam on it
+  /// (0 = none) and the time a part needs from the station before.
+  final int conveyorCapacity;
+  final int conveyorTransportMicros;
+
+  bool get hasConveyor => conveyorCapacity > 0;
 }
 
 /// One defined work step of a study.

@@ -2195,7 +2195,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportBuffers.
   ///
   /// In en, this message translates to:
-  /// **'Buffers'**
+  /// **'Connections'**
   String get reportBuffers;
 
   /// No description provided for @reportBufferBefore.
@@ -2215,6 +2215,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Simulated: {minutes} min failure in {period}'**
   String simulationNote(int minutes, String period);
+
+  /// No description provided for @addConveyor.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert conveyor before'**
+  String get addConveyor;
+
+  /// No description provided for @conveyorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Conveyor'**
+  String get conveyorTitle;
+
+  /// No description provided for @conveyorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Measure how long a part needs from the station before to this one and count how many parts can jam on the conveyor. A buffer at this place only stores when the conveyor is full.'**
+  String get conveyorHint;
+
+  /// No description provided for @conveyorTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport time'**
+  String get conveyorTime;
+
+  /// No description provided for @conveyorPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Parts that can jam on it'**
+  String get conveyorPlaces;
+
+  /// No description provided for @conveyorCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Conveyor · {count} places'**
+  String conveyorCard(int count);
+
+  /// No description provided for @conveyorTransport.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport time {time}'**
+  String conveyorTransport(String time);
+
+  /// No description provided for @conveyorMaxLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'At most {count} parts on it'**
+  String conveyorMaxLevel(int count);
+
+  /// No description provided for @reportConveyorPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Conveyor places'**
+  String get reportConveyorPlaces;
 }
 
 class _AppLocalizationsDelegate

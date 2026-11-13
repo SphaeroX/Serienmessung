@@ -28,11 +28,35 @@ class SimStation {
     required this.name,
     required this.machines,
     this.bufferBefore,
+    this.conveyorBefore,
   });
 
   final String name;
   final List<SimMachine> machines;
   final SimBuffer? bufferBefore;
+
+  /// Conveyor from the station before; a buffer at the same place stores
+  /// only when the conveyor is full.
+  final SimConveyor? conveyorBefore;
+}
+
+/// A conveyor between two stations: [capacity] parts can be on it (moving
+/// or jammed at its end), a part needs [transportMicros] to its end.
+class SimConveyor {
+  const SimConveyor({required this.capacity, required this.transportMicros});
+
+  final int capacity;
+  final int transportMicros;
+}
+
+/// Figures of a conveyor over the simulated time.
+class SimConveyorStats {
+  const SimConveyorStats({required this.capacity, required this.maxLevel});
+
+  final int capacity;
+
+  /// Most parts on the conveyor at the same time.
+  final int maxLevel;
 }
 
 /// Machine [machine] of station [station] stops at [startMicros] for
@@ -107,7 +131,11 @@ class SimResult {
     required this.horizonMicros,
     required this.stations,
     required this.buffers,
+    this.conveyors = const [],
   });
+
+  /// Per station: statistics of the conveyor before it (null without one).
+  final List<SimConveyorStats?> conveyors;
 
   /// Parts finished by the last station within the horizon.
   final int output;
@@ -169,6 +197,47 @@ class _Machine {
   bool isDown(int t) => t >= downFrom && t < downUntil;
 }
 
+class _Conveyor {
+  _Conveyor(this.spec);
+
+  final SimConveyor spec;
+
+  /// Times at which the parts on the conveyor reach its end, ascending.
+  final parts = <int>[];
+
+  /// Places held for parts the buffer is retrieving onto the conveyor.
+  int reserved = 0;
+  int maxLevel = 0;
+
+  int get level => parts.length + reserved;
+
+  bool get hasRoom => level < spec.capacity;
+
+  void _track() {
+    if (level > maxLevel) maxLevel = level;
+  }
+
+  void add(int readyAt) {
+    var i = parts.length;
+    while (i > 0 && parts[i - 1] > readyAt) {
+      i--;
+    }
+    parts.insert(i, readyAt);
+    _track();
+  }
+
+  void reserve() {
+    reserved += 1;
+    _track();
+  }
+
+  /// A retrieved part placed at the end of the conveyor, ready at [t].
+  void place(int t) {
+    reserved -= 1;
+    add(t);
+  }
+}
+
 class _Buffer {
   _Buffer(this.spec);
 
@@ -219,6 +288,12 @@ class LineSimulation {
                   storeMicros: st.bufferBefore!.storeMicros,
                   retrieveMicros: st.bufferBefore!.retrieveMicros,
                 ),
+          conveyorBefore: st.conveyorBefore == null
+              ? null
+              : SimConveyor(
+                  capacity: st.conveyorBefore!.capacity,
+                  transportMicros: st.conveyorBefore!.transportMicros,
+                ),
         ),
   ]);
 
@@ -226,9 +301,14 @@ class LineSimulation {
 
   bool get hasBuffers => stations.skip(1).any((s) => s.bufferBefore != null);
 
-  /// The same line without any buffer.
+  /// The same line without any buffer (conveyors stay).
   LineSimulation withoutBuffers() => LineSimulation([
-    for (final s in stations) SimStation(name: s.name, machines: s.machines),
+    for (final s in stations)
+      SimStation(
+        name: s.name,
+        machines: s.machines,
+        conveyorBefore: s.conveyorBefore,
+      ),
   ]);
 
   /// For every machine: parts lost when it stops at [startMicros] for
@@ -279,6 +359,12 @@ class LineSimulation {
             ? _Buffer(stations[i].bufferBefore!)
             : null,
     ];
+    final conveyors = [
+      for (var i = 0; i < stations.length; i++)
+        i > 0 && stations[i].conveyorBefore != null
+            ? _Conveyor(stations[i].conveyorBefore!)
+            : null,
+    ];
     var output = 0;
     var failureApplied = failure == null;
     final last = stations.length - 1;
@@ -321,6 +407,44 @@ class LineSimulation {
               if (m.phase == _Phase.holding) m,
           ]..sort((a, b) => a.holdSince.compareTo(b.holdSince));
           final b = buffers[si];
+          final c = conveyors[si];
+          if (c != null) {
+            // Parts at the end of the conveyor go to free machines.
+            while (free.isNotEmpty &&
+                c.parts.isNotEmpty &&
+                c.parts.first <= t) {
+              c.parts.removeAt(0);
+              start(free.removeAt(0), t);
+              changed = true;
+            }
+            // Finished parts leave on the conveyor while it has room.
+            while (holders.isNotEmpty && c.hasRoom) {
+              release(holders.removeAt(0), t);
+              c.add(t + c.spec.transportMicros);
+              changed = true;
+            }
+            if (b == null || !b.idle) continue;
+            if (holders.isNotEmpty && b.level < b.spec.capacity) {
+              // The conveyor is full: store the oldest waiting part.
+              release(holders.removeAt(0), t);
+              b
+                ..storing = true
+                ..busyUntil = t + b.spec.storeMicros
+                ..stores += 1;
+              changed = true;
+            } else if (b.level > 0 && c.hasRoom) {
+              // Room on the conveyor: put a stored part on it in front of
+              // the station.
+              c.reserve();
+              b
+                ..level -= 1
+                ..retrieving = true
+                ..busyUntil = t + b.spec.retrieveMicros
+                ..retrieves += 1;
+              changed = true;
+            }
+            continue;
+          }
           // A retrieved part waiting in front of the station is older than
           // anything on the conveyor: it goes first.
           while (b != null && b.infeed > 0 && free.isNotEmpty) {
@@ -379,6 +503,15 @@ class LineSimulation {
       for (final b in buffers) {
         if (b != null && !b.idle) consider(b.busyUntil);
       }
+      for (final c in conveyors) {
+        if (c == null) continue;
+        for (final ready in c.parts) {
+          if (ready > now) {
+            consider(ready);
+            break;
+          }
+        }
+      }
       if (!failureApplied) consider(failure!.startMicros);
       if (next == null || next! > h) break;
       final t = next!;
@@ -408,7 +541,8 @@ class LineSimulation {
           }
         }
       }
-      for (final b in buffers) {
+      for (var i = 0; i <= last; i++) {
+        final b = buffers[i];
         if (b == null || b.idle || b.busyUntil != t) continue;
         if (b.storing) {
           b
@@ -416,9 +550,13 @@ class LineSimulation {
             ..level += 1;
           if (b.level > b.maxLevel) b.maxLevel = b.level;
         } else {
-          b
-            ..retrieving = false
-            ..infeed += 1;
+          b.retrieving = false;
+          final c = conveyors[i];
+          if (c == null) {
+            b.infeed += 1;
+          } else {
+            c.place(t);
+          }
         }
       }
       dispatch(t);
@@ -449,6 +587,15 @@ class LineSimulation {
             blockedMicros: machines[si].fold(0, (a, m) => a + m.blocked),
             downMicros: machines[si].fold(0, (a, m) => a + down(m)),
           ),
+      ],
+      conveyors: [
+        for (final c in conveyors)
+          c == null
+              ? null
+              : SimConveyorStats(
+                  capacity: c.spec.capacity,
+                  maxLevel: c.maxLevel,
+                ),
       ],
       buffers: [
         for (final b in buffers)

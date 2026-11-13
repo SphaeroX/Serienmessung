@@ -50,7 +50,7 @@ Stand: 2026-11-13 – **Task_33 (Transportbänder) läuft.** Davor abgeschlossen
 | 30 | Simulation der Linie mit Puffern und Störungen | erledigt |
 | 31 | Simulationsbildschirm | erledigt |
 | 32 | Reports mit Puffern und simuliertem Ausfallrisiko | erledigt |
-| 33 | Transportbänder zwischen Stationen | offen |
+| 33 | Transportbänder zwischen Stationen | erledigt |
 
 Status ist `offen`, `läuft` (Datei trägt das Präfix `RUN_`) oder `erledigt` (Datei liegt in `Archiv/`). Die Tabelle wird beim Archivieren eines Tasks aktualisiert.
 
@@ -110,6 +110,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_30] Simulation:** `LineSimulation` (reines Dart). Pufferregel: Einlagern nur bei echtem Stau (Station länger belegt als die Einlagerzeit), Auslagern auf einen Bereitstellplatz vor der Station, parallel zur Station. Langsame Ein-/Auslagerzeiten begrenzen den Nutzen eines Puffers – das zeigt die Simulation bewusst.
 - **[Task_31] Simulationsbildschirm:** Einstellungen `shiftMinutes` (Standard 480) und `failureMinutes` (Standard 30) – Task_32 nutzt beide für den Report. Lange Dauern mit `formatDuration` ("5 h 50 min"), nicht in HM.
 - **[Task_32] Reports mit Puffern:** Puffertabelle im Linienkapitel/-blatt, Ausfallrisiko mit simulierten Verlusten (mit/ohne Puffer) für die angenommene Störungsdauer in einer Schicht. Risikokapitel jetzt auch bei Puffern.
+- **[Task_33] Transportbänder:** Migration v13; Band = Warteschlange mit Kapazität und Transportzeit; ein Puffer an derselben Stelle lagert erst bei vollem Band ein. "Ohne Puffer"-Vergleiche behalten die Bänder.
 
 ## Auffälligkeiten & Details
 

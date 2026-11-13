@@ -2,6 +2,7 @@ import 'package:excel/excel.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/time_format.dart';
+import '../../group/domain/line_analysis.dart';
 import '../../group/domain/line_simulation.dart';
 import '../../recording/domain/measurement.dart';
 import '../../study/domain/study.dart';
@@ -399,7 +400,10 @@ void _writeLine(
     FormulaCellValue('ROUND(3600/($maxCell*$secondsPerUnit),1)'),
   );
   final bl = ll.buffers;
-  if (bl != null && line.stations.any((st) => st.bufferBefore != null)) {
+  final conveyors = bl != null && bl.withConveyors;
+  bool listed(LineStation st) =>
+      st.bufferBefore != null || (conveyors && st.conveyorBefore != null);
+  if (bl != null && line.stations.any(listed)) {
     sh.appendRow([t(bl.title)]);
     header(sh, [
       gl.position,
@@ -407,18 +411,27 @@ void _writeLine(
       bl.places,
       '${bl.store} [${unit.label}]',
       '${bl.retrieve} [${unit.label}]',
+      if (conveyors) ...[
+        bl.conveyorPlaces!,
+        '${bl.conveyorTime} [${unit.label}]',
+      ],
     ]);
-    double value(int micros) =>
-        double.parse(unit.fromMicros(micros).toStringAsFixed(decimals));
-    for (final st in line.stations) {
+    CellValue value(int micros) => DoubleCellValue(
+      double.parse(unit.fromMicros(micros).toStringAsFixed(decimals)),
+    );
+    for (final st in line.stations.where(listed)) {
       final b = st.bufferBefore;
-      if (b == null) continue;
+      final c = st.conveyorBefore;
       sh.appendRow([
         IntCellValue(st.position + 1),
         t(st.name),
-        IntCellValue(b.capacity),
-        DoubleCellValue(value(b.storeMicros)),
-        DoubleCellValue(value(b.retrieveMicros)),
+        b == null ? null : IntCellValue(b.capacity),
+        b == null ? null : value(b.storeMicros),
+        b == null ? null : value(b.retrieveMicros),
+        if (conveyors) ...[
+          c == null ? null : IntCellValue(c.capacity),
+          c == null ? null : value(c.transportMicros),
+        ],
       ]);
     }
   }

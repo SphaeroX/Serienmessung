@@ -1243,7 +1243,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get reportBuffers => 'Puffer';
+  String get reportBuffers => 'Verbindungen';
 
   @override
   String get reportBufferBefore => 'Vor Station';
@@ -1255,4 +1255,38 @@ class AppLocalizationsDe extends AppLocalizations {
   String simulationNote(int minutes, String period) {
     return 'Simuliert: $minutes min Ausfall in $period';
   }
+
+  @override
+  String get addConveyor => 'Transportband davor einfügen';
+
+  @override
+  String get conveyorTitle => 'Transportband';
+
+  @override
+  String get conveyorHint =>
+      'Messen, wie lange ein Teil von der vorigen Station bis hierher braucht, und zählen, wie viele Teile sich auf dem Band stauen können. Ein Puffer an dieser Stelle lagert erst ein, wenn das Band voll ist.';
+
+  @override
+  String get conveyorTime => 'Transportzeit';
+
+  @override
+  String get conveyorPlaces => 'Teile, die sich stauen können';
+
+  @override
+  String conveyorCard(int count) {
+    return 'Transportband · $count Plätze';
+  }
+
+  @override
+  String conveyorTransport(String time) {
+    return 'Transportzeit $time';
+  }
+
+  @override
+  String conveyorMaxLevel(int count) {
+    return 'Höchstens $count Teile darauf';
+  }
+
+  @override
+  String get reportConveyorPlaces => 'Band-Plätze';
 }
