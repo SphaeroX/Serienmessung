@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-13 – **Task_33 (Transportbänder) läuft.** Davor abgeschlossen: Erweiterung 5 (Task_29–32: Puffer, Simulation, simuliertes Ausfallrisiko). Davor abgeschlossen: Erweiterung 4 (Task_26–28: parallele Maschinen, feste Taktzeiten, Ausfallrisiko). Davor abgeschlossen: Erweiterung 3 (Task_24–25: Linienbetrachtung, vollständiger Gruppen-Report), Tasks 01–18, Feedback-Runde 1 und Erweiterung 2 (Gruppen, Revisionen, Nachfrage bei alter Messung, Gruppen-Reports, Backup v2; Task_19–23) erledigt. 367 Tests grün, `flutter analyze` ohne Befunde. Offen sind nur manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
+Stand: 2026-11-13 – **Task_34 (Sonderzyklen) läuft**, Task_33 (Transportbänder) erledigt. Davor abgeschlossen: Erweiterung 5 (Task_29–32: Puffer, Simulation, simuliertes Ausfallrisiko). Davor abgeschlossen: Erweiterung 4 (Task_26–28: parallele Maschinen, feste Taktzeiten, Ausfallrisiko). Davor abgeschlossen: Erweiterung 3 (Task_24–25: Linienbetrachtung, vollständiger Gruppen-Report), Tasks 01–18, Feedback-Runde 1 und Erweiterung 2 (Gruppen, Revisionen, Nachfrage bei alter Messung, Gruppen-Reports, Backup v2; Task_19–23) erledigt. 367 Tests grün, `flutter analyze` ohne Befunde. Offen sind nur manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
 
 | Task | Titel | Status |
 |---|---|---|
@@ -51,6 +51,7 @@ Stand: 2026-11-13 – **Task_33 (Transportbänder) läuft.** Davor abgeschlossen
 | 31 | Simulationsbildschirm | erledigt |
 | 32 | Reports mit Puffern und simuliertem Ausfallrisiko | erledigt |
 | 33 | Transportbänder zwischen Stationen | erledigt |
+| 34 | Sonderzyklen und geplante Stillstände je Maschine | offen |
 
 Status ist `offen`, `läuft` (Datei trägt das Präfix `RUN_`) oder `erledigt` (Datei liegt in `Archiv/`). Die Tabelle wird beim Archivieren eines Tasks aktualisiert.
 
