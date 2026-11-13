@@ -2,6 +2,7 @@ import 'package:excel/excel.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/time_format.dart';
+import '../../group/domain/line_simulation.dart';
 import '../../recording/domain/measurement.dart';
 import '../../study/domain/study.dart';
 import '../../group/domain/failure_risk.dart';
@@ -397,6 +398,30 @@ void _writeLine(
     ll.outputPerHour,
     FormulaCellValue('ROUND(3600/($maxCell*$secondsPerUnit),1)'),
   );
+  final bl = ll.buffers;
+  if (bl != null && line.stations.any((st) => st.bufferBefore != null)) {
+    sh.appendRow([t(bl.title)]);
+    header(sh, [
+      gl.position,
+      bl.before,
+      bl.places,
+      '${bl.store} [${unit.label}]',
+      '${bl.retrieve} [${unit.label}]',
+    ]);
+    double value(int micros) =>
+        double.parse(unit.fromMicros(micros).toStringAsFixed(decimals));
+    for (final st in line.stations) {
+      final b = st.bufferBefore;
+      if (b == null) continue;
+      sh.appendRow([
+        IntCellValue(st.position + 1),
+        t(st.name),
+        IntCellValue(b.capacity),
+        DoubleCellValue(value(b.storeMicros)),
+        DoubleCellValue(value(b.retrieveMicros)),
+      ]);
+    }
+  }
 }
 
 /// Failure scenarios: line output while each machine is down.
@@ -420,22 +445,52 @@ void _writeRisk(
   if (risk.singlePoints.isNotEmpty) {
     sh.appendRow([t(rl.singlePoints(risk.singlePoints.length))]);
   }
+  final simulated = simulatedLosses(g);
+  final withSim = simulated != null && rl.lostWithBuffers != null;
+  if (withSim && rl.simulationNote != null) {
+    sh.appendRow([
+      t(
+        rl.simulationNote!(
+          formatDuration(g.simulationHorizonMicros!),
+          g.simulationFailureMicros! ~/ 60000000,
+        ),
+      ),
+    ]);
+  }
   header(sh, [
     gl.position,
     rl.machine,
     '${rl.outputDuring} [1/h]',
     '${rl.loss} [%]',
     rl.standstill,
+    if (withSim) ...[rl.lostWithoutBuffers!, rl.lostWithBuffers!],
   ]);
   for (final f in risk.failures) {
+    final lost = withSim ? simulated[(f.station.position, f.machine)] : null;
     sh.appendRow([
       IntCellValue(f.station.position + 1),
       t(f.machine),
       DoubleCellValue(_round(f.outputAfter, 1)),
       DoubleCellValue(_round(f.loss * 100, 1)),
       t(f.standstill ? rl.standstill : (f.loss == 0 ? rl.noLoss : '')),
+      if (withSim) ...[
+        lost == null ? null : IntCellValue(lost.lostWithoutBuffers),
+        lost == null ? null : IntCellValue(lost.lostWithBuffers),
+      ],
     ]);
   }
+}
+
+/// Simulated failure scenarios by (station position, machine name); null
+/// when the report has no simulation.
+Map<(int, String), FailureScenario>? simulatedLosses(GroupReportInput g) {
+  final scenarios = g.failureScenarios;
+  if (scenarios == null) return null;
+  final measured = [
+    for (final st in g.line.stations)
+      if (st.measured) st.position,
+  ];
+  return {for (final x in scenarios) (measured[x.station], x.machine): x};
 }
 
 double _round(double v, int decimals) {

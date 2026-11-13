@@ -42,8 +42,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
 
 ## Offene Fragen / Annahmen
 
@@ -57,15 +57,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `BufferReportLabels`, `LineReportLabels.buffers/withBuffers`, `RiskReportLabels.withSimulation` (Spalten + Hinweis), `GroupReportInput.simulationHorizonMicros/simulationFailureMicros/failureScenarios`, `simulatedLosses`; Excel: Puffertabelle unter den Linienkennzahlen (die Formelzeilen bleiben zusammenhängend), Risikoblatt mit Simulationsspalten; PDF: Puffertabelle im Linienkapitel, Risikokapitel mit Hinweis und Spalten. App: Schichtlänge und Störungsdauer aus den Einstellungen; Risikokapitel auch bei Puffern. README: Funktionen und Screenshot "Simulation".
+- **Learnings & Stolpersteine:** Pufferzeilen nicht zwischen die Stationszeilen des Linienblatts setzen – sonst brechen die SUMME/MAX-Bereiche; eigene Tabelle darunter.
+- **Wichtige Entscheidungen und ihre Gründe:** Simulationsspalten nur, wenn die Linie Puffer hat (ohne Puffer sind beide Spalten gleich). Bestehende Tests unverändert – neue Texte und Parameter sind optional.
+- **Auswirkungen auf Folge-Tasks:** Keine – letzter Task.
+- **Hinweise zu Tests und Befehlen:** `tests/export/group_report_buffer_test.dart`, `tests/export/group_buffer_export_test.dart`. Excel mit LibreOffice nachgerechnet, PDF gerendert.

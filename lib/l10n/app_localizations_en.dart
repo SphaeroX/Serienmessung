@@ -1234,4 +1234,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String simDown(String time) {
     return 'down $time';
   }
+
+  @override
+  String get reportBuffers => 'Buffers';
+
+  @override
+  String get reportBufferBefore => 'Before station';
+
+  @override
+  String get simLostWithBuffers => 'Lost with buffers';
+
+  @override
+  String simulationNote(int minutes, String period) {
+    return 'Simulated: $minutes min failure in $period';
+  }
 }

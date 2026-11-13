@@ -728,5 +728,19 @@
         "type": "String"
       }
     }
+  },
+  "reportBuffers": "Buffers",
+  "reportBufferBefore": "Before station",
+  "simLostWithBuffers": "Lost with buffers",
+  "simulationNote": "Simulated: {minutes} min failure in {period}",
+  "@simulationNote": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "period": {
+        "type": "String"
+      }
+    }
   }
 }

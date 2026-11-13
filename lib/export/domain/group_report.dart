@@ -1,5 +1,6 @@
 import '../../core/time_format.dart';
 import '../../group/domain/line_analysis.dart';
+import '../../group/domain/line_simulation.dart';
 import '../../group/domain/study_group.dart';
 import 'export_data.dart';
 
@@ -47,7 +48,29 @@ class LineReportLabels {
     required this.backToContents,
     required this.studies,
     this.risk,
+    this.buffers,
   });
+
+  /// Texts of the buffer table; without them it is left out.
+  final BufferReportLabels? buffers;
+
+  LineReportLabels withBuffers(BufferReportLabels buffers) => LineReportLabels(
+    contents: contents,
+    lineAnalysis: lineAnalysis,
+    station: station,
+    totalTime: totalTime,
+    lineCycleTime: lineCycleTime,
+    bottleneck: bottleneck,
+    balance: balance,
+    outputPerHour: outputPerHour,
+    waiting: waiting,
+    share: share,
+    sheet: sheet,
+    backToContents: backToContents,
+    studies: studies,
+    risk: risk,
+    buffers: buffers,
+  );
 
   /// Texts of the failure risk chapter/sheet; without them it is left out.
   final RiskReportLabels? risk;
@@ -67,6 +90,7 @@ class LineReportLabels {
     backToContents: backToContents,
     studies: studies,
     risk: risk,
+    buffers: buffers,
   );
 
   final String contents;
@@ -97,7 +121,35 @@ class RiskReportLabels {
     required this.standstill,
     required this.noLoss,
     required this.singlePoints,
+    this.lostWithoutBuffers,
+    this.lostWithBuffers,
+    this.simulationNote,
   });
+
+  /// Columns with the simulated lost parts (only with buffers).
+  final String? lostWithoutBuffers;
+  final String? lostWithBuffers;
+
+  /// Note above the table, e.g. "Simulated: 30 min failure in 8 h".
+  final String Function(String period, int minutes)? simulationNote;
+
+  RiskReportLabels withSimulation({
+    required String lostWithoutBuffers,
+    required String lostWithBuffers,
+    required String Function(String period, int minutes) note,
+  }) => RiskReportLabels(
+    title: title,
+    hint: hint,
+    machine: machine,
+    outputDuring: outputDuring,
+    loss: loss,
+    standstill: standstill,
+    noLoss: noLoss,
+    singlePoints: singlePoints,
+    lostWithoutBuffers: lostWithoutBuffers,
+    lostWithBuffers: lostWithBuffers,
+    simulationNote: note,
+  );
 
   final String title;
   final String hint;
@@ -113,6 +165,25 @@ class RiskReportLabels {
   final String Function(int count) singlePoints;
 }
 
+/// Texts of the buffer table.
+class BufferReportLabels {
+  const BufferReportLabels({
+    required this.title,
+    required this.before,
+    required this.places,
+    required this.store,
+    required this.retrieve,
+  });
+
+  final String title;
+
+  /// Column: the station the buffer is in front of.
+  final String before;
+  final String places;
+  final String store;
+  final String retrieve;
+}
+
 /// Everything a group report needs; one [ExportInput] per study in group
 /// order. Independent of Flutter.
 class GroupReportInput {
@@ -124,7 +195,30 @@ class GroupReportInput {
     required this.exportedAt,
     required this.labels,
     required this.exportLabels,
+    this.simulationHorizonMicros,
+    this.simulationFailureMicros,
   });
+
+  /// Period and failure duration for the simulated failure scenarios
+  /// (both needed; only used when the line has buffers).
+  final int? simulationHorizonMicros;
+  final int? simulationFailureMicros;
+
+  /// Simulated lost parts per machine failure, with and without buffers;
+  /// null without simulation settings or without buffers. The failure
+  /// starts after a quarter of the period.
+  List<FailureScenario>? get failureScenarios {
+    final horizon = simulationHorizonMicros;
+    final failure = simulationFailureMicros;
+    if (horizon == null || failure == null) return null;
+    final sim = LineSimulation.fromLine(line);
+    if (!sim.hasBuffers) return null;
+    return sim.failureScenarios(
+      horizonMicros: horizon,
+      durationMicros: failure,
+      startMicros: horizon ~/ 4,
+    );
+  }
 
   final StudyGroup group;
   final List<ExportInput> entries;

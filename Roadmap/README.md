@@ -14,7 +14,7 @@ Neuentwicklung einer bestehenden Android-App "Zeitstudie Stoppuhr" als bessere F
 
 ## Aktueller Status
 
-Stand: 2026-11-13 – **Erweiterung 5 läuft (Task_29–32: Puffer, Simulation).** Davor abgeschlossen: Erweiterung 4 (Task_26–28: parallele Maschinen, feste Taktzeiten, Ausfallrisiko). Davor abgeschlossen: Erweiterung 3 (Task_24–25: Linienbetrachtung, vollständiger Gruppen-Report), Tasks 01–18, Feedback-Runde 1 und Erweiterung 2 (Gruppen, Revisionen, Nachfrage bei alter Messung, Gruppen-Reports, Backup v2; Task_19–23) erledigt. 339 Tests grün, `flutter analyze` ohne Befunde. Offen sind nur manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
+Stand: 2026-11-13 – **Roadmap abgeschlossen** inkl. Erweiterung 5 (Task_29–32: Puffer, Simulation, simuliertes Ausfallrisiko). Davor abgeschlossen: Erweiterung 4 (Task_26–28: parallele Maschinen, feste Taktzeiten, Ausfallrisiko). Davor abgeschlossen: Erweiterung 3 (Task_24–25: Linienbetrachtung, vollständiger Gruppen-Report), Tasks 01–18, Feedback-Runde 1 und Erweiterung 2 (Gruppen, Revisionen, Nachfrage bei alter Messung, Gruppen-Reports, Backup v2; Task_19–23) erledigt. 367 Tests grün, `flutter analyze` ohne Befunde. Offen sind nur manuelle Geräteprüfungen (siehe Erkenntnisse der Tasks).
 
 | Task | Titel | Status |
 |---|---|---|
@@ -49,7 +49,7 @@ Stand: 2026-11-13 – **Erweiterung 5 läuft (Task_29–32: Puffer, Simulation).
 | 29 | Puffer in der Gruppe | erledigt |
 | 30 | Simulation der Linie mit Puffern und Störungen | erledigt |
 | 31 | Simulationsbildschirm | erledigt |
-| 32 | Reports mit Puffern und simuliertem Ausfallrisiko | offen |
+| 32 | Reports mit Puffern und simuliertem Ausfallrisiko | erledigt |
 
 Status ist `offen`, `läuft` (Datei trägt das Präfix `RUN_`) oder `erledigt` (Datei liegt in `Archiv/`). Die Tabelle wird beim Archivieren eines Tasks aktualisiert.
 
@@ -108,6 +108,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_29] Puffer:** Migration v12; Puffer liegt am ersten Mitglied der Station *dahinter* (wandert beim Umsortieren mit). Parallel schalten, Verschieben und Kopieren entfernen ihn.
 - **[Task_30] Simulation:** `LineSimulation` (reines Dart). Pufferregel: Einlagern nur bei echtem Stau (Station länger belegt als die Einlagerzeit), Auslagern auf einen Bereitstellplatz vor der Station, parallel zur Station. Langsame Ein-/Auslagerzeiten begrenzen den Nutzen eines Puffers – das zeigt die Simulation bewusst.
 - **[Task_31] Simulationsbildschirm:** Einstellungen `shiftMinutes` (Standard 480) und `failureMinutes` (Standard 30) – Task_32 nutzt beide für den Report. Lange Dauern mit `formatDuration` ("5 h 50 min"), nicht in HM.
+- **[Task_32] Reports mit Puffern:** Puffertabelle im Linienkapitel/-blatt, Ausfallrisiko mit simulierten Verlusten (mit/ohne Puffer) für die angenommene Störungsdauer in einer Schicht. Risikokapitel jetzt auch bei Puffern.
 
 ## Auffälligkeiten & Details
 

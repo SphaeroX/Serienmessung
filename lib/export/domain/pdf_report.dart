@@ -12,6 +12,7 @@ import 'export_data.dart';
 import '../../group/domain/failure_risk.dart';
 import '../../group/domain/line_analysis.dart';
 import 'group_report.dart';
+import 'group_xlsx_export.dart' show simulatedLosses;
 
 /// Texts only the PDF report needs.
 class PdfLabels {
@@ -330,6 +331,8 @@ List<pw.Widget> _riskSection(
 ) {
   final rl = ll.risk!;
   final risk = FailureRisk.of(line);
+  final simulated = simulatedLosses(g);
+  final withSim = simulated != null && rl.lostWithBuffers != null;
   final singles = risk.singlePoints.length;
   String number(double v) => formatNumber(v, 1, locale: g.locale);
   return [
@@ -355,6 +358,19 @@ List<pw.Widget> _riskSection(
           style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
         ),
       ),
+    if (withSim && rl.simulationNote != null)
+      pw.Padding(
+        padding: const pw.EdgeInsets.only(top: 4),
+        child: pw.Text(
+          _latin1(
+            rl.simulationNote!(
+              formatDuration(g.simulationHorizonMicros!),
+              g.simulationFailureMicros! ~/ 60000000,
+            ),
+          ),
+          style: const pw.TextStyle(fontSize: 9),
+        ),
+      ),
     if (singles > 0)
       pw.Padding(
         padding: const pw.EdgeInsets.only(top: 4),
@@ -372,7 +388,13 @@ List<pw.Widget> _riskSection(
       pw.Text(_latin1(ll.lineAnalysis), style: _small)
     else
       _table(
-        [g.labels.position, rl.machine, '${rl.outputDuring} / h', rl.loss],
+        [
+          g.labels.position,
+          rl.machine,
+          '${rl.outputDuring} / h',
+          rl.loss,
+          if (withSim) ...[rl.lostWithoutBuffers!, rl.lostWithBuffers!],
+        ],
         [
           for (final f in risk.failures)
             [
@@ -384,6 +406,10 @@ List<pw.Widget> _riskSection(
                   : f.loss == 0
                   ? rl.noLoss
                   : '${number(f.loss * 100)} %',
+              if (withSim) ...[
+                '${simulated[(f.station.position, f.machine)]?.lostWithoutBuffers ?? ''}',
+                '${simulated[(f.station.position, f.machine)]?.lostWithBuffers ?? ''}',
+              ],
             ],
         ],
       ),
@@ -493,6 +519,30 @@ List<pw.Widget> _lineSection(
           ],
       ],
     ),
+    if (ll.buffers != null &&
+        line.stations.any((st) => st.bufferBefore != null)) ...[
+      _section(ll.buffers!.title),
+      _table(
+        [
+          gl.position,
+          ll.buffers!.before,
+          ll.buffers!.places,
+          ll.buffers!.store,
+          ll.buffers!.retrieve,
+        ],
+        [
+          for (final st in line.stations)
+            if (st.bufferBefore != null)
+              [
+                '${st.position + 1}',
+                st.name,
+                '${st.bufferBefore!.capacity}',
+                _fmt(g, st.bufferBefore!.storeMicros),
+                _fmt(g, st.bufferBefore!.retrieveMicros),
+              ],
+        ],
+      ),
+    ],
   ];
 }
 

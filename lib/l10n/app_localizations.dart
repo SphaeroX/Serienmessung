@@ -2191,6 +2191,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'down {time}'**
   String simDown(String time);
+
+  /// No description provided for @reportBuffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Buffers'**
+  String get reportBuffers;
+
+  /// No description provided for @reportBufferBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Before station'**
+  String get reportBufferBefore;
+
+  /// No description provided for @simLostWithBuffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost with buffers'**
+  String get simLostWithBuffers;
+
+  /// No description provided for @simulationNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulated: {minutes} min failure in {period}'**
+  String simulationNote(int minutes, String period);
 }
 
 class _AppLocalizationsDelegate

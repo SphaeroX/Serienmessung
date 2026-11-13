@@ -103,6 +103,13 @@ LineReportLabels lineReportLabels(AppLocalizations l) => LineReportLabels(
   sheet: l.reportSheet,
   backToContents: l.reportBackToContents,
   studies: l.reportStudies,
+  buffers: BufferReportLabels(
+    title: l.reportBuffers,
+    before: l.reportBufferBefore,
+    places: l.bufferCapacity,
+    store: l.bufferStoreTime,
+    retrieve: l.bufferRetrieveTime,
+  ),
 );
 
 /// Texts of the failure risk chapter in the current language.
@@ -115,6 +122,9 @@ RiskReportLabels riskReportLabels(AppLocalizations l) => RiskReportLabels(
   standstill: l.standstill,
   noLoss: l.noLoss,
   singlePoints: l.singlePointsOfFailure,
+  lostWithoutBuffers: l.simLostWithoutBuffers,
+  lostWithBuffers: l.simLostWithBuffers,
+  simulationNote: (period, minutes) => l.simulationNote(minutes, period),
 );
 
 /// Group report texts in the current language.
@@ -303,6 +313,8 @@ Future<GroupReportInput?> loadGroupReport(
     locale: locale,
     exportedAt: now,
     labels: groupReportLabels(l),
+    simulationHorizonMicros: settings.shiftMinutes * 60 * 1000000,
+    simulationFailureMicros: settings.failureMinutes * 60 * 1000000,
     exportLabels: exportLabels(
       l,
       Study(
@@ -346,7 +358,10 @@ class GroupExportButton extends ConsumerWidget {
       if (input == null) return;
       // The failure risk chapter is added when the line has parallel
       // machines (otherwise every failure simply stops the line).
-      final line = input.line.stations.any((s) => s.isParallel)
+      // The failure risk chapter is added when the line has parallel
+      // machines or buffers (otherwise every failure simply stops it).
+      final line =
+          input.line.stations.any((s) => s.isParallel || s.bufferBefore != null)
           ? lineOnly.withRisk(risk)
           : lineOnly;
       final dir = await ref.read(exportDirectoryProvider)();
