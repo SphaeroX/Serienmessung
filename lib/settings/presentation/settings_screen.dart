@@ -11,7 +11,7 @@ import '../domain/app_settings.dart';
 import 'settings_controller.dart';
 
 /// App version shown in the settings.
-const appVersion = '1.3.1';
+const appVersion = '1.5.0';
 
 /// Global settings.
 class SettingsScreen extends ConsumerWidget {
