@@ -52,8 +52,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
 
 ## Offene Fragen / Annahmen
 
@@ -67,15 +67,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `SimMachine`, `SimBuffer`, `SimStation`, `SimFailure`, `SimResult` (+ Stations-/Pufferstatistik), `FailureScenario`, `LineSimulation` (`run`, `withoutBuffers`, `failureScenarios`, `fromLine`); `LineBuffer`, `LineStationInput.buffer`, `LineStation.bufferBefore`; `GroupReportInput.line` übergibt den Puffer der Studie. Abweichung vom Plan: Puffer hat einen Bereitstellplatz vor der Station, und eingelagert wird nur bei echtem Stau.
+- **Learnings & Stolpersteine:** Die erste, naive Pufferregel (einlagern, sobald die Station belegt ist; auslagern nur in eine freie Station) machte den Puffer bei langsamen Ein-/Auslagerzeiten selbst zum Engpass – Linien mit Puffer verloren mehr Teile als ohne. Ein Probelauf mit realistischen Zeiten (Puffer 20 s / 15 s) deckte das auf; deshalb immer auch mit realistischen Werten probieren, nicht nur mit kleinen Testwerten.
+- **Wichtige Entscheidungen und ihre Gründe:** Deterministisch (reale Taktzeiten, keine Verteilungen), Linie startet leer, kein Platz zwischen Stationen ohne Puffer – einfach nachvollziehbar und testbar. Ergebnis zählt nur Teile, die die letzte Station bis zum Zeitraumende verlassen.
+- **Auswirkungen auf Folge-Tasks:** Task_31/32 nutzen `LineSimulation.fromLine(group.line)` und `failureScenarios`.
+- **Hinweise zu Tests und Befehlen:** `tests/group/domain/line_simulation_test.dart` (Einzelstation, Reihe, Parallel, Störung, Puffer ohne Stau / bei Engpass / Störung dahinter / Störung davor, Szenarien, Übernahme aus der Linienanalyse).

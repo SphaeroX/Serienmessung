@@ -146,6 +146,13 @@ class GroupReportInput {
         current: x.analysis,
         previous: x.previousAnalysis,
         parallel: x.study.parallel,
+        buffer: x.study.hasBuffer
+            ? LineBuffer(
+                capacity: x.study.bufferCapacity,
+                storeMicros: x.study.bufferStoreMicros,
+                retrieveMicros: x.study.bufferRetrieveMicros,
+              )
+            : null,
       ),
   ]);
 }

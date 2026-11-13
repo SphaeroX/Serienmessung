@@ -10,17 +10,35 @@ class LineStationInput {
     required this.current,
     this.previous,
     this.parallel = false,
+    this.buffer,
   });
 
   final String name;
   final StudyMode mode;
   final StudyAnalysis current;
 
+  /// Buffer before this member's station (only used on a station's first
+  /// member).
+  final LineBuffer? buffer;
+
   /// Analysis of the most recently archived revision (optional).
   final StudyAnalysis? previous;
 
   /// Works in parallel with the input before it (same station).
   final bool parallel;
+}
+
+/// A buffer (intermediate storage) before a station.
+class LineBuffer {
+  const LineBuffer({
+    required this.capacity,
+    required this.storeMicros,
+    required this.retrieveMicros,
+  });
+
+  final int capacity;
+  final int storeMicros;
+  final int retrieveMicros;
 }
 
 /// Part of a station bar: one step (or the whole cycle without steps).
@@ -65,7 +83,11 @@ class LineStation {
     required this.idle,
     required this.segments,
     required this.isBottleneck,
+    this.bufferBefore,
   });
+
+  /// Buffer between the previous station and this one.
+  final LineBuffer? bufferBefore;
 
   /// Machine name, or the names of the parallel machines.
   final String name;
@@ -203,6 +225,7 @@ class LineAnalysis {
               ? const []
               : [LineSegment(machines[k].first.name, times[k]!)],
           isBottleneck: k == bottleneck,
+          bufferBefore: k == 0 ? null : inputs[groups[k].first].buffer,
         ),
     ];
     return LineAnalysis(
