@@ -185,8 +185,13 @@ class LineAnalysis {
   });
 
   factory LineAnalysis.of(List<LineStationInput> inputs) {
+    // A cycle time below one microsecond is no measurement (the line would
+    // have no pace and the simulation could never finish a part).
     double? cycle(StudyAnalysis? a, StudyMode mode) =>
-        a == null || mode == StudyMode.stepTimer || a.cycleStats.n == 0
+        a == null ||
+            mode == StudyMode.stepTimer ||
+            a.cycleStats.n == 0 ||
+            a.realCycleTime < 1
         ? null
         : a.realCycleTime;
     double? effective(double? base, List<SpecialCycle> cycles) =>

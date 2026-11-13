@@ -95,8 +95,8 @@ String formatDuration(int micros) {
 }
 
 /// Parses a typed time (decimal point or comma) in [unit] to microseconds;
-/// the stopwatch format is typed as seconds. Null unless it is a number
-/// greater than 0.
+/// the stopwatch format is typed as seconds. Null unless it is a number of
+/// at least one microsecond.
 int? parseTimeInput(String text, TimeUnit unit) {
   final value = double.tryParse(text.trim().replaceAll(',', '.'));
   if (value == null || value.isNaN || value <= 0) return null;
@@ -105,7 +105,8 @@ int? parseTimeInput(String text, TimeUnit unit) {
     TimeUnit.tmu => 36000,
     TimeUnit.seconds || TimeUnit.stopwatch => 1000000,
   };
-  return (value * perUnit).round();
+  final micros = (value * perUnit).round();
+  return micros <= 0 ? null : micros;
 }
 
 /// Unit label for typed times (the stopwatch format is typed as seconds).

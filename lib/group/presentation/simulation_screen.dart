@@ -43,6 +43,10 @@ class _Run {
 class _SimulationScreenState extends ConsumerState<SimulationScreen> {
   GroupReportInput? _input;
   LineSimulation? _sim;
+
+  /// Number of every simulated station in the line (stations without
+  /// times are not simulated but keep their number).
+  List<int> _numbers = const [];
   _Horizon _horizon = _Horizon.shift;
   final _hours = TextEditingController(text: '8');
   final _start = TextEditingController();
@@ -85,6 +89,10 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
     setState(() {
       _input = input;
       _sim = LineSimulation.fromLine(input.line);
+      _numbers = [
+        for (final st in input.line.stations)
+          if (st.measured) st.position + 1,
+      ];
     });
     _simulate();
   }
@@ -220,7 +228,7 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
                         DropdownMenuItem(
                           value: (si, mi),
                           child: Text(
-                            '${si + 1}. ${sim.stations[si].machines[mi].name}',
+                            '${_numbers[si]}. ${sim.stations[si].machines[mi].name}',
                           ),
                         ),
                   ],
@@ -359,7 +367,7 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
               leading: const Icon(Icons.linear_scale),
               title: Text(
                 '${l.conveyorCard(shown.conveyors[si]!.capacity)} · '
-                '${si + 1}. ${sim.stations[si].name}',
+                '${_numbers[si]}. ${sim.stations[si].name}',
               ),
               subtitle: Text(l.conveyorMaxLevel(shown.conveyors[si]!.maxLevel)),
             ),
@@ -372,7 +380,7 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
               leading: const Icon(Icons.inventory_2_outlined),
               title: Text(
                 '${l.bufferPlaces(shown.buffers[si]!.capacity)} · '
-                '${si + 1}. ${sim.stations[si].name}',
+                '${_numbers[si]}. ${sim.stations[si].name}',
               ),
               subtitle: Text(
                 [
@@ -399,7 +407,7 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
           margin: const EdgeInsets.symmetric(vertical: 3),
           child: ListTile(
             dense: true,
-            title: Text('${si + 1}. ${sim.stations[si].name}'),
+            title: Text('${_numbers[si]}. ${sim.stations[si].name}'),
             subtitle: Text(
               [
                 l.simUtilization(pct(shown.stations[si].utilization)),

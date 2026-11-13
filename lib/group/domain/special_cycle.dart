@@ -46,14 +46,18 @@ double availability(List<SpecialCycle> cycles) {
   return (1 - stopped).clamp(0.01, 1.0);
 }
 
-/// Cycle time including the special cycles: the extra time per part of the
-/// part-based rules is added, then divided by the [availability].
-double effectiveCycleTime(double baseMicros, List<SpecialCycle> cycles) {
-  var perPart = baseMicros;
+/// Extra time per part (µs) of the part-based rules.
+double extraPerPart(List<SpecialCycle> cycles) {
+  var extra = 0.0;
   for (final c in cycles) {
     if (c.kind == SpecialCycleKind.parts && c.interval > 0) {
-      perPart += c.durationMicros / c.interval;
+      extra += c.durationMicros / c.interval;
     }
   }
-  return perPart / availability(cycles);
+  return extra;
 }
+
+/// Cycle time including the special cycles: the extra time per part of the
+/// part-based rules is added, then divided by the [availability].
+double effectiveCycleTime(double baseMicros, List<SpecialCycle> cycles) =>
+    (baseMicros + extraPerPart(cycles)) / availability(cycles);

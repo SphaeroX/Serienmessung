@@ -375,6 +375,7 @@
   "intervalHours": "Alle wie viele Stunden",
   "extraTime": "Zusatzzeit",
   "stopDuration": "Stillstandsdauer",
+  "stopTooLong": "Der Stillstand muss kürzer als das Intervall sein",
   "specialEveryParts": "Alle {count} Teile · +{time}",
   "specialEveryHours": "Alle {hours} h · Stillstand {time}",
   "specialCycleCount": "{count, plural, =1{1 Sonderzyklus} other{{count} Sonderzyklen}}",

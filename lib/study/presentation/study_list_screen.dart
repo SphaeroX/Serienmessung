@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/providers.dart';
 import '../../group/presentation/group_dialogs.dart';
 import '../../l10n/app_localizations.dart';
+import '../../video/data/video_cleanup.dart';
 import '../domain/study.dart';
 import 'create_study_screen.dart';
 import 'mode_texts.dart';
@@ -110,7 +111,13 @@ class _StudyListScreenState extends ConsumerState<StudyListScreen> {
       ),
     );
     if (ok == true) {
-      await ref.read(studyRepositoryProvider).deleteStudy(study.id);
+      final studies = ref.read(studyRepositoryProvider);
+      await studies.deleteStudy(study.id);
+      await deleteUnusedVideo(
+        studies,
+        ref.read(videoFilesProvider),
+        study.videoPath,
+      );
       ref.invalidate(studyListProvider);
     }
   }

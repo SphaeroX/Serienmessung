@@ -85,20 +85,24 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     await _load();
   }
 
-  Future<void> _reorder(List<int> ids) async {
-    await ref.read(groupRepositoryProvider).reorder(widget.groupId, ids);
+  /// Stores the new order; [moved] is the member that changed its place, so
+  /// the stations of the other members stay together.
+  Future<void> _reorder(List<int> ids, int moved) async {
+    await ref
+        .read(groupRepositoryProvider)
+        .reorder(widget.groupId, ids, moved: moved);
     await _changed();
   }
 
   /// Drag reorder; [to] is already adjusted for the removed item.
   Future<void> _onReorder(int from, int to) async {
+    final moved = _members[from];
     setState(() {
-      final moved = _members[from];
       _members = [..._members]
         ..removeAt(from)
         ..insert(to, moved);
     });
-    await _reorder([for (final m in _members) m.study.id]);
+    await _reorder([for (final m in _members) m.study.id], moved.study.id);
   }
 
   Future<void> _studyAction(_StudyAction action, int index) async {
@@ -108,11 +112,11 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
       case _StudyAction.moveUp:
         if (index == 0) return;
         ids.insert(index - 1, ids.removeAt(index));
-        await _reorder(ids);
+        await _reorder(ids, study.id);
       case _StudyAction.moveDown:
         if (index == ids.length - 1) return;
         ids.insert(index + 1, ids.removeAt(index));
-        await _reorder(ids);
+        await _reorder(ids, study.id);
       case _StudyAction.parallel:
         await ref
             .read(groupRepositoryProvider)

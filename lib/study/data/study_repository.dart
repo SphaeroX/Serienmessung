@@ -96,8 +96,57 @@ class StudyRepository {
     return r.first['n'] as int;
   }
 
-  Future<void> deleteStudy(int id) async {
-    await _db.db.delete('study', where: 'id = ?', whereArgs: [id]);
+  Future<void> deleteStudy(int id) => _db.db.transaction((txn) async {
+    await handOverStation(txn, id);
+    await txn.delete('study', where: 'id = ?', whereArgs: [id]);
+  });
+
+  /// Columns of what stands before a station (stored on its first member).
+  static const stationLinkColumns = [
+    'buffer_capacity',
+    'buffer_store_us',
+    'buffer_retrieve_us',
+    'conveyor_capacity',
+    'conveyor_transport_us',
+  ];
+
+  /// Call before study [studyId] leaves its group (removed, moved to
+  /// another group or deleted): if it is the first machine of a station
+  /// with parallel machines, the next machine becomes the first one and
+  /// takes over the buffer and the conveyor before the station. Otherwise
+  /// that machine would silently work in parallel with the station before.
+  static Future<void> handOverStation(DatabaseExecutor db, int studyId) async {
+    final rows = await db.query(
+      'study',
+      columns: ['group_id'],
+      where: 'id = ?',
+      whereArgs: [studyId],
+    );
+    final groupId = rows.isEmpty ? null : rows.first['group_id'] as int?;
+    if (groupId == null) return;
+    final members = await db.query(
+      'study',
+      columns: ['id', 'parallel', ...stationLinkColumns],
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+      orderBy: 'group_position, id',
+    );
+    final i = members.indexWhere((m) => m['id'] == studyId);
+    final isHead = i == 0 || members[i]['parallel'] != 1;
+    if (!isHead || i + 1 >= members.length) return;
+    final next = members[i + 1];
+    if (next['parallel'] != 1) return;
+    await db.update(
+      'study',
+      {
+        'parallel': 0,
+        // Nothing stands before the first station of a line.
+        if (i > 0)
+          for (final c in stationLinkColumns) c: members[i][c],
+      },
+      where: 'id = ?',
+      whereArgs: [next['id']],
+    );
   }
 
   Future<void> updateStudy(
@@ -340,6 +389,15 @@ class StudyRepository {
       [groupId],
     );
     return r.first['p'] as int;
+  }
+
+  /// Whether any study plays the video file at [path].
+  Future<bool> isVideoUsed(String path) async {
+    final r = await _db.db.rawQuery(
+      'SELECT COUNT(*) AS n FROM study WHERE video_path = ?',
+      [path],
+    );
+    return (r.first['n'] as int) > 0;
   }
 
   Future<void> setVideoPath(int id, String path) => _db.db.update(

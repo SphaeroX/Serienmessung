@@ -10,18 +10,37 @@ class MeasurementRepository {
   /// Wall clock for `recorded_at`; without it no timestamp is written.
   final DateTime Function()? now;
 
-  Future<int> insert(int studyId, MeasurementDraft m) =>
-      _db.db.insert('measurement', {
-        'study_id': studyId,
-        'cycle': m.cycle,
-        'step_id': m.stepId,
-        'kind': m.kind.name,
-        'start_us': m.startMicros,
-        'end_us': m.endMicros,
-        'duration_us': m.durationMicros,
-        'note': m.note,
-        'recorded_at': now?.call().millisecondsSinceEpoch,
-      });
+  Future<int> insert(int studyId, MeasurementDraft m) async =>
+      (await store(studyId, m)).id;
+
+  /// Stores [m] and returns it as it is in the database (with its id and
+  /// `recorded_at`).
+  Future<Measurement> store(int studyId, MeasurementDraft m) async {
+    final recordedAt = now?.call();
+    final id = await _db.db.insert('measurement', {
+      'study_id': studyId,
+      'cycle': m.cycle,
+      'step_id': m.stepId,
+      'kind': m.kind.name,
+      'start_us': m.startMicros,
+      'end_us': m.endMicros,
+      'duration_us': m.durationMicros,
+      'note': m.note,
+      'recorded_at': recordedAt?.millisecondsSinceEpoch,
+    });
+    return Measurement(
+      id: id,
+      studyId: studyId,
+      cycle: m.cycle,
+      stepId: m.stepId,
+      kind: m.kind,
+      startMicros: m.startMicros,
+      endMicros: m.endMicros,
+      durationMicros: m.durationMicros,
+      note: m.note,
+      recordedAt: recordedAt,
+    );
+  }
 
   Future<void> updateNote(int id, String note) => _db.db.update(
     'measurement',

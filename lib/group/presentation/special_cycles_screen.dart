@@ -116,9 +116,21 @@ class _SpecialCyclesScreenState extends ConsumerState<SpecialCyclesScreen> {
                           ? '${l.extraTime} [${inputUnitLabel(unit)}]'
                           : '${l.stopDuration} [${inputUnitLabel(unit)}]',
                     ),
-                    validator: (v) => parseTimeInput(v ?? '', unit) == null
-                        ? l.invalidTime
-                        : null,
+                    validator: (v) {
+                      final micros = parseTimeInput(v ?? '', unit);
+                      if (micros == null) return l.invalidTime;
+                      // A stop as long as its interval leaves no time to
+                      // work.
+                      final hours = double.tryParse(
+                        interval.text.trim().replaceAll(',', '.'),
+                      );
+                      return kind == SpecialCycleKind.time &&
+                              hours != null &&
+                              hours > 0 &&
+                              micros >= hours * 3600 * 1000000
+                          ? l.stopTooLong
+                          : null;
+                    },
                   ),
                 ],
               ),

@@ -7,6 +7,8 @@ import 'package:cyclescope/recording/platform/hardware_keys.dart';
 import 'package:cyclescope/recording/platform/recording_notifier.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 
+import 'fake_video_files.dart';
+
 /// Records platform calls instead of touching the device.
 class FakeDeviceFeedback implements DeviceFeedback {
   final events = <String>[];
@@ -67,10 +69,13 @@ List<Override> fakePlatformOverrides({
   FakeDeviceFeedback? feedback,
   FakeHardwareKeys? keys,
   FakeRecordingNotifier? notifier,
+  FakeVideoFiles? videoFiles,
 }) => [
   recordingNotifierProvider.overrideWithValue(
     notifier ?? FakeRecordingNotifier(),
   ),
   deviceFeedbackProvider.overrideWithValue(feedback ?? FakeDeviceFeedback()),
   hardwareKeysProvider.overrideWithValue(keys ?? FakeHardwareKeys()),
+  // Tests never delete real files.
+  videoFilesProvider.overrideWithValue(videoFiles ?? FakeVideoFiles()),
 ];

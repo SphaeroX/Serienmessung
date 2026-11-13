@@ -273,6 +273,7 @@ class RecordingController extends ChangeNotifier {
             endMicros: m.endMicros,
             durationMicros: m.durationMicros,
             note: note,
+            recordedAt: m.recordedAt,
           )
         else
           m,
@@ -382,7 +383,18 @@ class RecordingController extends ChangeNotifier {
     if (last == null) return;
     await measurementRepo.deleteById(last.id);
     measurements = await measurementRepo.listForStudy(studyId);
-    engine.rewindTo(last);
+    engine.rewindTo(
+      last,
+      specials: [
+        for (final m in measurements)
+          if (m.kind == MeasurementKind.special &&
+              m.cycle == last.cycle &&
+              m.stepId == last.stepId &&
+              m.startMicros >= last.startMicros &&
+              m.endMicros <= last.endMicros)
+            m,
+      ],
+    );
     displayCycle = engine.cycle;
   });
 

@@ -343,19 +343,24 @@ void _writeLine(
   for (var k = 0; k < line.stations.length; k++) {
     final row = first + k;
     final station = line.stations[k];
-    // Members of the station whose sheet holds a real cycle time.
+    // Members of the station whose sheet holds a real cycle time, as the
+    // effective cycle time of the machine (special cycles included, like
+    // the line analysis in the app).
     final refs = [
-      for (final e in groups[k])
-        if (cycleRows[e] != null &&
-            station.machines[groups[k].indexOf(e)].measured)
-          '${_ref(names[e])}!B${cycleRows[e]}',
+      for (var j = 0; j < groups[k].length; j++)
+        if (cycleRows[groups[k][j]] != null && station.machines[j].measured)
+          _effective(
+            '${_ref(names[groups[k][j]])}!B${cycleRows[groups[k][j]]}',
+            station.machines[j].specialCycles,
+            unit,
+          ),
     ];
     final measured = refs.isNotEmpty && station.cycleTime != null;
     final prev = station.previousCycleTime;
     // Parallel machines add their capacities: 1 / (1/t1 + 1/t2 + ...).
     final cycleFormula = refs.length == 1
         ? refs.single
-        : '1/(${[for (final r in refs) '1/$r'].join('+')})';
+        : '1/(${[for (final r in refs) '1/${r.contains('/') ? '($r)' : r}'].join('+')})';
     sh.appendRow([
       IntCellValue(k + 1),
       groups[k].length == 1
@@ -473,6 +478,24 @@ void _writeLine(
     }
   }
 }
+
+/// Formula of a machine's effective cycle time: `(ref + extra time per
+/// part) / availability`, with [ref] the cell of its measured cycle time.
+/// Without rules it is just [ref].
+String _effective(String ref, List<SpecialCycle> cycles, TimeUnit unit) {
+  final extra = extraPerPart(cycles) * unit.fromMicros(1000000) / 1000000;
+  final available = availability(cycles);
+  var formula = ref;
+  if (extra > 0) formula = '($formula+${_plain(extra)})';
+  if (available < 1) formula = '$formula/${_plain(available)}';
+  return formula;
+}
+
+/// Number for a formula: plain decimal notation without trailing zeros.
+String _plain(double v) => v
+    .toStringAsFixed(9)
+    .replaceFirst(RegExp(r'0+$'), '')
+    .replaceFirst(RegExp(r'\.$'), '');
 
 /// Failure scenarios: line output while each machine is down.
 void _writeRisk(

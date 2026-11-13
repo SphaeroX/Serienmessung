@@ -1324,6 +1324,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stopDuration => 'Stop duration';
 
   @override
+  String get stopTooLong => 'The stop must be shorter than the interval';
+
+  @override
   String specialEveryParts(int count, String time) {
     return 'Every $count parts · +$time';
   }

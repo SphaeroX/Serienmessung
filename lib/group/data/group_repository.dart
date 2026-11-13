@@ -1,5 +1,6 @@
 import '../../core/database.dart';
 import '../../study/data/study_repository.dart';
+import '../domain/stations.dart';
 import '../domain/study_group.dart';
 
 /// Persistence of study groups and the membership/order of their studies.
@@ -62,6 +63,7 @@ class GroupRepository {
   /// from its group.
   Future<void> moveToGroup(int studyId, int? groupId) =>
       _db.db.transaction((txn) async {
+        await StudyRepository.handOverStation(txn, studyId);
         final position = groupId == null
             ? 0
             : await StudyRepository.nextGroupPosition(txn, groupId);
@@ -139,17 +141,77 @@ class GroupRepository {
   };
 
   /// Sets the group order to [studyIdsInOrder].
-  Future<void> reorder(int groupId, List<int> studyIdsInOrder) =>
-      _db.db.transaction((txn) async {
-        for (var i = 0; i < studyIdsInOrder.length; i++) {
-          await txn.update(
-            'study',
-            {'group_position': i},
-            where: 'id = ? AND group_id = ?',
-            whereArgs: [studyIdsInOrder[i], groupId],
-          );
-        }
-      });
+  ///
+  /// With [moved] (the one member that changed its place) the stations are
+  /// kept together, see [parallelAfterMove]: a first machine that moves
+  /// away hands its station (with buffer and conveyor) to the next machine,
+  /// a member dropped inside a station joins it (and loses its own buffer
+  /// and conveyor), anywhere else it becomes a station of its own.
+  Future<void> reorder(
+    int groupId,
+    List<int> studyIdsInOrder, {
+    int? moved,
+  }) => _db.db.transaction((txn) async {
+    final members = await txn.query(
+      'study',
+      columns: ['id', 'parallel', ...StudyRepository.stationLinkColumns],
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+      orderBy: 'group_position, id',
+    );
+    final old = [for (final m in members) m['id'] as int];
+    final from = moved == null ? -1 : old.indexOf(moved);
+    final to = moved == null ? -1 : studyIdsInOrder.indexOf(moved);
+    final single =
+        from >= 0 &&
+        to >= 0 &&
+        old.length == studyIdsInOrder.length &&
+        _equal([...old]..removeAt(from), [...studyIdsInOrder]..removeAt(to));
+    final move = single
+        ? parallelAfterMove(
+            [for (final m in members) m['parallel'] == 1],
+            from,
+            to,
+          )
+        : null;
+    for (var i = 0; i < studyIdsInOrder.length; i++) {
+      await txn.update(
+        'study',
+        {
+          'group_position': i,
+          if (move != null) 'parallel': move.parallel[i] ? 1 : 0,
+        },
+        where: 'id = ? AND group_id = ?',
+        whereArgs: [studyIdsInOrder[i], groupId],
+      );
+    }
+    if (move == null) return;
+    final newHead = move.newHead;
+    if (newHead != null && from > 0) {
+      await txn.update(
+        'study',
+        {
+          for (final c in StudyRepository.stationLinkColumns)
+            c: members[from][c],
+        },
+        where: 'id = ?',
+        whereArgs: [studyIdsInOrder[newHead]],
+      );
+    }
+    // The buffer stays with the station the member left; a member that
+    // joins a station is no station of its own.
+    if (newHead != null || move.parallel[to]) {
+      await txn.update('study', _noBuffer, where: 'id = ?', whereArgs: [moved]);
+    }
+  });
+
+  static bool _equal(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
 
   static StudyGroup groupFromRow(Map<String, Object?> r) => StudyGroup(
     id: r['id'] as int,

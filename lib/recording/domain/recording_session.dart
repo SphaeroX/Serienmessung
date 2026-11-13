@@ -41,20 +41,7 @@ class RecordingSession {
   Future<List<Measurement>> _store(List<MeasurementDraft> drafts) async {
     final stored = <Measurement>[];
     for (final d in drafts) {
-      final id = await measurements.insert(studyId, d);
-      stored.add(
-        Measurement(
-          id: id,
-          studyId: studyId,
-          cycle: d.cycle,
-          stepId: d.stepId,
-          kind: d.kind,
-          startMicros: d.startMicros,
-          endMicros: d.endMicros,
-          durationMicros: d.durationMicros,
-          note: d.note,
-        ),
-      );
+      stored.add(await measurements.store(studyId, d));
     }
     return stored;
   }

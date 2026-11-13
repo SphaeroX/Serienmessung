@@ -2348,6 +2348,12 @@ abstract class AppLocalizations {
   /// **'Stop duration'**
   String get stopDuration;
 
+  /// No description provided for @stopTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'The stop must be shorter than the interval'**
+  String get stopTooLong;
+
   /// No description provided for @specialEveryParts.
   ///
   /// In en, this message translates to:

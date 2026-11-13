@@ -21,6 +21,7 @@ import '../../recording/presentation/recording_screen.dart'
     show RecordingScreen, StepOverlay;
 import '../../settings/presentation/settings_controller.dart';
 import '../../study/presentation/edit_study_screen.dart';
+import '../data/video_cleanup.dart';
 import '../domain/boundary.dart';
 import '../domain/frame_cache.dart';
 import '../domain/position_interpolator.dart';
@@ -237,6 +238,9 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
         .read(videoPickerProvider)
         .pickAndCopy(studyId: widget.studyId);
     if (path == null || !mounted) return;
+    final studies = ref.read(studyRepositoryProvider);
+    final files = ref.read(videoFilesProvider);
+    final old = controller.study?.videoPath;
     if (controller.measurements.isNotEmpty) {
       final l = AppLocalizations.of(context);
       final delete = await showDialog<bool>(
@@ -258,14 +262,20 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
           ],
         ),
       );
-      if (delete == null) return;
+      if (delete == null) {
+        // Cancelled: the copy made by the picker is not needed.
+        await deleteUnusedVideo(studies, files, path);
+        return;
+      }
       if (delete) await controller.deleteAllMeasurements();
     }
     // Markers of the old video must not block positions in the new one.
     await controller.resetMarkers();
-    await ref.read(studyRepositoryProvider).setVideoPath(widget.studyId, path);
+    await studies.setVideoPath(widget.studyId, path);
     await controller.load();
     await _open(path);
+    // The player has let go of the old file by now.
+    if (old != path) await deleteUnusedVideo(studies, files, old);
   }
 
   void _saveUnit(TimeUnit unit) => ref

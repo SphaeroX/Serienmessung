@@ -232,14 +232,28 @@ class RecordingEngine {
 
   /// Reopens the step of [m] as if it had never been closed (undo of the
   /// last marker): timing continues from its start.
-  void rewindTo(MeasurementDraft m) {
+  ///
+  /// [specials] are the special times recorded during that step. They stay
+  /// excluded: timing continues behind the last of them, with the time
+  /// worked before it.
+  void rewindTo(
+    MeasurementDraft m, {
+    List<MeasurementDraft> specials = const [],
+  }) {
     final idx = sequence.indexOf(m.stepId);
     _stepIndex = idx >= 0 ? idx : 0;
     _currentStepId = sequence.isEmpty ? null : sequence[_stepIndex];
     _cycle = m.cycle;
     _stepStart = m.startMicros;
-    _segmentStart = m.startMicros;
-    _accumulated = 0;
+    var resume = m.startMicros;
+    var excluded = 0;
+    for (final sp in specials) {
+      excluded += sp.durationMicros;
+      if (sp.endMicros > resume) resume = sp.endMicros;
+    }
+    final worked = resume - m.startMicros - excluded;
+    _segmentStart = resume;
+    _accumulated = worked < 0 ? 0 : worked;
     _status = EngineStatus.running;
   }
 

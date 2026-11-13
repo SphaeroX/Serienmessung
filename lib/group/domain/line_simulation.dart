@@ -202,9 +202,11 @@ class _Machine {
   /// Parts started so far (for the every-N-parts rules).
   int parts = 0;
 
-  /// Time stopped within the horizon (failures and planned stops).
-  int down = 0;
+  /// Stops (failures and planned stops) as [start, end], merged where they
+  /// overlap, in order. Stopped time is neither busy nor blocked time.
+  final stops = <List<int>>[];
   _Phase phase = _Phase.idle;
+  int workFrom = 0;
   int busyUntil = 0;
   int holdSince = 0;
   int downFrom = -1;
@@ -213,6 +215,34 @@ class _Machine {
   int blocked = 0;
 
   bool isDown(int t) => t >= downFrom && t < downUntil;
+
+  /// Stops the machine at [t] for [duration]; a stop during another one
+  /// only extends it.
+  void stop(int t, int duration) {
+    if (isDown(t)) {
+      downUntil += duration;
+      stops.last[1] = downUntil;
+    } else {
+      downFrom = t;
+      downUntil = t + duration;
+      stops.add([downFrom, downUntil]);
+    }
+  }
+
+  /// Time stopped between [from] and [to].
+  int stoppedIn(int from, int to) {
+    var sum = 0;
+    for (final s in stops) {
+      final a = s[0] > from ? s[0] : from;
+      final b = s[1] < to ? s[1] : to;
+      if (b > a) sum += b - a;
+    }
+    return sum;
+  }
+
+  /// Time between [from] and [to] the machine was not stopped.
+  int runningIn(int from, int to) =>
+      to > from ? to - from - stoppedIn(from, to) : 0;
 }
 
 class _Conveyor {
@@ -370,6 +400,18 @@ class LineSimulation {
   }
 
   SimResult run({required int horizonMicros, SimFailure? failure}) {
+    for (final s in stations) {
+      for (final m in s.machines) {
+        if (m.cycleMicros <= 0) {
+          // Such a machine would finish parts without time passing.
+          throw ArgumentError.value(
+            m.cycleMicros,
+            'cycleMicros',
+            'machine "${m.name}" needs a cycle time greater than 0',
+          );
+        }
+      }
+    }
     final h = horizonMicros;
     final machines = [
       for (final s in stations)
@@ -426,12 +468,12 @@ class LineSimulation {
         }
       }
       m.phase = _Phase.busy;
+      m.workFrom = from;
       m.busyUntil = from + time;
-      if (from < h) m.busy += (m.busyUntil < h ? m.busyUntil : h) - from;
     }
 
     void release(_Machine m, int t) {
-      m.blocked += t - m.holdSince;
+      m.blocked += m.runningIn(m.holdSince, t);
       m.phase = _Phase.idle;
     }
 
@@ -574,11 +616,7 @@ class LineSimulation {
       while (nextStop < stops.length && stops[nextStop].$1 == t) {
         final (_, duration, si, mi) = stops[nextStop++];
         final m = machines[si][mi];
-        // A stop during another one only extends it.
-        final until = m.isDown(t) ? m.downUntil + duration : t + duration;
-        if (!m.isDown(t)) m.downFrom = t;
-        m.down += (until < h ? until : h) - (m.downUntil > t ? m.downUntil : t);
-        m.downUntil = until;
+        m.stop(t, duration);
         if (m.phase == _Phase.busy && m.busyUntil > t) {
           m.busyUntil += duration;
         }
@@ -586,6 +624,7 @@ class LineSimulation {
       for (var si = 0; si <= last; si++) {
         for (final m in machines[si]) {
           if (m.phase == _Phase.busy && m.busyUntil == t) {
+            m.busy += m.runningIn(m.workFrom, t);
             if (si == last) {
               output++;
               m.phase = _Phase.idle;
@@ -621,12 +660,14 @@ class LineSimulation {
     // Close the open intervals at the horizon.
     for (final row in machines) {
       for (final m in row) {
-        if (m.phase == _Phase.holding && m.holdSince < h) {
-          m.blocked += h - m.holdSince;
+        if (m.phase == _Phase.holding) {
+          m.blocked += m.runningIn(m.holdSince, h);
+        } else if (m.phase == _Phase.busy) {
+          m.busy += m.runningIn(m.workFrom, h);
         }
       }
     }
-    int down(_Machine m) => m.down;
+    int down(_Machine m) => m.stoppedIn(0, h);
 
     return SimResult(
       output: output,

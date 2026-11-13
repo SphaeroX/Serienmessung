@@ -70,4 +70,5 @@ Measurement _copy(
   endMicros: end ?? m.endMicros,
   durationMicros: duration,
   note: m.note,
+  recordedAt: m.recordedAt,
 );

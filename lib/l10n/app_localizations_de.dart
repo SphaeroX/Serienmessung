@@ -1331,6 +1331,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get stopDuration => 'Stillstandsdauer';
 
   @override
+  String get stopTooLong => 'Der Stillstand muss kürzer als das Intervall sein';
+
+  @override
   String specialEveryParts(int count, String time) {
     return 'Alle $count Teile · +$time';
   }

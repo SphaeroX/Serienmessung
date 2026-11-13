@@ -786,6 +786,7 @@
   "intervalHours": "Every how many hours",
   "extraTime": "Extra time",
   "stopDuration": "Stop duration",
+  "stopTooLong": "The stop must be shorter than the interval",
   "specialEveryParts": "Every {count} parts · +{time}",
   "@specialEveryParts": {
     "placeholders": {

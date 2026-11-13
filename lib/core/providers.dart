@@ -12,6 +12,7 @@ import '../revision/data/revision_repository.dart';
 import '../settings/presentation/settings_controller.dart';
 import '../study/data/study_repository.dart';
 import '../study/domain/study.dart';
+import '../video/platform/video_files.dart';
 import 'clock.dart';
 import 'database.dart';
 import 'platform.dart';
@@ -81,6 +82,11 @@ final deviceFeedbackProvider = Provider<DeviceFeedback>((ref) {
     keepScreenOn: s.keepScreenOn,
   );
 });
+
+/// Copied video files of the video studies.
+final videoFilesProvider = Provider<VideoFiles>(
+  (ref) => const LocalVideoFiles(),
+);
 
 /// Volume keys (Android platform channel).
 final hardwareKeysProvider = Provider<HardwareKeys>(
