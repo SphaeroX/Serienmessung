@@ -15,6 +15,7 @@ import 'package:cyclescope/core/providers.dart';
 import 'package:cyclescope/core/time_format.dart';
 import 'package:cyclescope/group/data/group_repository.dart';
 import 'package:cyclescope/group/presentation/group_screen.dart';
+import 'package:cyclescope/group/presentation/line_screen.dart';
 import 'package:cyclescope/l10n/app_localizations.dart';
 import 'package:cyclescope/recording/data/measurement_repository.dart';
 import 'package:cyclescope/recording/domain/measurement.dart';
@@ -408,18 +409,28 @@ void main() {
           steps: t.timerSteps,
           now: DateTime(2026, 11, 8, 10),
         );
+        final press = await seedTimeStudy(t, scale: 1.25);
+        await StudyRepository(db).updateStudy(
+          press,
+          name: t.timerSteps.first == 'Change tool' ? 'Press' : 'Presse',
+          description: '',
+        );
         final groups = GroupRepository(db);
         lineId = await groups.createGroup(
           name: t.line,
           description: t.lineDescription,
           now: DateTime(2026, 11, 1),
         );
-        for (final id in [video, studyId, timer]) {
+        for (final id in [video, studyId, press, timer]) {
           await groups.moveToGroup(id, lineId);
         }
       });
       await show(tester, lang, GroupScreen(groupId: lineId));
       await shot(tester, lang, '08_group');
+
+      await show(tester, lang, LineScreen(groupId: lineId));
+      await settle(tester);
+      await shot(tester, lang, '10_line');
 
       await show(
         tester,

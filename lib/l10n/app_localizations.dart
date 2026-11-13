@@ -1729,6 +1729,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Overview sheet and one sheet per study'**
   String get groupXlsxHint;
+
+  /// No description provided for @lineAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Line analysis'**
+  String get lineAnalysis;
+
+  /// No description provided for @lineTotalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sum of cycle times (lead time)'**
+  String get lineTotalLabel;
+
+  /// No description provided for @lineCycleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Line cycle time (bottleneck)'**
+  String get lineCycleLabel;
+
+  /// No description provided for @lineBottleneckLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Bottleneck'**
+  String get lineBottleneckLabel;
+
+  /// No description provided for @lineBalanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Line balance'**
+  String get lineBalanceLabel;
+
+  /// No description provided for @lineOutputLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Output per hour'**
+  String get lineOutputLabel;
+
+  /// No description provided for @lineStations.
+  ///
+  /// In en, this message translates to:
+  /// **'Stations'**
+  String get lineStations;
+
+  /// No description provided for @lineChartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stations in group order, stacked by step. The dashed line marks the bottleneck that paces the line.'**
+  String get lineChartHint;
+
+  /// No description provided for @lineWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting: {time}'**
+  String lineWaiting(String time);
+
+  /// No description provided for @lineShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{share} of the line'**
+  String lineShare(String share);
+
+  /// No description provided for @lineNotMeasured.
+  ///
+  /// In en, this message translates to:
+  /// **'No complete cycles'**
+  String get lineNotMeasured;
+
+  /// No description provided for @lineVsPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'vs. previous revision: {delta}'**
+  String lineVsPrevious(String delta);
 }
 
 class _AppLocalizationsDelegate

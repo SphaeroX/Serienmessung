@@ -51,8 +51,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
 
 ## Offene Fragen / Annahmen
 
@@ -67,15 +67,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `LineAnalysis`, `LineStation`, `LineSegment`, `LineStationInput` (`lib/group/domain/line_analysis.dart`); `GroupReportInput.line`; `loadGroupReport()` aus dem `GroupExportButton` ausgelagert; `LineScreen` mit Kennzahl-Kacheln (Summe/Durchlauf, Linientakt, Engpass, Austaktungsgrad, Ausbringung/h, jeweils Δ zur Vorrevision), `YamazumiPainter` und Stationsliste (Anteil, Wartezeit, Δ); Knopf `lineAnalysisButton` im Gruppen-Bildschirm. Screenshot-Szene `10_line`.
+- **Learnings & Stolpersteine:** `GridView` mit festem Seitenverhältnis lief bei langen Beschriftungen über – `Wrap` mit halber Breite nutzen. Bildschirme mit Ladekreis: in Tests `pumpFrames` + `settleUntil` statt `pumpAndSettle`.
+- **Wichtige Entscheidungen und ihre Gründe:** Summe der Taktzeiten = reine Bearbeitungs-Durchlaufzeit (ohne Puffer). Schrittsegmente auf die reale Taktzeit skaliert, damit Balkenhöhe = Taktzeit. Linienvergleich nur, wenn alle gemessenen Stationen eine Vorrevision haben (sonst irreführend).
+- **Auswirkungen auf Folge-Tasks:** Task_25 nutzt `GroupReportInput.line` für Deckblatt, Linienkapitel und Excel-Linienblatt.
+- **Hinweise zu Tests und Befehlen:** `tests/group/domain/line_analysis_test.dart`, `tests/group/presentation/line_screen_test.dart`.

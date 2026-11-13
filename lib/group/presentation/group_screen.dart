@@ -10,6 +10,7 @@ import '../../study/presentation/mode_texts.dart';
 import '../../study/presentation/study_list_screen.dart' show OpenStudy;
 import '../domain/study_group.dart';
 import 'group_dialogs.dart';
+import 'line_screen.dart';
 
 /// One group: its studies in order (drag to reorder), adding, moving,
 /// copying and removing studies, editing and deleting the group.
@@ -227,6 +228,16 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
       appBar: AppBar(
         title: Text(_group?.name ?? ''),
         actions: [
+          IconButton(
+            key: const Key('lineAnalysisButton'),
+            tooltip: l.lineAnalysis,
+            icon: const Icon(Icons.stacked_bar_chart),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => LineScreen(groupId: widget.groupId),
+              ),
+            ),
+          ),
           GroupExportButton(groupId: widget.groupId),
           PopupMenuButton<_GroupAction>(
             key: const Key('groupMenu'),

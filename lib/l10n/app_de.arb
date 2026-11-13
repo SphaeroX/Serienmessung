@@ -271,5 +271,17 @@
   "deviationFrom": "Abweichung zu Revision {number}",
   "exportGroupReport": "Gruppen-Report exportieren",
   "groupPdfHint": "Übersicht und jede Studie auf eigenen Seiten",
-  "groupXlsxHint": "Übersichtsblatt und ein Blatt je Studie"
+  "groupXlsxHint": "Übersichtsblatt und ein Blatt je Studie",
+  "lineAnalysis": "Linienbetrachtung",
+  "lineTotalLabel": "Summe der Taktzeiten (Durchlauf)",
+  "lineCycleLabel": "Linientakt (Engpass)",
+  "lineBottleneckLabel": "Engpass",
+  "lineBalanceLabel": "Austaktungsgrad",
+  "lineOutputLabel": "Ausbringung pro Stunde",
+  "lineStations": "Stationen",
+  "lineChartHint": "Stationen in Gruppenreihenfolge, gestapelt nach Schritten. Die gestrichelte Linie markiert den Engpass, der den Takt der Linie bestimmt.",
+  "lineWaiting": "Wartezeit: {time}",
+  "lineShare": "{share} der Linie",
+  "lineNotMeasured": "Keine vollständigen Zyklen",
+  "lineVsPrevious": "ggü. Vorrevision: {delta}"
 }

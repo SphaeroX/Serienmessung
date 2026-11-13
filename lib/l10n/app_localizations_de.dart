@@ -965,4 +965,47 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupXlsxHint => 'Übersichtsblatt und ein Blatt je Studie';
+
+  @override
+  String get lineAnalysis => 'Linienbetrachtung';
+
+  @override
+  String get lineTotalLabel => 'Summe der Taktzeiten (Durchlauf)';
+
+  @override
+  String get lineCycleLabel => 'Linientakt (Engpass)';
+
+  @override
+  String get lineBottleneckLabel => 'Engpass';
+
+  @override
+  String get lineBalanceLabel => 'Austaktungsgrad';
+
+  @override
+  String get lineOutputLabel => 'Ausbringung pro Stunde';
+
+  @override
+  String get lineStations => 'Stationen';
+
+  @override
+  String get lineChartHint =>
+      'Stationen in Gruppenreihenfolge, gestapelt nach Schritten. Die gestrichelte Linie markiert den Engpass, der den Takt der Linie bestimmt.';
+
+  @override
+  String lineWaiting(String time) {
+    return 'Wartezeit: $time';
+  }
+
+  @override
+  String lineShare(String share) {
+    return '$share der Linie';
+  }
+
+  @override
+  String get lineNotMeasured => 'Keine vollständigen Zyklen';
+
+  @override
+  String lineVsPrevious(String delta) {
+    return 'ggü. Vorrevision: $delta';
+  }
 }

@@ -41,7 +41,7 @@ Stand: 2026-11-13 – **Erweiterung 3 läuft (Task_24–25: Linienbetrachtung, R
 | 21 | Nachfrage bei veralteter Messung | erledigt |
 | 22 | Gruppen-Report PDF + Excel | erledigt |
 | 23 | Backup v2, Screenshots & Doku | erledigt |
-| 24 | Linienbetrachtung der Gruppe | offen |
+| 24 | Linienbetrachtung der Gruppe | erledigt |
 | 25 | Gruppen-Report: Deckblatt, Inhaltsverzeichnis, verknüpftes Excel | offen |
 
 Status ist `offen`, `läuft` (Datei trägt das Präfix `RUN_`) oder `erledigt` (Datei liegt in `Archiv/`). Die Tabelle wird beim Archivieren eines Tasks aktualisiert.
@@ -93,6 +93,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_21] Veraltete Messung:** Einstellung `staleDays` (Standard 10, 0 = nie; Auswahl 0/3/7/10/14/30/60/90/180/365). Nachfrage zentral in `openStudy` – jeder Weg, eine Studie zu öffnen, sollte über `openStudy` laufen.
 - **[Task_22] Gruppen-Report:** `buildGroupXlsx`/`buildGroupPdf` (`lib/export/domain/`), Export-Knopf im Gruppen-Bildschirm. Einzel-Exporte enthalten jetzt Revision und letzte Messung, das PDF zusätzlich die Abweichung zur letzten archivierten Revision. Neue Export-Texte als optionale Labels (`ExportLabels.revision`), damit bestehende Aufrufer/Tests unverändert bleiben.
 - **[Task_23] Backup v2:** Format-Version 2 (Gruppen, Reihenfolge, Revisionen, `recordedAt`), v1 bleibt importierbar. Neue Tabellen mit Studienbezug müssen in `BackupService` (Export, Import, Ersetzen, Validierung) und in `StudyRepository.copyStudy` ergänzt werden.
+- **[Task_24] Linienbetrachtung:** `LineAnalysis` (reines Dart) + `LineScreen` mit Yamazumi-Diagramm. Gruppendaten (Report und Linie) lädt einheitlich `loadGroupReport()`; Einheit = Standardeinheit der Einstellungen.
 
 ## Auffälligkeiten & Details
 

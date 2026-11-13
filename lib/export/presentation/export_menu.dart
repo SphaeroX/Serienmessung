@@ -231,64 +231,70 @@ class ExportButton extends ConsumerWidget {
   }
 }
 
+/// Loads everything a group report or the line analysis needs: all studies
+/// of group [groupId] in group order with their latest revision, in the
+/// default unit (method per study, else the default method).
+Future<GroupReportInput?> loadGroupReport(
+  WidgetRef ref,
+  AppLocalizations l,
+  String locale,
+  int groupId,
+) async {
+  final group = await ref.read(groupRepositoryProvider).getGroup(groupId);
+  if (group == null) return null;
+  final settings = ref.read(settingsProvider);
+  final studies = ref.read(studyRepositoryProvider);
+  final times = ref.read(measurementRepositoryProvider);
+  final revisions = ref.read(revisionRepositoryProvider);
+  final now = ref.read(wallClockProvider)();
+  final entries = <ExportInput>[];
+  for (final m in await studies.listStudies(groupId: groupId)) {
+    final study = m.study;
+    final method = study.cycleTimeMethod == null
+        ? settings.defaultMethod
+        : CycleTimeMethod.parse(study.cycleTimeMethod!);
+    entries.add(
+      ExportInput(
+        study: study,
+        steps: await studies.getSteps(study.id),
+        measurements: await times.listForStudy(study.id),
+        unit: settings.defaultUnit,
+        method: method,
+        locale: locale,
+        exportedAt: now,
+        labels: exportLabels(l, study, methodLabel(l, method)),
+        previous: await revisions.latestRevision(study.id),
+      ),
+    );
+  }
+  return GroupReportInput(
+    group: group,
+    entries: entries,
+    unit: settings.defaultUnit,
+    locale: locale,
+    exportedAt: now,
+    labels: groupReportLabels(l),
+    exportLabels: exportLabels(
+      l,
+      Study(
+        id: 0,
+        name: group.name,
+        description: group.description,
+        mode: StudyMode.timeStudy,
+        createdAt: now,
+        lastActiveAt: now,
+      ),
+      '',
+    ),
+  );
+}
+
 /// Share button of the group screen: PDF report or Excel workbook of all
 /// studies of the group in group order.
 class GroupExportButton extends ConsumerWidget {
   const GroupExportButton({super.key, required this.groupId});
 
   final int groupId;
-
-  Future<GroupReportInput?> _input(BuildContext context, WidgetRef ref) async {
-    final l = AppLocalizations.of(context);
-    final locale = Localizations.localeOf(context).languageCode;
-    final group = await ref.read(groupRepositoryProvider).getGroup(groupId);
-    if (group == null) return null;
-    final settings = ref.read(settingsProvider);
-    final studies = ref.read(studyRepositoryProvider);
-    final times = ref.read(measurementRepositoryProvider);
-    final revisions = ref.read(revisionRepositoryProvider);
-    final now = ref.read(wallClockProvider)();
-    final entries = <ExportInput>[];
-    for (final m in await studies.listStudies(groupId: groupId)) {
-      final study = m.study;
-      final method = study.cycleTimeMethod == null
-          ? settings.defaultMethod
-          : CycleTimeMethod.parse(study.cycleTimeMethod!);
-      entries.add(
-        ExportInput(
-          study: study,
-          steps: await studies.getSteps(study.id),
-          measurements: await times.listForStudy(study.id),
-          unit: settings.defaultUnit,
-          method: method,
-          locale: locale,
-          exportedAt: now,
-          labels: exportLabels(l, study, methodLabel(l, method)),
-          previous: await revisions.latestRevision(study.id),
-        ),
-      );
-    }
-    return GroupReportInput(
-      group: group,
-      entries: entries,
-      unit: settings.defaultUnit,
-      locale: locale,
-      exportedAt: now,
-      labels: groupReportLabels(l),
-      exportLabels: exportLabels(
-        l,
-        Study(
-          id: 0,
-          name: group.name,
-          description: group.description,
-          mode: StudyMode.timeStudy,
-          createdAt: now,
-          lastActiveAt: now,
-        ),
-        '',
-      ),
-    );
-  }
 
   Future<void> _export(
     BuildContext context,
@@ -299,7 +305,12 @@ class GroupExportButton extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     final labels = pdfLabels(l, null);
     try {
-      final input = await _input(context, ref);
+      final input = await loadGroupReport(
+        ref,
+        l,
+        Localizations.localeOf(context).languageCode,
+        groupId,
+      );
       if (input == null) return;
       final dir = await ref.read(exportDirectoryProvider)();
       final (List<int> bytes, ext, mime) = switch (format) {

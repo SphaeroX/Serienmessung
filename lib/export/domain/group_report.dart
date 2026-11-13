@@ -1,4 +1,5 @@
 import '../../core/time_format.dart';
+import '../../group/domain/line_analysis.dart';
 import '../../group/domain/study_group.dart';
 import 'export_data.dart';
 
@@ -52,6 +53,17 @@ class GroupReportInput {
   /// Generic export texts for the overview (study, mode, real cycle time,
   /// revision ...).
   final ExportLabels exportLabels;
+
+  /// The studies looked at as one line (stations in group order).
+  LineAnalysis get line => LineAnalysis.of([
+    for (final x in entries)
+      LineStationInput(
+        name: x.study.name,
+        mode: x.study.mode,
+        current: x.analysis,
+        previous: x.previousAnalysis,
+      ),
+  ]);
 }
 
 /// Excel sheet names: at most 31 characters, none of `[]:*?/\`, unique

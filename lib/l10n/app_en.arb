@@ -537,5 +537,38 @@
   },
   "exportGroupReport": "Export group report",
   "groupPdfHint": "Overview and every study on its own pages",
-  "groupXlsxHint": "Overview sheet and one sheet per study"
+  "groupXlsxHint": "Overview sheet and one sheet per study",
+  "lineAnalysis": "Line analysis",
+  "lineTotalLabel": "Sum of cycle times (lead time)",
+  "lineCycleLabel": "Line cycle time (bottleneck)",
+  "lineBottleneckLabel": "Bottleneck",
+  "lineBalanceLabel": "Line balance",
+  "lineOutputLabel": "Output per hour",
+  "lineStations": "Stations",
+  "lineChartHint": "Stations in group order, stacked by step. The dashed line marks the bottleneck that paces the line.",
+  "lineWaiting": "Waiting: {time}",
+  "@lineWaiting": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "lineShare": "{share} of the line",
+  "@lineShare": {
+    "placeholders": {
+      "share": {
+        "type": "String"
+      }
+    }
+  },
+  "lineNotMeasured": "No complete cycles",
+  "lineVsPrevious": "vs. previous revision: {delta}",
+  "@lineVsPrevious": {
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  }
 }

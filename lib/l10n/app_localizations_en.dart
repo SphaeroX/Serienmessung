@@ -958,4 +958,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupXlsxHint => 'Overview sheet and one sheet per study';
+
+  @override
+  String get lineAnalysis => 'Line analysis';
+
+  @override
+  String get lineTotalLabel => 'Sum of cycle times (lead time)';
+
+  @override
+  String get lineCycleLabel => 'Line cycle time (bottleneck)';
+
+  @override
+  String get lineBottleneckLabel => 'Bottleneck';
+
+  @override
+  String get lineBalanceLabel => 'Line balance';
+
+  @override
+  String get lineOutputLabel => 'Output per hour';
+
+  @override
+  String get lineStations => 'Stations';
+
+  @override
+  String get lineChartHint =>
+      'Stations in group order, stacked by step. The dashed line marks the bottleneck that paces the line.';
+
+  @override
+  String lineWaiting(String time) {
+    return 'Waiting: $time';
+  }
+
+  @override
+  String lineShare(String share) {
+    return '$share of the line';
+  }
+
+  @override
+  String get lineNotMeasured => 'No complete cycles';
+
+  @override
+  String lineVsPrevious(String delta) {
+    return 'vs. previous revision: $delta';
+  }
 }
