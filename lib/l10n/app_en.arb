@@ -582,5 +582,12 @@
   "groupFullXlsx": "Excel (linked)",
   "groupFullXlsxHint": "Contents with links, line analysis with formulas, overview, one sheet per study",
   "groupCompactPdf": "PDF (compact)",
-  "groupCompactXlsx": "Excel (compact)"
+  "groupCompactXlsx": "Excel (compact)",
+  "addMachine": "Machine with fixed cycle time",
+  "addMachineHint": "Enter the average cycle time instead of measuring it",
+  "averageCycleTime": "Average cycle time",
+  "invalidTime": "Enter a time greater than 0",
+  "parallelToPrevious": "Parallel to the one above",
+  "setCycleTime": "Enter cycle time…",
+  "setCycleTimeHint": "Replaces the times of this study. The previous times are kept as a revision."
 }

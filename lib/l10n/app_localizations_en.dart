@@ -1039,4 +1039,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupCompactXlsx => 'Excel (compact)';
+
+  @override
+  String get addMachine => 'Machine with fixed cycle time';
+
+  @override
+  String get addMachineHint =>
+      'Enter the average cycle time instead of measuring it';
+
+  @override
+  String get averageCycleTime => 'Average cycle time';
+
+  @override
+  String get invalidTime => 'Enter a time greater than 0';
+
+  @override
+  String get parallelToPrevious => 'Parallel to the one above';
+
+  @override
+  String get setCycleTime => 'Enter cycle time…';
+
+  @override
+  String get setCycleTimeHint =>
+      'Replaces the times of this study. The previous times are kept as a revision.';
 }

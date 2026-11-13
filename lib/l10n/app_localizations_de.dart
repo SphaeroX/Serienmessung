@@ -1046,4 +1046,27 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get groupCompactXlsx => 'Excel (kompakt)';
+
+  @override
+  String get addMachine => 'Maschine mit fester Taktzeit';
+
+  @override
+  String get addMachineHint =>
+      'Durchschnittliche Taktzeit eintragen statt messen';
+
+  @override
+  String get averageCycleTime => 'Durchschnittliche Taktzeit';
+
+  @override
+  String get invalidTime => 'Eine Zeit größer als 0 eingeben';
+
+  @override
+  String get parallelToPrevious => 'Parallel zur vorherigen';
+
+  @override
+  String get setCycleTime => 'Taktzeit eintragen …';
+
+  @override
+  String get setCycleTimeHint =>
+      'Ersetzt die Zeiten dieser Studie. Die bisherigen Zeiten bleiben als Revision erhalten.';
 }

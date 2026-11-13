@@ -43,7 +43,7 @@ Stand: 2026-11-13 – **Erweiterung 4 läuft (Task_26–28: parallele Maschinen,
 | 23 | Backup v2, Screenshots & Doku | erledigt |
 | 24 | Linienbetrachtung der Gruppe | erledigt |
 | 25 | Gruppen-Report: Deckblatt, Inhaltsverzeichnis, verknüpftes Excel | erledigt |
-| 26 | Parallele Maschinen in der Gruppe | offen |
+| 26 | Parallele Maschinen in der Gruppe | erledigt |
 | 27 | Linie mit Parallelstationen und Ausfallrisiko | offen |
 | 28 | Reports mit Parallelstationen und Ausfallrisiko | offen |
 
@@ -98,6 +98,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_23] Backup v2:** Format-Version 2 (Gruppen, Reihenfolge, Revisionen, `recordedAt`), v1 bleibt importierbar. Neue Tabellen mit Studienbezug müssen in `BackupService` (Export, Import, Ersetzen, Validierung) und in `StudyRepository.copyStudy` ergänzt werden.
 - **[Task_24] Linienbetrachtung:** `LineAnalysis` (reines Dart) + `LineScreen` mit Yamazumi-Diagramm. Gruppendaten (Report und Linie) lädt einheitlich `loadGroupReport()`; Einheit = Standardeinheit der Einstellungen.
 - **[Task_25] Vollständiger Gruppen-Report:** `buildGroupReportPdf` (Deckblatt, klickbares Inhaltsverzeichnis mit Seitenzahlen über zwei Layout-Durchläufe, Lesezeichen, Linienkapitel) und `buildGroupReportXlsx` (Inhalt mit Hyperlinks, Linienblatt mit Formeln auf die Studienblätter, Rück-Links). Export-Menü der Gruppe: vollständig (Standard) und kompakt. Formeln wurden mit LibreOffice (`soffice --headless --convert-to csv`, alle Blätter) nachgerechnet.
+- **[Task_26] Parallele Maschinen:** Migration v11 `study.parallel` (parallel zum Gruppenmitglied davor). Maschinen mit fester Taktzeit sind Einfach-Studien mit genau einer Runde – keine neue `StudyMode`, damit alle Auswertungen, Exporte, Revisionen und das Backup ohne Sonderfälle funktionieren.
 
 ## Auffälligkeiten & Details
 

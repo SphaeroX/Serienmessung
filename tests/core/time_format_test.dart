@@ -65,4 +65,17 @@ void main() {
     expect(formatRatioDelta(0.05), '+5.0 %');
     expect(formatRatioDelta(-0.125, locale: 'de'), '-12,5 %');
   });
+
+  test('typed times are parsed in the given unit', () {
+    expect(parseTimeInput('40', TimeUnit.seconds), 40000000);
+    expect(parseTimeInput(' 42,5 ', TimeUnit.seconds), 42500000);
+    expect(parseTimeInput('1.5', TimeUnit.hm), 900000);
+    expect(parseTimeInput('100', TimeUnit.tmu), 3600000);
+    // The stopwatch format is typed as seconds.
+    expect(parseTimeInput('2', TimeUnit.stopwatch), 2000000);
+    expect(parseTimeInput('', TimeUnit.seconds), isNull);
+    expect(parseTimeInput('abc', TimeUnit.seconds), isNull);
+    expect(parseTimeInput('-3', TimeUnit.seconds), isNull);
+    expect(parseTimeInput('0', TimeUnit.seconds), isNull);
+  });
 }

@@ -87,6 +87,7 @@ class BackupService {
         'notes': s['notes'],
         'groupRef': s['group_id'],
         'groupPosition': s['group_position'],
+        'parallel': s['parallel'] == 1,
         'revision': s['revision'],
         'steps': [
           for (final st in steps)
@@ -250,6 +251,7 @@ class BackupService {
               ? 0
               : await position(groupId, s['groupPosition']),
           'revision': s['revision'] as int? ?? 1,
+          'parallel': groupId != null && s['parallel'] == true ? 1 : 0,
         });
         final stepIds = <Object?, int>{};
         for (final st in s['steps'] as List) {

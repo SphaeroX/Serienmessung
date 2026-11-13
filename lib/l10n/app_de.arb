@@ -295,5 +295,12 @@
   "groupFullXlsx": "Excel (verknüpft)",
   "groupFullXlsxHint": "Inhalt mit Links, Linienbetrachtung mit Formeln, Übersicht, ein Blatt je Studie",
   "groupCompactPdf": "PDF (kompakt)",
-  "groupCompactXlsx": "Excel (kompakt)"
+  "groupCompactXlsx": "Excel (kompakt)",
+  "addMachine": "Maschine mit fester Taktzeit",
+  "addMachineHint": "Durchschnittliche Taktzeit eintragen statt messen",
+  "averageCycleTime": "Durchschnittliche Taktzeit",
+  "invalidTime": "Eine Zeit größer als 0 eingeben",
+  "parallelToPrevious": "Parallel zur vorherigen",
+  "setCycleTime": "Taktzeit eintragen …",
+  "setCycleTimeHint": "Ersetzt die Zeiten dieser Studie. Die bisherigen Zeiten bleiben als Revision erhalten."
 }

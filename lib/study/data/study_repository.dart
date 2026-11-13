@@ -224,6 +224,7 @@ class StudyRepository {
       ..['created_at'] = now.millisecondsSinceEpoch
       ..['last_active_at'] = now.millisecondsSinceEpoch
       ..['group_id'] = groupId
+      ..['parallel'] = 0
       ..['group_position'] = groupId == null
           ? 0
           : await nextGroupPosition(txn, groupId);
@@ -369,6 +370,7 @@ class StudyRepository {
     groupId: r['group_id'] as int?,
     groupPosition: r['group_position'] as int? ?? 0,
     revision: r['revision'] as int? ?? 1,
+    parallel: (r['parallel'] as int? ?? 0) == 1,
   );
 
   static StepDefinition stepFromRow(Map<String, Object?> r) => StepDefinition(

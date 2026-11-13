@@ -33,6 +33,7 @@ class Study {
     this.groupId,
     this.groupPosition = 0,
     this.revision = 1,
+    this.parallel = false,
   });
 
   final int id;
@@ -64,6 +65,10 @@ class Study {
   /// Number of the current revision (measurement round); earlier rounds are
   /// archived as revisions.
   final int revision;
+
+  /// Works in parallel with the group member before it (same station of
+  /// the line, e.g. one of several identical machines).
+  final bool parallel;
 }
 
 /// One defined work step of a study.

@@ -67,11 +67,20 @@ class GroupRepository {
             : await StudyRepository.nextGroupPosition(txn, groupId);
         await txn.update(
           'study',
-          {'group_id': groupId, 'group_position': position},
+          {'group_id': groupId, 'group_position': position, 'parallel': 0},
           where: 'id = ?',
           whereArgs: [studyId],
         );
       });
+
+  /// Marks study [studyId] as working in parallel with the group member
+  /// before it.
+  Future<void> setParallel(int studyId, bool parallel) => _db.db.update(
+    'study',
+    {'parallel': parallel ? 1 : 0},
+    where: 'id = ?',
+    whereArgs: [studyId],
+  );
 
   /// Sets the group order to [studyIdsInOrder].
   Future<void> reorder(int groupId, List<int> studyIdsInOrder) =>

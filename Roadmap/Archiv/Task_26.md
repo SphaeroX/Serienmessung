@@ -53,8 +53,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
 
 ## Offene Fragen / Annahmen
 
@@ -68,15 +68,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Migration v11, `Study.parallel`, `GroupRepository.setParallel` (Verschieben/Kopieren setzen zurück), Backup-Feld `parallel`; `stationLabels`/`stationGroups`; `MachineService` (`createMachine`, `setCycleTime`), `parseTimeInput`/`inputUnitLabel`; Gruppen-Bildschirm: Menüpunkte "Parallel zur vorherigen" (ab dem 2. Mitglied) und "Taktzeit eintragen …" (nur Einfach-Studien), Hinzufügen "Maschine mit fester Taktzeit" (Name, durchschnittliche Taktzeit in der Standardeinheit, Schalter parallel), Stationsnummern 2a/2b, eingerückte und farbig umrandete Parallelmaschinen.
+- **Learnings & Stolpersteine:** Keine neuen.
+- **Wichtige Entscheidungen und ihre Gründe:** Feste Taktzeit = eine Runde einer Einfach-Studie (siehe README). Parallel-Flag des ersten Mitglieds wird ignoriert (Bezeichnung "1a" erst, wenn das zweite parallel ist). Backup-Format bleibt v2, `parallel` ist optional (ältere App-Versionen ignorieren es).
+- **Auswirkungen auf Folge-Tasks:** Task_27 bildet Stationen über `stationGroups` aus `Study.parallel`.
+- **Hinweise zu Tests und Befehlen:** `tests/group/data/parallel_machines_test.dart`, `tests/group/presentation/parallel_machines_screen_test.dart`, `parseTimeInput` in `tests/core/time_format_test.dart`.

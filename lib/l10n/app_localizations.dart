@@ -1873,6 +1873,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Excel (compact)'**
   String get groupCompactXlsx;
+
+  /// No description provided for @addMachine.
+  ///
+  /// In en, this message translates to:
+  /// **'Machine with fixed cycle time'**
+  String get addMachine;
+
+  /// No description provided for @addMachineHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the average cycle time instead of measuring it'**
+  String get addMachineHint;
+
+  /// No description provided for @averageCycleTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Average cycle time'**
+  String get averageCycleTime;
+
+  /// No description provided for @invalidTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a time greater than 0'**
+  String get invalidTime;
+
+  /// No description provided for @parallelToPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Parallel to the one above'**
+  String get parallelToPrevious;
+
+  /// No description provided for @setCycleTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter cycle time…'**
+  String get setCycleTime;
+
+  /// No description provided for @setCycleTimeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Replaces the times of this study. The previous times are kept as a revision.'**
+  String get setCycleTimeHint;
 }
 
 class _AppLocalizationsDelegate

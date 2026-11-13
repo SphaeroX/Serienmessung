@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../group/data/group_repository.dart';
+import '../group/data/machine_service.dart';
 import '../group/domain/study_group.dart';
 import '../recording/data/measurement_repository.dart';
 import '../recording/data/run_state_repository.dart';
@@ -40,6 +41,14 @@ final runStateRepositoryProvider = Provider<RunStateRepository>(
 
 final groupRepositoryProvider = Provider<GroupRepository>(
   (ref) => GroupRepository(ref.watch(databaseProvider)),
+);
+
+/// Machines with a typed (not measured) cycle time.
+final machineServiceProvider = Provider<MachineService>(
+  (ref) => MachineService(
+    ref.watch(databaseProvider),
+    now: ref.watch(wallClockProvider),
+  ),
 );
 
 /// Groups for the group list. Invalidate after changes.

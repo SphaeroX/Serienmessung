@@ -82,6 +82,24 @@ String formatRatioDelta(double ratio, {String locale = 'en'}) {
   return '$sign${formatNumber(ratio.abs() * 100, 1, locale: locale)} %';
 }
 
+/// Parses a typed time (decimal point or comma) in [unit] to microseconds;
+/// the stopwatch format is typed as seconds. Null unless it is a number
+/// greater than 0.
+int? parseTimeInput(String text, TimeUnit unit) {
+  final value = double.tryParse(text.trim().replaceAll(',', '.'));
+  if (value == null || value.isNaN || value <= 0) return null;
+  final perUnit = switch (unit) {
+    TimeUnit.hm => 600000,
+    TimeUnit.tmu => 36000,
+    TimeUnit.seconds || TimeUnit.stopwatch => 1000000,
+  };
+  return (value * perUnit).round();
+}
+
+/// Unit label for typed times (the stopwatch format is typed as seconds).
+String inputUnitLabel(TimeUnit unit) =>
+    unit == TimeUnit.stopwatch ? TimeUnit.seconds.label : unit.label;
+
 /// Formats a plain number with fixed [decimals] for [locale].
 String formatNumber(double value, int decimals, {String locale = 'en'}) {
   final f = NumberFormat.decimalPatternDigits(

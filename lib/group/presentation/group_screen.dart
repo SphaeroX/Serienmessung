@@ -9,7 +9,10 @@ import '../../study/presentation/create_study_screen.dart';
 import '../../study/presentation/mode_texts.dart';
 import '../../study/presentation/study_list_screen.dart' show OpenStudy;
 import '../domain/study_group.dart';
+import '../../settings/presentation/settings_controller.dart';
+import '../domain/stations.dart';
 import 'group_dialogs.dart';
+import 'machine_dialogs.dart';
 import 'line_screen.dart';
 
 /// One group: its studies in order (drag to reorder), adding, moving,
@@ -24,7 +27,15 @@ class GroupScreen extends ConsumerStatefulWidget {
   ConsumerState<GroupScreen> createState() => _GroupScreenState();
 }
 
-enum _StudyAction { moveUp, moveDown, moveToGroup, copyToGroup, remove }
+enum _StudyAction {
+  moveUp,
+  moveDown,
+  parallel,
+  cycleTime,
+  moveToGroup,
+  copyToGroup,
+  remove,
+}
 
 enum _GroupAction { edit, delete }
 
@@ -90,6 +101,19 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         if (index == ids.length - 1) return;
         ids.insert(index + 1, ids.removeAt(index));
         await _reorder(ids);
+      case _StudyAction.parallel:
+        await ref
+            .read(groupRepositoryProvider)
+            .setParallel(study.id, !study.parallel);
+        await _changed();
+      case _StudyAction.cycleTime:
+        final micros = await showCycleTimeDialog(
+          context,
+          ref.read(settingsProvider).defaultUnit,
+        );
+        if (micros == null) return;
+        await ref.read(machineServiceProvider).setCycleTime(study.id, micros);
+        await _changed();
       case _StudyAction.moveToGroup:
         if (await moveStudyToGroup(context, ref, study)) await _changed();
       case _StudyAction.copyToGroup:
@@ -167,6 +191,13 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
               onTap: () => Navigator.pop(sheet, 'new'),
             ),
             ListTile(
+              key: const Key('addMachine'),
+              leading: const Icon(Icons.precision_manufacturing_outlined),
+              title: Text(l.addMachine),
+              subtitle: Text(l.addMachineHint),
+              onTap: () => Navigator.pop(sheet, 'machine'),
+            ),
+            ListTile(
               key: const Key('addExistingStudies'),
               leading: const Icon(Icons.playlist_add),
               title: Text(l.addExistingStudies),
@@ -180,6 +211,25 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     if (!mounted) return;
     if (choice == 'new') await _addNew();
     if (choice == 'existing') await _addExisting();
+    if (choice == 'machine') await _addMachine();
+  }
+
+  Future<void> _addMachine() async {
+    final fields = await showMachineDialog(
+      context,
+      ref.read(settingsProvider).defaultUnit,
+      canBeParallel: _members.isNotEmpty,
+    );
+    if (fields == null) return;
+    await ref
+        .read(machineServiceProvider)
+        .createMachine(
+          name: fields.name,
+          groupId: widget.groupId,
+          cycleMicros: fields.cycleMicros,
+          parallel: fields.parallel,
+        );
+    await _changed();
   }
 
   Future<void> _addNew() async {
@@ -284,24 +334,30 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                   child: Text(l.reorderHint, style: theme.textTheme.bodySmall),
                 ),
-                Expanded(
-                  child: ReorderableListView.builder(
-                    buildDefaultDragHandles: false,
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
-                    itemCount: _members.length,
-                    onReorderItem: _onReorder,
-                    itemBuilder: (context, i) => _MemberTile(
-                      key: ValueKey(_members[i].study.id),
-                      index: i,
-                      count: _members.length,
-                      summary: _members[i],
-                      onTap: () => _open(_members[i].study.id),
-                      onAction: (a) => _studyAction(a, i),
-                    ),
-                  ),
-                ),
+                Expanded(child: _list()),
               ],
             ),
+    );
+  }
+
+  Widget _list() {
+    final labels = stationLabels([for (final m in _members) m.study.parallel]);
+    return ReorderableListView.builder(
+      buildDefaultDragHandles: false,
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
+      itemCount: _members.length,
+      onReorderItem: _onReorder,
+      itemBuilder: (context, i) => _MemberTile(
+        key: ValueKey(_members[i].study.id),
+        index: i,
+        count: _members.length,
+        label: labels[i],
+        // Parallel machines carry a letter ("2a").
+        inStation: RegExp('[a-z]').hasMatch(labels[i]),
+        summary: _members[i],
+        onTap: () => _open(_members[i].study.id),
+        onAction: (a) => _studyAction(a, i),
+      ),
     );
   }
 }
@@ -311,6 +367,8 @@ class _MemberTile extends StatelessWidget {
     super.key,
     required this.index,
     required this.count,
+    required this.label,
+    required this.inStation,
     required this.summary,
     required this.onTap,
     required this.onAction,
@@ -318,6 +376,12 @@ class _MemberTile extends StatelessWidget {
 
   final int index;
   final int count;
+
+  /// Station label ("2" or "2b" for parallel machines).
+  final String label;
+
+  /// Part of a station with several parallel machines.
+  final bool inStation;
   final StudySummary summary;
   final VoidCallback onTap;
   final ValueChanged<_StudyAction> onAction;
@@ -326,8 +390,19 @@ class _MemberTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final study = summary.study;
+    final theme = Theme.of(context);
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      margin: EdgeInsets.only(
+        top: 4,
+        bottom: 4,
+        left: study.parallel && index > 0 ? 24 : 0,
+      ),
+      shape: inStation
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: theme.colorScheme.tertiary, width: 1.5),
+            )
+          : null,
       child: ListTile(
         onTap: onTap,
         leading: ReorderableDragStartListener(
@@ -338,7 +413,7 @@ class _MemberTile extends StatelessWidget {
           ),
         ),
         title: Text(
-          '${index + 1}. ${study.name}',
+          '$label. ${study.name}',
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
@@ -364,6 +439,19 @@ class _MemberTile extends StatelessWidget {
                 key: const Key('moveDown'),
                 value: _StudyAction.moveDown,
                 child: Text(l.moveDown),
+              ),
+            if (index > 0)
+              CheckedPopupMenuItem(
+                key: const Key('toggleParallel'),
+                value: _StudyAction.parallel,
+                checked: study.parallel,
+                child: Text(l.parallelToPrevious),
+              ),
+            if (study.mode == StudyMode.simple)
+              PopupMenuItem(
+                key: const Key('setCycleTime'),
+                value: _StudyAction.cycleTime,
+                child: Text(l.setCycleTime),
               ),
             PopupMenuItem(
               key: const Key('moveToGroup'),

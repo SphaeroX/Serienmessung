@@ -145,6 +145,12 @@ final List<Migration> migrations = [
       'CREATE INDEX idx_revision_study ON revision(study_id, number)',
     );
   },
+  // v11: group members working in parallel with the member before them.
+  (db) async {
+    await db.execute(
+      'ALTER TABLE study ADD COLUMN parallel INTEGER NOT NULL DEFAULT 0',
+    );
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.
