@@ -78,4 +78,12 @@ void main() {
     expect(parseTimeInput('-3', TimeUnit.seconds), isNull);
     expect(parseTimeInput('0', TimeUnit.seconds), isNull);
   });
+
+  test('long durations are written in hours, minutes and seconds', () {
+    expect(formatDuration(45 * 1000000), '45 s');
+    expect(formatDuration(750 * 1000000), '12 min 30 s');
+    expect(formatDuration(21000 * 1000000), '5 h 50 min');
+    expect(formatDuration(3600 * 1000000), '1 h');
+    expect(formatDuration(0), '0 s');
+  });
 }

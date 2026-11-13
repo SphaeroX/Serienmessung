@@ -648,5 +648,85 @@
         "type": "String"
       }
     }
+  },
+  "shiftLength": "Shift length",
+  "failureDuration": "Assumed failure duration",
+  "simulation": "Simulation",
+  "simulationHint": "Plays the line through with the real cycle times: parallel machines share the work, a part waits when the next station is busy, buffers store parts on a jam and empty themselves again.",
+  "simulationPeriod": "Period",
+  "shift": "Shift",
+  "custom": "Custom",
+  "hoursLabel": "Hours",
+  "simulationFailure": "Failure",
+  "noFailure": "No failure",
+  "failureStart": "Start after [h]",
+  "failureStartHint": "default: after a quarter",
+  "failureDurationMinutes": "Duration [min]",
+  "runSimulation": "Simulate",
+  "simPartsNormal": "Parts without failure",
+  "simPartsFailure": "Parts with failure",
+  "simLost": "Lost parts",
+  "simLostWithoutBuffers": "Lost without buffers",
+  "buffersSave": "The buffers save {count} parts.",
+  "@buffersSave": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "bufferMaxLevel": "Max. fill {max}, at the end {end}",
+  "@bufferMaxLevel": {
+    "placeholders": {
+      "max": {
+        "type": "int"
+      },
+      "end": {
+        "type": "int"
+      }
+    }
+  },
+  "bufferMoves": "Stored {stores} ×, retrieved {retrieves} ×",
+  "@bufferMoves": {
+    "placeholders": {
+      "stores": {
+        "type": "int"
+      },
+      "retrieves": {
+        "type": "int"
+      }
+    }
+  },
+  "bufferHandling": "Handling time {time}",
+  "@bufferHandling": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "simUtilization": "Utilization {value}",
+  "@simUtilization": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "simBlocked": "blocked {time}",
+  "@simBlocked": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "simDown": "down {time}",
+  "@simDown": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   }
 }

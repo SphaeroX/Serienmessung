@@ -1144,4 +1144,94 @@ class AppLocalizationsEn extends AppLocalizations {
   String bufferTimes(String store, String retrieve) {
     return 'In $store · out $retrieve';
   }
+
+  @override
+  String get shiftLength => 'Shift length';
+
+  @override
+  String get failureDuration => 'Assumed failure duration';
+
+  @override
+  String get simulation => 'Simulation';
+
+  @override
+  String get simulationHint =>
+      'Plays the line through with the real cycle times: parallel machines share the work, a part waits when the next station is busy, buffers store parts on a jam and empty themselves again.';
+
+  @override
+  String get simulationPeriod => 'Period';
+
+  @override
+  String get shift => 'Shift';
+
+  @override
+  String get custom => 'Custom';
+
+  @override
+  String get hoursLabel => 'Hours';
+
+  @override
+  String get simulationFailure => 'Failure';
+
+  @override
+  String get noFailure => 'No failure';
+
+  @override
+  String get failureStart => 'Start after [h]';
+
+  @override
+  String get failureStartHint => 'default: after a quarter';
+
+  @override
+  String get failureDurationMinutes => 'Duration [min]';
+
+  @override
+  String get runSimulation => 'Simulate';
+
+  @override
+  String get simPartsNormal => 'Parts without failure';
+
+  @override
+  String get simPartsFailure => 'Parts with failure';
+
+  @override
+  String get simLost => 'Lost parts';
+
+  @override
+  String get simLostWithoutBuffers => 'Lost without buffers';
+
+  @override
+  String buffersSave(int count) {
+    return 'The buffers save $count parts.';
+  }
+
+  @override
+  String bufferMaxLevel(int max, int end) {
+    return 'Max. fill $max, at the end $end';
+  }
+
+  @override
+  String bufferMoves(int stores, int retrieves) {
+    return 'Stored $stores ×, retrieved $retrieves ×';
+  }
+
+  @override
+  String bufferHandling(String time) {
+    return 'Handling time $time';
+  }
+
+  @override
+  String simUtilization(String value) {
+    return 'Utilization $value';
+  }
+
+  @override
+  String simBlocked(String time) {
+    return 'blocked $time';
+  }
+
+  @override
+  String simDown(String time) {
+    return 'down $time';
+  }
 }

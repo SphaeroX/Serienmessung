@@ -1151,4 +1151,94 @@ class AppLocalizationsDe extends AppLocalizations {
   String bufferTimes(String store, String retrieve) {
     return 'Ein $store · aus $retrieve';
   }
+
+  @override
+  String get shiftLength => 'Schichtlänge';
+
+  @override
+  String get failureDuration => 'Angenommene Störungsdauer';
+
+  @override
+  String get simulation => 'Simulation';
+
+  @override
+  String get simulationHint =>
+      'Spielt die Linie mit den realen Taktzeiten durch: parallele Maschinen teilen sich die Arbeit, ein Teil wartet, wenn die nächste Station belegt ist, Puffer lagern bei Stau ein und leeren sich wieder.';
+
+  @override
+  String get simulationPeriod => 'Zeitraum';
+
+  @override
+  String get shift => 'Schicht';
+
+  @override
+  String get custom => 'Frei';
+
+  @override
+  String get hoursLabel => 'Stunden';
+
+  @override
+  String get simulationFailure => 'Störung';
+
+  @override
+  String get noFailure => 'Keine Störung';
+
+  @override
+  String get failureStart => 'Beginn nach [h]';
+
+  @override
+  String get failureStartHint => 'Standard: nach einem Viertel';
+
+  @override
+  String get failureDurationMinutes => 'Dauer [min]';
+
+  @override
+  String get runSimulation => 'Simulieren';
+
+  @override
+  String get simPartsNormal => 'Teile ohne Störung';
+
+  @override
+  String get simPartsFailure => 'Teile mit Störung';
+
+  @override
+  String get simLost => 'Verlorene Teile';
+
+  @override
+  String get simLostWithoutBuffers => 'Verloren ohne Puffer';
+
+  @override
+  String buffersSave(int count) {
+    return 'Die Puffer retten $count Teile.';
+  }
+
+  @override
+  String bufferMaxLevel(int max, int end) {
+    return 'Max. Füllstand $max, am Ende $end';
+  }
+
+  @override
+  String bufferMoves(int stores, int retrieves) {
+    return '$stores × eingelagert, $retrieves × ausgelagert';
+  }
+
+  @override
+  String bufferHandling(String time) {
+    return 'Handlingzeit $time';
+  }
+
+  @override
+  String simUtilization(String value) {
+    return 'Auslastung $value';
+  }
+
+  @override
+  String simBlocked(String time) {
+    return 'blockiert $time';
+  }
+
+  @override
+  String simDown(String time) {
+    return 'Ausfall $time';
+  }
 }

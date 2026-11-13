@@ -17,6 +17,7 @@ import 'package:cyclescope/group/data/group_repository.dart';
 import 'package:cyclescope/group/data/machine_service.dart';
 import 'package:cyclescope/group/presentation/group_screen.dart';
 import 'package:cyclescope/group/presentation/line_screen.dart';
+import 'package:cyclescope/group/presentation/simulation_screen.dart';
 import 'package:cyclescope/l10n/app_localizations.dart';
 import 'package:cyclescope/recording/data/measurement_repository.dart';
 import 'package:cyclescope/recording/domain/measurement.dart';
@@ -428,12 +429,21 @@ void main() {
         // Three identical test benches working in parallel.
         final machines = MachineService(db, now: () => DateTime(2026, 11, 9));
         for (var i = 1; i <= 3; i++) {
-          await machines.createMachine(
+          final bench = await machines.createMachine(
             name: '${lang == 'de' ? 'Prüfstand' : 'Test bench'} $i',
             groupId: lineId,
             cycleMicros: 95 * _s,
             parallel: i > 1,
           );
+          // A buffer in front of the test benches.
+          if (i == 1) {
+            await groups.setBuffer(
+              bench,
+              capacity: 40,
+              storeMicros: 20 * _s,
+              retrieveMicros: 15 * _s,
+            );
+          }
         }
         await groups.moveToGroup(timer, lineId);
       });
@@ -443,6 +453,17 @@ void main() {
       await show(tester, lang, LineScreen(groupId: lineId));
       await settle(tester);
       await shot(tester, lang, '10_line');
+
+      // Simulation: a test bench fails for 30 minutes during a shift.
+      await show(tester, lang, SimulationScreen(groupId: lineId));
+      await settle(tester);
+      await tester.tap(find.byKey(const Key('failureMachine')));
+      await pumpFrames(tester);
+      await tester.tap(find.textContaining('3').last);
+      await pumpFrames(tester);
+      await tester.tap(find.byKey(const Key('runSimulation')));
+      await settle(tester);
+      await shot(tester, lang, '11_simulation');
 
       await show(
         tester,

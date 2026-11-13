@@ -50,8 +50,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
 
 ## Offene Fragen / Annahmen
 
@@ -65,15 +65,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `AppSettings.shiftMinutes/failureMinutes` (+ Auswahl in den Einstellungen), `SimulationScreen` (Zeitraum Schicht/24 h/frei, Störung: Maschine, Beginn [h], Dauer [min], Knopf "Simulieren"; Kacheln Teile ohne/mit Störung, verloren, verloren ohne Puffer, "Die Puffer retten n Teile"; Pufferkarten; Stationsauslastung), Linien-Bildschirm mit Simulationsknopf und Pufferkarten zwischen den Stationen, `formatDuration`. Screenshot-Szene `11_simulation`, Puffer vor den Prüfständen in der Gruppen-Szene.
+- **Learnings & Stolpersteine:** HM-Werte für Stunden-Dauern sind unlesbar – Sichtprüfung des Screenshots hat das gezeigt.
+- **Wichtige Entscheidungen und ihre Gründe:** Simulation läuft per Knopf (nicht bei jeder Eingabe), Ergebnis direkt im Bildschirm; Störbeginn ohne Eingabe = ein Viertel des Zeitraums (eingeschwungene Linie).
+- **Auswirkungen auf Folge-Tasks:** Task_32 nutzt `shiftMinutes`/`failureMinutes` und `failureScenarios`.
+- **Hinweise zu Tests und Befehlen:** `tests/group/presentation/simulation_screen_test.dart` (Einstellungen, Schicht mit Störung, 24 h, freier Zeitraum, Linien-Bildschirm), `formatDuration` in `tests/core/time_format_test.dart`.

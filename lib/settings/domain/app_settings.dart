@@ -20,6 +20,8 @@ class AppSettings {
     this.keepScreenOn = true,
     this.notifications = true,
     this.staleDays = 10,
+    this.shiftMinutes = 480,
+    this.failureMinutes = 30,
   });
 
   final ThemeChoice theme;
@@ -38,6 +40,15 @@ class AppSettings {
   /// offers a new measurement (revision); 0 = never ask.
   final int staleDays;
 
+  /// Length of a shift for the line simulation (minutes).
+  final int shiftMinutes;
+
+  /// Assumed duration of a machine failure for the failure risk (minutes).
+  final int failureMinutes;
+
+  static const shiftChoices = [360, 420, 450, 480, 540, 600, 720];
+  static const failureChoices = [5, 10, 15, 30, 45, 60, 120, 240];
+
   /// Choices for [staleDays] in the settings.
   static const staleDayChoices = [0, 3, 7, 10, 14, 30, 60, 90, 180, 365];
 
@@ -55,6 +66,8 @@ class AppSettings {
     bool? keepScreenOn,
     bool? notifications,
     int? staleDays,
+    int? shiftMinutes,
+    int? failureMinutes,
   }) => AppSettings(
     theme: theme ?? this.theme,
     language: language ?? this.language,
@@ -66,6 +79,8 @@ class AppSettings {
     keepScreenOn: keepScreenOn ?? this.keepScreenOn,
     notifications: notifications ?? this.notifications,
     staleDays: staleDays ?? this.staleDays,
+    shiftMinutes: shiftMinutes ?? this.shiftMinutes,
+    failureMinutes: failureMinutes ?? this.failureMinutes,
   );
 
   Map<String, String> toMap() => {
@@ -79,6 +94,8 @@ class AppSettings {
     'keepScreenOn': '$keepScreenOn',
     'notifications': '$notifications',
     'staleDays': '$staleDays',
+    'shiftMinutes': '$shiftMinutes',
+    'failureMinutes': '$failureMinutes',
   };
 
   /// Reads stored values; unknown or missing keys fall back to defaults.
@@ -89,6 +106,11 @@ class AppSettings {
     bool flag(String key, bool fallback) =>
         m[key] == null ? fallback : m[key] == 'true';
     final hold = int.tryParse(m['holdThresholdMs'] ?? '') ?? d.holdThresholdMs;
+    int positive(String key, int fallback) {
+      final v = int.tryParse(m[key] ?? '');
+      return v == null || v <= 0 ? fallback : v;
+    }
+
     return AppSettings(
       theme: pick(ThemeChoice.values, m['theme'], d.theme),
       language: pick(LanguageChoice.values, m['language'], d.language),
@@ -103,6 +125,8 @@ class AppSettings {
       holdThresholdMs: hold.clamp(minHoldMs, maxHoldMs),
       keepScreenOn: flag('keepScreenOn', d.keepScreenOn),
       notifications: flag('notifications', d.notifications),
+      shiftMinutes: positive('shiftMinutes', d.shiftMinutes),
+      failureMinutes: positive('failureMinutes', d.failureMinutes),
       staleDays: (int.tryParse(m['staleDays'] ?? '') ?? d.staleDays).clamp(
         0,
         3650,

@@ -2041,6 +2041,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'In {store} · out {retrieve}'**
   String bufferTimes(String store, String retrieve);
+
+  /// No description provided for @shiftLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Shift length'**
+  String get shiftLength;
+
+  /// No description provided for @failureDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Assumed failure duration'**
+  String get failureDuration;
+
+  /// No description provided for @simulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulation'**
+  String get simulation;
+
+  /// No description provided for @simulationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Plays the line through with the real cycle times: parallel machines share the work, a part waits when the next station is busy, buffers store parts on a jam and empty themselves again.'**
+  String get simulationHint;
+
+  /// No description provided for @simulationPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get simulationPeriod;
+
+  /// No description provided for @shift.
+  ///
+  /// In en, this message translates to:
+  /// **'Shift'**
+  String get shift;
+
+  /// No description provided for @custom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get custom;
+
+  /// No description provided for @hoursLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours'**
+  String get hoursLabel;
+
+  /// No description provided for @simulationFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Failure'**
+  String get simulationFailure;
+
+  /// No description provided for @noFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'No failure'**
+  String get noFailure;
+
+  /// No description provided for @failureStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start after [h]'**
+  String get failureStart;
+
+  /// No description provided for @failureStartHint.
+  ///
+  /// In en, this message translates to:
+  /// **'default: after a quarter'**
+  String get failureStartHint;
+
+  /// No description provided for @failureDurationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration [min]'**
+  String get failureDurationMinutes;
+
+  /// No description provided for @runSimulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Simulate'**
+  String get runSimulation;
+
+  /// No description provided for @simPartsNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Parts without failure'**
+  String get simPartsNormal;
+
+  /// No description provided for @simPartsFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Parts with failure'**
+  String get simPartsFailure;
+
+  /// No description provided for @simLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost parts'**
+  String get simLost;
+
+  /// No description provided for @simLostWithoutBuffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost without buffers'**
+  String get simLostWithoutBuffers;
+
+  /// No description provided for @buffersSave.
+  ///
+  /// In en, this message translates to:
+  /// **'The buffers save {count} parts.'**
+  String buffersSave(int count);
+
+  /// No description provided for @bufferMaxLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Max. fill {max}, at the end {end}'**
+  String bufferMaxLevel(int max, int end);
+
+  /// No description provided for @bufferMoves.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored {stores} ×, retrieved {retrieves} ×'**
+  String bufferMoves(int stores, int retrieves);
+
+  /// No description provided for @bufferHandling.
+  ///
+  /// In en, this message translates to:
+  /// **'Handling time {time}'**
+  String bufferHandling(String time);
+
+  /// No description provided for @simUtilization.
+  ///
+  /// In en, this message translates to:
+  /// **'Utilization {value}'**
+  String simUtilization(String value);
+
+  /// No description provided for @simBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'blocked {time}'**
+  String simBlocked(String time);
+
+  /// No description provided for @simDown.
+  ///
+  /// In en, this message translates to:
+  /// **'down {time}'**
+  String simDown(String time);
 }
 
 class _AppLocalizationsDelegate

@@ -82,6 +82,18 @@ String formatRatioDelta(double ratio, {String locale = 'en'}) {
   return '$sign${formatNumber(ratio.abs() * 100, 1, locale: locale)} %';
 }
 
+/// Long durations for people: "45 s", "12 min 30 s", "5 h 50 min" (the two
+/// largest parts, rounded down to whole seconds).
+String formatDuration(int micros) {
+  final total = micros ~/ 1000000;
+  final h = total ~/ 3600;
+  final m = (total % 3600) ~/ 60;
+  final sec = total % 60;
+  if (h > 0) return m == 0 ? '$h h' : '$h h $m min';
+  if (m > 0) return sec == 0 ? '$m min' : '$m min $sec s';
+  return '$sec s';
+}
+
 /// Parses a typed time (decimal point or comma) in [unit] to microseconds;
 /// the stopwatch format is typed as seconds. Null unless it is a number
 /// greater than 0.

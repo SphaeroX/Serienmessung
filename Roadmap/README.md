@@ -48,7 +48,7 @@ Stand: 2026-11-13 – **Erweiterung 5 läuft (Task_29–32: Puffer, Simulation).
 | 28 | Reports mit Parallelstationen und Ausfallrisiko | erledigt |
 | 29 | Puffer in der Gruppe | erledigt |
 | 30 | Simulation der Linie mit Puffern und Störungen | erledigt |
-| 31 | Simulationsbildschirm | offen |
+| 31 | Simulationsbildschirm | erledigt |
 | 32 | Reports mit Puffern und simuliertem Ausfallrisiko | offen |
 
 Status ist `offen`, `läuft` (Datei trägt das Präfix `RUN_`) oder `erledigt` (Datei liegt in `Archiv/`). Die Tabelle wird beim Archivieren eines Tasks aktualisiert.
@@ -107,6 +107,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_28] Reports:** Excel-Linienblatt stationsweise mit Formel 1/(Σ 1/t) für Parallelstationen; Blatt/Kapitel "Ausfallrisiko" (`RiskReportLabels`) – in der App nur, wenn die Linie eine Parallelstation hat (ein bestehender UI-Test legt die Blattliste ohne Parallelstation fest; immer anzeigen bräuchte die Freigabe, diesen Test anzupassen).
 - **[Task_29] Puffer:** Migration v12; Puffer liegt am ersten Mitglied der Station *dahinter* (wandert beim Umsortieren mit). Parallel schalten, Verschieben und Kopieren entfernen ihn.
 - **[Task_30] Simulation:** `LineSimulation` (reines Dart). Pufferregel: Einlagern nur bei echtem Stau (Station länger belegt als die Einlagerzeit), Auslagern auf einen Bereitstellplatz vor der Station, parallel zur Station. Langsame Ein-/Auslagerzeiten begrenzen den Nutzen eines Puffers – das zeigt die Simulation bewusst.
+- **[Task_31] Simulationsbildschirm:** Einstellungen `shiftMinutes` (Standard 480) und `failureMinutes` (Standard 30) – Task_32 nutzt beide für den Report. Lange Dauern mit `formatDuration` ("5 h 50 min"), nicht in HM.
 
 ## Auffälligkeiten & Details
 

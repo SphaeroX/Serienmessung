@@ -29,6 +29,11 @@ class SettingsScreen extends ConsumerWidget {
     ThemeChoice.dark => l.themeDark,
   };
 
+  /// Minutes as hours ("8 h", "7.5 h").
+  static String _hours(int minutes) => minutes % 60 == 0
+      ? '${minutes ~/ 60} h'
+      : '${(minutes / 60).toStringAsFixed(1)} h';
+
   String _staleLabel(AppLocalizations l, int days) =>
       days == 0 ? l.never : l.staleDaysValue(days);
 
@@ -215,6 +220,38 @@ class SettingsScreen extends ConsumerWidget {
                 (d) => _staleLabel(l, d),
               );
               if (v != null) ctrl.update((x) => x.copyWith(staleDays: v));
+            },
+          ),
+          ListTile(
+            key: const Key('shiftLengthTile'),
+            leading: const Icon(Icons.schedule),
+            title: Text(l.shiftLength),
+            subtitle: Text(_hours(s.shiftMinutes)),
+            onTap: () async {
+              final v = await _choose<int>(
+                context,
+                l.shiftLength,
+                AppSettings.shiftChoices,
+                s.shiftMinutes,
+                _hours,
+              );
+              if (v != null) ctrl.update((x) => x.copyWith(shiftMinutes: v));
+            },
+          ),
+          ListTile(
+            key: const Key('failureDurationTile'),
+            leading: const Icon(Icons.build_circle_outlined),
+            title: Text(l.failureDuration),
+            subtitle: Text('${s.failureMinutes} min'),
+            onTap: () async {
+              final v = await _choose<int>(
+                context,
+                l.failureDuration,
+                AppSettings.failureChoices,
+                s.failureMinutes,
+                (m) => '$m min',
+              );
+              if (v != null) ctrl.update((x) => x.copyWith(failureMinutes: v));
             },
           ),
           header(l.data),

@@ -7,6 +7,7 @@ import '../../export/presentation/export_menu.dart';
 import '../../l10n/app_localizations.dart';
 import '../domain/failure_risk.dart';
 import '../domain/line_analysis.dart';
+import 'simulation_screen.dart';
 
 /// The studies of a group looked at as one line: key figures, a stacked bar
 /// chart (yamazumi) of the stations in group order and the station list.
@@ -51,6 +52,18 @@ class _LineScreenState extends ConsumerState<LineScreen> {
     final line = _line;
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          IconButton(
+            key: const Key('simulationButton'),
+            tooltip: l.simulation,
+            icon: const Icon(Icons.play_circle_outline),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => SimulationScreen(groupId: widget.groupId),
+              ),
+            ),
+          ),
+        ],
         title: Text(
           input == null
               ? l.lineAnalysis
@@ -184,7 +197,24 @@ class _LineBody extends StatelessWidget {
         ],
         const SizedBox(height: 16),
         Text(l.lineStations, style: theme.textTheme.titleMedium),
-        for (final st in line.stations)
+        for (final st in line.stations) ...[
+          if (st.bufferBefore != null)
+            Card(
+              key: Key('lineBuffer_${st.position}'),
+              margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 32),
+              color: theme.colorScheme.secondaryContainer,
+              child: ListTile(
+                dense: true,
+                leading: const Icon(Icons.inventory_2_outlined),
+                title: Text(l.bufferPlaces(st.bufferBefore!.capacity)),
+                subtitle: Text(
+                  l.bufferTimes(
+                    t(st.bufferBefore!.storeMicros.toDouble()),
+                    t(st.bufferBefore!.retrieveMicros.toDouble()),
+                  ),
+                ),
+              ),
+            ),
           Card(
             margin: const EdgeInsets.symmetric(vertical: 4),
             shape: st.isBottleneck
@@ -237,6 +267,7 @@ class _LineBody extends StatelessWidget {
                     ),
             ),
           ),
+        ],
         ..._risk(FailureRisk.of(line), locale),
       ],
     );
