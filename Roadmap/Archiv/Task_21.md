@@ -50,8 +50,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
 
 ## Offene Fragen / Annahmen
 
@@ -65,15 +65,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `AppSettings.staleDays` (+ `staleDayChoices`), Einstellungs-Kachel "Neue Messung vorschlagen"; `isMeasurementStale`/`daysSince` (`lib/revision/domain/staleness.dart`); `offerNewRevisionIfStale` (`lib/revision/presentation/stale_prompt.dart`), aufgerufen in `openStudy`. Dialog "Messung ist N Tage alt" mit "Fortsetzen" / "Neue Messung" (nicht wegklickbar).
+- **Learnings & Stolpersteine:** Für Widget-Tests von `openStudy` reicht ein `Builder` mit Knopf; `RecordingScreen` braucht `usePhoneSize` und `pumpFrames` statt `pumpAndSettle`.
+- **Wichtige Entscheidungen und ihre Gründe:** "Älter als X Tage" streng (genau X Tage → keine Frage). Keine Frage bei Video-Studien, laufender Aufnahme oder ohne Zeiten. "Neue Messung" archiviert die Zeiten als Revision (siehe Task_20) statt sie zu löschen.
+- **Auswirkungen auf Folge-Tasks:** Keine. Einstellung `staleDays` ist bewusst nicht Teil des Backups (Einstellungen generell nicht).
+- **Hinweise zu Tests und Befehlen:** `tests/revision/domain/staleness_test.dart`, `tests/revision/presentation/stale_prompt_test.dart`, `tests/settings/stale_days_setting_test.dart`.

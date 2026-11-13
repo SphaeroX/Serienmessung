@@ -252,5 +252,12 @@
   "deleteRevision": "Revision löschen",
   "deleteRevisionConfirm": "Revision {number} mit allen Zeiten löschen?",
   "removedStep": "{name} (entfernt)",
-  "revisionNoTimes": "Noch keine Zeiten erfasst."
+  "revisionNoTimes": "Noch keine Zeiten erfasst.",
+  "staleTitle": "Messung ist {days} Tage alt",
+  "staleText": "Die letzte Zeit von \"{name}\" wurde am {date} erfasst. Neue Messung beginnen? Die bisherigen Zeiten bleiben als Revision {number} zum Vergleich erhalten.",
+  "staleNewRevision": "Neue Messung",
+  "staleContinue": "Fortsetzen",
+  "staleDaysSetting": "Neue Messung vorschlagen",
+  "staleDaysValue": "Nach {days} Tagen",
+  "never": "Nie"
 }

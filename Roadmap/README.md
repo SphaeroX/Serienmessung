@@ -38,7 +38,7 @@ Stand: 2026-11-13 – Roadmap 01–18 abgeschlossen, Feedback-Runde 1 erledigt. 
 | 18 | Backup & Wiederherstellen | erledigt |
 | 19 | Gruppen: Datenmodell & Verwaltung | erledigt |
 | 20 | Messzeitpunkt & Revisionen | erledigt |
-| 21 | Nachfrage bei veralteter Messung | offen |
+| 21 | Nachfrage bei veralteter Messung | erledigt |
 | 22 | Gruppen-Report PDF + Excel | offen |
 | 23 | Backup v2, Screenshots & Doku | offen |
 
@@ -88,6 +88,7 @@ Im Interview festgelegt (vor Task_01):
 
 - **[Task_19] Gruppen:** Feature-Ordner `lib/group/`. Migration v9: `study_group`, `study.group_id` (`ON DELETE SET NULL`), `study.group_position`. Eine Studie gehört zu höchstens einer Gruppe; Kopieren (`StudyRepository.copyStudy`) für "mehrere Gruppen". Gruppen-Liste über das Ordner-Symbol der Startseite; Studienkarten haben ein Menü (Verschieben, Kopieren, Löschen) und zeigen die Gruppe. `copyStudy` kopiert Schritte und Messungen – neue Tabellen mit Studienbezug (z. B. Revisionen) müssen dort mitkopiert werden.
 - **[Task_20] Revisionen:** Feature-Ordner `lib/revision/`. Migration v10: `measurement.recorded_at`, `study.revision`, Tabellen `revision`, `revision_step`, `revision_measurement`. Alle bestehenden Abfragen sehen weiterhin nur die aktuelle Revision (Tabelle `measurement`) – archivierte Zeiten liegen getrennt und werden nur über `RevisionRepository` gelesen. Zeitdifferenzen formatiert `formatDelta`/`formatRatioDelta` (`core/time_format.dart`). "Neue Messung" archiviert, statt zu löschen.
+- **[Task_21] Veraltete Messung:** Einstellung `staleDays` (Standard 10, 0 = nie; Auswahl 0/3/7/10/14/30/60/90/180/365). Nachfrage zentral in `openStudy` – jeder Weg, eine Studie zu öffnen, sollte über `openStudy` laufen.
 
 ## Auffälligkeiten & Details
 

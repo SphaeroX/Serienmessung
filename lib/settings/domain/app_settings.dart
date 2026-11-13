@@ -19,6 +19,7 @@ class AppSettings {
     this.holdThresholdMs = 400,
     this.keepScreenOn = true,
     this.notifications = true,
+    this.staleDays = 10,
   });
 
   final ThemeChoice theme;
@@ -33,6 +34,13 @@ class AppSettings {
   final bool keepScreenOn;
   final bool notifications;
 
+  /// Opening a study whose last measurement is older than this many days
+  /// offers a new measurement (revision); 0 = never ask.
+  final int staleDays;
+
+  /// Choices for [staleDays] in the settings.
+  static const staleDayChoices = [0, 3, 7, 10, 14, 30, 60, 90, 180, 365];
+
   static const minHoldMs = 250;
   static const maxHoldMs = 1000;
 
@@ -46,6 +54,7 @@ class AppSettings {
     int? holdThresholdMs,
     bool? keepScreenOn,
     bool? notifications,
+    int? staleDays,
   }) => AppSettings(
     theme: theme ?? this.theme,
     language: language ?? this.language,
@@ -56,6 +65,7 @@ class AppSettings {
     holdThresholdMs: holdThresholdMs ?? this.holdThresholdMs,
     keepScreenOn: keepScreenOn ?? this.keepScreenOn,
     notifications: notifications ?? this.notifications,
+    staleDays: staleDays ?? this.staleDays,
   );
 
   Map<String, String> toMap() => {
@@ -68,6 +78,7 @@ class AppSettings {
     'holdThresholdMs': '$holdThresholdMs',
     'keepScreenOn': '$keepScreenOn',
     'notifications': '$notifications',
+    'staleDays': '$staleDays',
   };
 
   /// Reads stored values; unknown or missing keys fall back to defaults.
@@ -92,6 +103,10 @@ class AppSettings {
       holdThresholdMs: hold.clamp(minHoldMs, maxHoldMs),
       keepScreenOn: flag('keepScreenOn', d.keepScreenOn),
       notifications: flag('notifications', d.notifications),
+      staleDays: (int.tryParse(m['staleDays'] ?? '') ?? d.staleDays).clamp(
+        0,
+        3650,
+      ),
     );
   }
 }

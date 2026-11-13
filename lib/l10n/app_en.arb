@@ -484,5 +484,39 @@
       }
     }
   },
-  "revisionNoTimes": "No times recorded yet."
+  "revisionNoTimes": "No times recorded yet.",
+  "staleTitle": "Measurement is {days} days old",
+  "@staleTitle": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "staleText": "The last time of \"{name}\" was recorded on {date}. Start a new measurement? The previous times are kept as revision {number} for comparison.",
+  "@staleText": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "staleNewRevision": "New measurement",
+  "staleContinue": "Continue",
+  "staleDaysSetting": "Suggest a new measurement",
+  "staleDaysValue": "After {days} days",
+  "@staleDaysValue": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "never": "Never"
 }

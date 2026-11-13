@@ -900,4 +900,31 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get revisionNoTimes => 'Noch keine Zeiten erfasst.';
+
+  @override
+  String staleTitle(int days) {
+    return 'Messung ist $days Tage alt';
+  }
+
+  @override
+  String staleText(String name, String date, int number) {
+    return 'Die letzte Zeit von \"$name\" wurde am $date erfasst. Neue Messung beginnen? Die bisherigen Zeiten bleiben als Revision $number zum Vergleich erhalten.';
+  }
+
+  @override
+  String get staleNewRevision => 'Neue Messung';
+
+  @override
+  String get staleContinue => 'Fortsetzen';
+
+  @override
+  String get staleDaysSetting => 'Neue Messung vorschlagen';
+
+  @override
+  String staleDaysValue(int days) {
+    return 'Nach $days Tagen';
+  }
+
+  @override
+  String get never => 'Nie';
 }

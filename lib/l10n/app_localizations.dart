@@ -1615,6 +1615,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No times recorded yet.'**
   String get revisionNoTimes;
+
+  /// No description provided for @staleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Measurement is {days} days old'**
+  String staleTitle(int days);
+
+  /// No description provided for @staleText.
+  ///
+  /// In en, this message translates to:
+  /// **'The last time of \"{name}\" was recorded on {date}. Start a new measurement? The previous times are kept as revision {number} for comparison.'**
+  String staleText(String name, String date, int number);
+
+  /// No description provided for @staleNewRevision.
+  ///
+  /// In en, this message translates to:
+  /// **'New measurement'**
+  String get staleNewRevision;
+
+  /// No description provided for @staleContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get staleContinue;
+
+  /// No description provided for @staleDaysSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggest a new measurement'**
+  String get staleDaysSetting;
+
+  /// No description provided for @staleDaysValue.
+  ///
+  /// In en, this message translates to:
+  /// **'After {days} days'**
+  String staleDaysValue(int days);
+
+  /// No description provided for @never.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get never;
 }
 
 class _AppLocalizationsDelegate

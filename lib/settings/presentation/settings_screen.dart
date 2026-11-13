@@ -29,6 +29,9 @@ class SettingsScreen extends ConsumerWidget {
     ThemeChoice.dark => l.themeDark,
   };
 
+  String _staleLabel(AppLocalizations l, int days) =>
+      days == 0 ? l.never : l.staleDaysValue(days);
+
   String _languageLabel(AppLocalizations l, LanguageChoice c) => switch (c) {
     LanguageChoice.system => l.followSystem,
     LanguageChoice.en => 'English',
@@ -197,6 +200,22 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: Text(l.notificationsHint),
             value: s.notifications,
             onChanged: (v) => ctrl.update((x) => x.copyWith(notifications: v)),
+          ),
+          ListTile(
+            key: const Key('staleDaysTile'),
+            leading: const Icon(Icons.history),
+            title: Text(l.staleDaysSetting),
+            subtitle: Text(_staleLabel(l, s.staleDays)),
+            onTap: () async {
+              final v = await _choose<int>(
+                context,
+                l.staleDaysSetting,
+                AppSettings.staleDayChoices,
+                s.staleDays,
+                (d) => _staleLabel(l, d),
+              );
+              if (v != null) ctrl.update((x) => x.copyWith(staleDays: v));
+            },
           ),
           header(l.data),
           const BackupTiles(),

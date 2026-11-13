@@ -893,4 +893,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get revisionNoTimes => 'No times recorded yet.';
+
+  @override
+  String staleTitle(int days) {
+    return 'Measurement is $days days old';
+  }
+
+  @override
+  String staleText(String name, String date, int number) {
+    return 'The last time of \"$name\" was recorded on $date. Start a new measurement? The previous times are kept as revision $number for comparison.';
+  }
+
+  @override
+  String get staleNewRevision => 'New measurement';
+
+  @override
+  String get staleContinue => 'Continue';
+
+  @override
+  String get staleDaysSetting => 'Suggest a new measurement';
+
+  @override
+  String staleDaysValue(int days) {
+    return 'After $days days';
+  }
+
+  @override
+  String get never => 'Never';
 }

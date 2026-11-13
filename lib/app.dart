@@ -6,6 +6,7 @@ import 'core/providers.dart';
 import 'group/presentation/group_list_screen.dart';
 import 'l10n/app_localizations.dart';
 import 'recording/presentation/recording_screen.dart';
+import 'revision/presentation/stale_prompt.dart';
 import 'study/domain/study.dart';
 import 'video/presentation/video_study_screen.dart';
 import 'settings/domain/app_settings.dart';
@@ -74,6 +75,10 @@ Future<void> openStudy(BuildContext context, int studyId) async {
   final container = ProviderScope.containerOf(context, listen: false);
   final study = await container.read(studyRepositoryProvider).getStudy(studyId);
   if (!context.mounted) return;
+  if (study != null) {
+    await offerNewRevisionIfStale(context, container, study);
+    if (!context.mounted) return;
+  }
   await Navigator.of(context).push(
     MaterialPageRoute<void>(
       builder: (_) => study?.mode == StudyMode.video
