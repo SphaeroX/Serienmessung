@@ -259,5 +259,17 @@
   "staleContinue": "Fortsetzen",
   "staleDaysSetting": "Neue Messung vorschlagen",
   "staleDaysValue": "Nach {days} Tagen",
-  "never": "Nie"
+  "never": "Nie",
+  "groupReportTitle": "Gruppen-Report",
+  "reportOverview": "Übersicht",
+  "exportGroup": "Gruppe",
+  "exportPosition": "Pos.",
+  "exportCycles": "Zyklen",
+  "exportPreviousRevision": "Vorherige Revision",
+  "exportRevision": "Revision",
+  "exportLastMeasured": "Letzte Messung",
+  "deviationFrom": "Abweichung zu Revision {number}",
+  "exportGroupReport": "Gruppen-Report exportieren",
+  "groupPdfHint": "Übersicht und jede Studie auf eigenen Seiten",
+  "groupXlsxHint": "Übersichtsblatt und ein Blatt je Studie"
 }

@@ -920,4 +920,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get never => 'Never';
+
+  @override
+  String get groupReportTitle => 'Group report';
+
+  @override
+  String get reportOverview => 'Overview';
+
+  @override
+  String get exportGroup => 'Group';
+
+  @override
+  String get exportPosition => 'Pos.';
+
+  @override
+  String get exportCycles => 'Cycles';
+
+  @override
+  String get exportPreviousRevision => 'Previous revision';
+
+  @override
+  String get exportRevision => 'Revision';
+
+  @override
+  String get exportLastMeasured => 'Last measurement';
+
+  @override
+  String deviationFrom(int number) {
+    return 'Deviation from revision $number';
+  }
+
+  @override
+  String get exportGroupReport => 'Export group report';
+
+  @override
+  String get groupPdfHint => 'Overview and every study on its own pages';
+
+  @override
+  String get groupXlsxHint => 'Overview sheet and one sheet per study';
 }

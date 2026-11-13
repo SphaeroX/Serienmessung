@@ -24,6 +24,13 @@ String buildCsv(ExportInput x) {
   }
   if (x.study.notes.isNotEmpty) rows.add([l.notes, x.study.notes]);
   rows.add([l.mode, l.modeName]);
+  final r = l.revision;
+  if (r != null) {
+    rows.add([r.revision, '${x.study.revision}']);
+    if (x.lastMeasuredText != null) {
+      rows.add([r.lastMeasured, x.lastMeasuredText!]);
+    }
+  }
   rows.add([l.date, DateFormat('yyyy-MM-dd HH:mm').format(x.exportedAt)]);
   rows.add([l.unit, unitLabel]);
   rows.add([l.method, l.methodName]);

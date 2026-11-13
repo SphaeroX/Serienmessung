@@ -518,5 +518,24 @@
       }
     }
   },
-  "never": "Never"
+  "never": "Never",
+  "groupReportTitle": "Group report",
+  "reportOverview": "Overview",
+  "exportGroup": "Group",
+  "exportPosition": "Pos.",
+  "exportCycles": "Cycles",
+  "exportPreviousRevision": "Previous revision",
+  "exportRevision": "Revision",
+  "exportLastMeasured": "Last measurement",
+  "deviationFrom": "Deviation from revision {number}",
+  "@deviationFrom": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "exportGroupReport": "Export group report",
+  "groupPdfHint": "Overview and every study on its own pages",
+  "groupXlsxHint": "Overview sheet and one sheet per study"
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
+import '../../export/presentation/export_menu.dart';
 import '../../l10n/app_localizations.dart';
 import '../../study/domain/study.dart';
 import '../../study/presentation/create_study_screen.dart';
@@ -226,6 +227,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
       appBar: AppBar(
         title: Text(_group?.name ?? ''),
         actions: [
+          GroupExportButton(groupId: widget.groupId),
           PopupMenuButton<_GroupAction>(
             key: const Key('groupMenu'),
             onSelected: _groupAction,

@@ -1657,6 +1657,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Never'**
   String get never;
+
+  /// No description provided for @groupReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Group report'**
+  String get groupReportTitle;
+
+  /// No description provided for @reportOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get reportOverview;
+
+  /// No description provided for @exportGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get exportGroup;
+
+  /// No description provided for @exportPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Pos.'**
+  String get exportPosition;
+
+  /// No description provided for @exportCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycles'**
+  String get exportCycles;
+
+  /// No description provided for @exportPreviousRevision.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous revision'**
+  String get exportPreviousRevision;
+
+  /// No description provided for @exportRevision.
+  ///
+  /// In en, this message translates to:
+  /// **'Revision'**
+  String get exportRevision;
+
+  /// No description provided for @exportLastMeasured.
+  ///
+  /// In en, this message translates to:
+  /// **'Last measurement'**
+  String get exportLastMeasured;
+
+  /// No description provided for @deviationFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Deviation from revision {number}'**
+  String deviationFrom(int number);
+
+  /// No description provided for @exportGroupReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Export group report'**
+  String get exportGroupReport;
+
+  /// No description provided for @groupPdfHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview and every study on its own pages'**
+  String get groupPdfHint;
+
+  /// No description provided for @groupXlsxHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview sheet and one sheet per study'**
+  String get groupXlsxHint;
 }
 
 class _AppLocalizationsDelegate

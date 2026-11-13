@@ -94,6 +94,11 @@ List<int> buildXlsx(ExportInput x) {
   if (x.study.description.isNotEmpty) kv(l.description, t(x.study.description));
   if (x.study.notes.isNotEmpty) kv(l.notes, t(x.study.notes));
   kv(l.mode, t(l.modeName));
+  final r = l.revision;
+  if (r != null) {
+    kv(r.revision, t('${x.study.revision}'));
+    if (x.lastMeasuredText != null) kv(r.lastMeasured, t(x.lastMeasuredText!));
+  }
   kv(l.date, t(DateFormat('yyyy-MM-dd HH:mm').format(x.exportedAt)));
   kv(l.unit, t(unit));
   kv(l.method, t(l.methodName));

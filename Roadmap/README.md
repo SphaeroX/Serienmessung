@@ -39,7 +39,7 @@ Stand: 2026-11-13 – Roadmap 01–18 abgeschlossen, Feedback-Runde 1 erledigt. 
 | 19 | Gruppen: Datenmodell & Verwaltung | erledigt |
 | 20 | Messzeitpunkt & Revisionen | erledigt |
 | 21 | Nachfrage bei veralteter Messung | erledigt |
-| 22 | Gruppen-Report PDF + Excel | offen |
+| 22 | Gruppen-Report PDF + Excel | erledigt |
 | 23 | Backup v2, Screenshots & Doku | offen |
 
 Status ist `offen`, `läuft` (Datei trägt das Präfix `RUN_`) oder `erledigt` (Datei liegt in `Archiv/`). Die Tabelle wird beim Archivieren eines Tasks aktualisiert.
@@ -89,6 +89,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_19] Gruppen:** Feature-Ordner `lib/group/`. Migration v9: `study_group`, `study.group_id` (`ON DELETE SET NULL`), `study.group_position`. Eine Studie gehört zu höchstens einer Gruppe; Kopieren (`StudyRepository.copyStudy`) für "mehrere Gruppen". Gruppen-Liste über das Ordner-Symbol der Startseite; Studienkarten haben ein Menü (Verschieben, Kopieren, Löschen) und zeigen die Gruppe. `copyStudy` kopiert Schritte und Messungen – neue Tabellen mit Studienbezug (z. B. Revisionen) müssen dort mitkopiert werden.
 - **[Task_20] Revisionen:** Feature-Ordner `lib/revision/`. Migration v10: `measurement.recorded_at`, `study.revision`, Tabellen `revision`, `revision_step`, `revision_measurement`. Alle bestehenden Abfragen sehen weiterhin nur die aktuelle Revision (Tabelle `measurement`) – archivierte Zeiten liegen getrennt und werden nur über `RevisionRepository` gelesen. Zeitdifferenzen formatiert `formatDelta`/`formatRatioDelta` (`core/time_format.dart`). "Neue Messung" archiviert, statt zu löschen.
 - **[Task_21] Veraltete Messung:** Einstellung `staleDays` (Standard 10, 0 = nie; Auswahl 0/3/7/10/14/30/60/90/180/365). Nachfrage zentral in `openStudy` – jeder Weg, eine Studie zu öffnen, sollte über `openStudy` laufen.
+- **[Task_22] Gruppen-Report:** `buildGroupXlsx`/`buildGroupPdf` (`lib/export/domain/`), Export-Knopf im Gruppen-Bildschirm. Einzel-Exporte enthalten jetzt Revision und letzte Messung, das PDF zusätzlich die Abweichung zur letzten archivierten Revision. Neue Export-Texte als optionale Labels (`ExportLabels.revision`), damit bestehende Aufrufer/Tests unverändert bleiben.
 
 ## Auffälligkeiten & Details
 
@@ -97,6 +98,6 @@ Dinge, die global noch zu beachten sind: Besonderheiten, bekannte Einschränkung
 - Fachbegriffe im Code (siehe `docs/conventions.md`): Studie = `Study`, Schritt = `StepDefinition`, Zyklus = `Cycle`, Messung = `Measurement`, Sonderzeit = `SpecialTime`, Taktzeit = `CycleTime`.
 - Mindest-Android-Version: API 26 gesetzt (Annahme, vom Nutzer nicht bestätigt).
 - **Sandbox-Hinweis (nur für die KI-Umgebung, in der die Tasks bisher liefen):** `flutter gen-l10n`/Build-Zeit-Generierung hatte dort keine Schreibrechte auf `lib/l10n`; die Agenten generierten in einem Temp-Ordner und kopierten. Auf normalen Rechnern funktioniert `flutter gen-l10n` direkt.
-- PDF-Bericht: nur Latin-1-Zeichen (eingebaute Schriften), Layout noch nicht visuell geprüft (Task_17).
+- PDF-Bericht: nur Latin-1-Zeichen (eingebaute Schriften). Gruppen-Report in Task_22 als PNG gerendert und geprüft (Übersicht + Studienseiten); `Δ` wird im PDF zu "Delta".
 - Lautstärketasten funktionieren nur bei eingeschaltetem Bildschirm mit geöffnetem Messbildschirm (Task_06).
 - Hardware-nahe Funktionen (Lautstärketasten, Mikrofon, Video, Hintergrunddienst) lassen sich nur teilweise automatisiert testen. Logik mit Fakes testen, zusätzlich eine kurze manuelle Geräteprüfung in den Task-Notizen protokollieren.

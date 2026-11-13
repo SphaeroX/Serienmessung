@@ -1,8 +1,12 @@
+import 'package:intl/intl.dart';
+
 import '../../analysis/domain/analysis.dart';
 import '../../analysis/domain/statistics.dart';
 import '../../core/time_format.dart';
 import '../../recording/domain/cycles.dart';
 import '../../recording/domain/measurement.dart';
+import '../../revision/domain/revision.dart';
+import '../../revision/domain/revision_comparison.dart';
 import '../../study/domain/study.dart';
 
 /// Localized texts for exports (filled from AppLocalizations by the UI).
@@ -46,7 +50,54 @@ class ExportLabels {
     required this.specialTotal,
     required this.share,
     required this.outliersRemoved,
+    this.revision,
   });
+
+  /// Texts for revision and last-measurement lines; without them those
+  /// lines are left out.
+  final RevisionLabels? revision;
+
+  ExportLabels withRevision(RevisionLabels revision) => ExportLabels(
+    study: study,
+    description: description,
+    notes: notes,
+    mode: mode,
+    modeName: modeName,
+    date: date,
+    unit: unit,
+    method: method,
+    methodName: methodName,
+    cycle: cycle,
+    stepNo: stepNo,
+    step: step,
+    start: start,
+    end: end,
+    duration: duration,
+    type: type,
+    note: note,
+    normal: normal,
+    special: special,
+    measurementsSheet: measurementsSheet,
+    cyclesSheet: cyclesSheet,
+    analysisSheet: analysisSheet,
+    total: total,
+    complete: complete,
+    yes: yes,
+    no: no,
+    n: n,
+    mean: mean,
+    median: median,
+    min: min,
+    max: max,
+    stdDev: stdDev,
+    cv: cv,
+    realCycleTime: realCycleTime,
+    realTime: realTime,
+    specialTotal: specialTotal,
+    share: share,
+    outliersRemoved: outliersRemoved,
+    revision: revision,
+  );
 
   final String study;
   final String description;
@@ -88,6 +139,27 @@ class ExportLabels {
   final String outliersRemoved;
 }
 
+/// Texts about revisions and the time of measurement.
+class RevisionLabels {
+  const RevisionLabels({
+    required this.revision,
+    required this.lastMeasured,
+    required this.deviationFrom,
+    required this.then,
+    required this.now,
+    required this.delta,
+  });
+
+  final String revision;
+  final String lastMeasured;
+
+  /// Section title, e.g. "Deviation from revision 1".
+  final String Function(int number) deviationFrom;
+  final String then;
+  final String now;
+  final String delta;
+}
+
 /// Everything an export needs; independent of Flutter.
 class ExportInput {
   const ExportInput({
@@ -99,6 +171,7 @@ class ExportInput {
     required this.locale,
     required this.exportedAt,
     required this.labels,
+    this.previous,
   });
 
   final Study study;
@@ -109,6 +182,44 @@ class ExportInput {
   final String locale;
   final DateTime exportedAt;
   final ExportLabels labels;
+
+  /// The most recently archived revision, for deviations (optional).
+  final Revision? previous;
+
+  /// Wall-clock time of the newest time; times from before timestamps
+  /// existed fall back to the study's last activity. Null without times.
+  DateTime? get lastMeasuredAt {
+    if (measurements.isEmpty) return null;
+    DateTime? last;
+    for (final m in measurements) {
+      final t = m.recordedAt;
+      if (t != null && (last == null || t.isAfter(last))) last = t;
+    }
+    return last ?? study.lastActiveAt;
+  }
+
+  /// Analysis of [previous] with this export's method.
+  StudyAnalysis? get previousAnalysis => previous == null
+      ? null
+      : StudyAnalysis.compute(
+          measurements: previous!.measurements,
+          steps: study.mode.usesSteps ? previous!.steps : const [],
+          mode: study.mode,
+          method: method,
+        );
+
+  /// Deviation of the current times from [previous]; null without one.
+  RevisionComparison? get comparison => previous == null
+      ? null
+      : RevisionComparison.compare(
+          previous: previousAnalysis!,
+          current: analysis,
+        );
+
+  /// Formatted [lastMeasuredAt] for the header blocks.
+  String? get lastMeasuredText => lastMeasuredAt == null
+      ? null
+      : DateFormat('yyyy-MM-dd HH:mm').format(lastMeasuredAt!);
 
   /// Times are exported relative to the first recorded start (live studies)
   /// or as video positions (video studies).
