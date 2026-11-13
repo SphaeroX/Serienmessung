@@ -273,7 +273,7 @@
   "groupPdfHint": "Übersicht und jede Studie auf eigenen Seiten",
   "groupXlsxHint": "Übersichtsblatt und ein Blatt je Studie",
   "lineAnalysis": "Linienbetrachtung",
-  "lineTotalLabel": "Summe der Taktzeiten (Durchlauf)",
+  "lineTotalLabel": "Summe der Taktzeiten",
   "lineCycleLabel": "Linientakt (Engpass)",
   "lineBottleneckLabel": "Engpass",
   "lineBalanceLabel": "Austaktungsgrad",
@@ -302,5 +302,13 @@
   "invalidTime": "Eine Zeit größer als 0 eingeben",
   "parallelToPrevious": "Parallel zur vorherigen",
   "setCycleTime": "Taktzeit eintragen …",
-  "setCycleTimeHint": "Ersetzt die Zeiten dieser Studie. Die bisherigen Zeiten bleiben als Revision erhalten."
+  "setCycleTimeHint": "Ersetzt die Zeiten dieser Studie. Die bisherigen Zeiten bleiben als Revision erhalten.",
+  "lineLeadLabel": "Durchlaufzeit eines Teils",
+  "lineParallelMachines": "{count} Maschinen parallel",
+  "failureRisk": "Ausfallrisiko",
+  "failureRiskHint": "Ausbringung der Linie, während eine Maschine ausfällt. Parallele Maschinen übernehmen einen Teil der Arbeit; eine Station mit nur einer Maschine legt die ganze Linie still.",
+  "singlePointsOfFailure": "{count, plural, =1{1 Station ohne Ersatzmaschine: ihr Ausfall legt die Linie still} other{{count} Stationen ohne Ersatzmaschine: jeder Ausfall legt die Linie still}}",
+  "outputDuringFailure": "Ausbringung während des Ausfalls: {output} / h",
+  "standstill": "Stillstand",
+  "noLoss": "Kein Verlust"
 }

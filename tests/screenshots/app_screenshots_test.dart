@@ -14,6 +14,7 @@ import 'package:cyclescope/core/database.dart';
 import 'package:cyclescope/core/providers.dart';
 import 'package:cyclescope/core/time_format.dart';
 import 'package:cyclescope/group/data/group_repository.dart';
+import 'package:cyclescope/group/data/machine_service.dart';
 import 'package:cyclescope/group/presentation/group_screen.dart';
 import 'package:cyclescope/group/presentation/line_screen.dart';
 import 'package:cyclescope/l10n/app_localizations.dart';
@@ -421,9 +422,20 @@ void main() {
           description: t.lineDescription,
           now: DateTime(2026, 11, 1),
         );
-        for (final id in [video, studyId, press, timer]) {
+        for (final id in [video, studyId, press]) {
           await groups.moveToGroup(id, lineId);
         }
+        // Three identical test benches working in parallel.
+        final machines = MachineService(db, now: () => DateTime(2026, 11, 9));
+        for (var i = 1; i <= 3; i++) {
+          await machines.createMachine(
+            name: '${lang == 'de' ? 'Prüfstand' : 'Test bench'} $i',
+            groupId: lineId,
+            cycleMicros: 95 * _s,
+            parallel: i > 1,
+          );
+        }
+        await groups.moveToGroup(timer, lineId);
       });
       await show(tester, lang, GroupScreen(groupId: lineId));
       await shot(tester, lang, '08_group');

@@ -539,7 +539,7 @@
   "groupPdfHint": "Overview and every study on its own pages",
   "groupXlsxHint": "Overview sheet and one sheet per study",
   "lineAnalysis": "Line analysis",
-  "lineTotalLabel": "Sum of cycle times (lead time)",
+  "lineTotalLabel": "Sum of cycle times",
   "lineCycleLabel": "Line cycle time (bottleneck)",
   "lineBottleneckLabel": "Bottleneck",
   "lineBalanceLabel": "Line balance",
@@ -589,5 +589,34 @@
   "invalidTime": "Enter a time greater than 0",
   "parallelToPrevious": "Parallel to the one above",
   "setCycleTime": "Enter cycle time…",
-  "setCycleTimeHint": "Replaces the times of this study. The previous times are kept as a revision."
+  "setCycleTimeHint": "Replaces the times of this study. The previous times are kept as a revision.",
+  "lineLeadLabel": "Lead time of one part",
+  "lineParallelMachines": "{count} machines in parallel",
+  "@lineParallelMachines": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "failureRisk": "Failure risk",
+  "failureRiskHint": "Output of the line while one machine is down. Parallel machines take over part of the work; a station with a single machine stops the whole line.",
+  "singlePointsOfFailure": "{count, plural, =1{1 station without a spare machine: its failure stops the line} other{{count} stations without a spare machine: each failure stops the line}}",
+  "@singlePointsOfFailure": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outputDuringFailure": "Output during the failure: {output} / h",
+  "@outputDuringFailure": {
+    "placeholders": {
+      "output": {
+        "type": "String"
+      }
+    }
+  },
+  "standstill": "Standstill",
+  "noLoss": "No loss"
 }

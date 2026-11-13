@@ -970,7 +970,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get lineAnalysis => 'Linienbetrachtung';
 
   @override
-  String get lineTotalLabel => 'Summe der Taktzeiten (Durchlauf)';
+  String get lineTotalLabel => 'Summe der Taktzeiten';
 
   @override
   String get lineCycleLabel => 'Linientakt (Engpass)';
@@ -1069,4 +1069,42 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get setCycleTimeHint =>
       'Ersetzt die Zeiten dieser Studie. Die bisherigen Zeiten bleiben als Revision erhalten.';
+
+  @override
+  String get lineLeadLabel => 'Durchlaufzeit eines Teils';
+
+  @override
+  String lineParallelMachines(int count) {
+    return '$count Maschinen parallel';
+  }
+
+  @override
+  String get failureRisk => 'Ausfallrisiko';
+
+  @override
+  String get failureRiskHint =>
+      'Ausbringung der Linie, während eine Maschine ausfällt. Parallele Maschinen übernehmen einen Teil der Arbeit; eine Station mit nur einer Maschine legt die ganze Linie still.';
+
+  @override
+  String singlePointsOfFailure(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Stationen ohne Ersatzmaschine: jeder Ausfall legt die Linie still',
+      one: '1 Station ohne Ersatzmaschine: ihr Ausfall legt die Linie still',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String outputDuringFailure(String output) {
+    return 'Ausbringung während des Ausfalls: $output / h';
+  }
+
+  @override
+  String get standstill => 'Stillstand';
+
+  @override
+  String get noLoss => 'Kein Verlust';
 }

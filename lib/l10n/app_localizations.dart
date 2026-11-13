@@ -1739,7 +1739,7 @@ abstract class AppLocalizations {
   /// No description provided for @lineTotalLabel.
   ///
   /// In en, this message translates to:
-  /// **'Sum of cycle times (lead time)'**
+  /// **'Sum of cycle times'**
   String get lineTotalLabel;
 
   /// No description provided for @lineCycleLabel.
@@ -1915,6 +1915,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Replaces the times of this study. The previous times are kept as a revision.'**
   String get setCycleTimeHint;
+
+  /// No description provided for @lineLeadLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Lead time of one part'**
+  String get lineLeadLabel;
+
+  /// No description provided for @lineParallelMachines.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} machines in parallel'**
+  String lineParallelMachines(int count);
+
+  /// No description provided for @failureRisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Failure risk'**
+  String get failureRisk;
+
+  /// No description provided for @failureRiskHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Output of the line while one machine is down. Parallel machines take over part of the work; a station with a single machine stops the whole line.'**
+  String get failureRiskHint;
+
+  /// No description provided for @singlePointsOfFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 station without a spare machine: its failure stops the line} other{{count} stations without a spare machine: each failure stops the line}}'**
+  String singlePointsOfFailure(int count);
+
+  /// No description provided for @outputDuringFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Output during the failure: {output} / h'**
+  String outputDuringFailure(String output);
+
+  /// No description provided for @standstill.
+  ///
+  /// In en, this message translates to:
+  /// **'Standstill'**
+  String get standstill;
+
+  /// No description provided for @noLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'No loss'**
+  String get noLoss;
 }
 
 class _AppLocalizationsDelegate

@@ -44,7 +44,7 @@ Stand: 2026-11-13 – **Erweiterung 4 läuft (Task_26–28: parallele Maschinen,
 | 24 | Linienbetrachtung der Gruppe | erledigt |
 | 25 | Gruppen-Report: Deckblatt, Inhaltsverzeichnis, verknüpftes Excel | erledigt |
 | 26 | Parallele Maschinen in der Gruppe | erledigt |
-| 27 | Linie mit Parallelstationen und Ausfallrisiko | offen |
+| 27 | Linie mit Parallelstationen und Ausfallrisiko | erledigt |
 | 28 | Reports mit Parallelstationen und Ausfallrisiko | offen |
 
 Status ist `offen`, `läuft` (Datei trägt das Präfix `RUN_`) oder `erledigt` (Datei liegt in `Archiv/`). Die Tabelle wird beim Archivieren eines Tasks aktualisiert.
@@ -99,6 +99,7 @@ Im Interview festgelegt (vor Task_01):
 - **[Task_24] Linienbetrachtung:** `LineAnalysis` (reines Dart) + `LineScreen` mit Yamazumi-Diagramm. Gruppendaten (Report und Linie) lädt einheitlich `loadGroupReport()`; Einheit = Standardeinheit der Einstellungen.
 - **[Task_25] Vollständiger Gruppen-Report:** `buildGroupReportPdf` (Deckblatt, klickbares Inhaltsverzeichnis mit Seitenzahlen über zwei Layout-Durchläufe, Lesezeichen, Linienkapitel) und `buildGroupReportXlsx` (Inhalt mit Hyperlinks, Linienblatt mit Formeln auf die Studienblätter, Rück-Links). Export-Menü der Gruppe: vollständig (Standard) und kompakt. Formeln wurden mit LibreOffice (`soffice --headless --convert-to csv`, alle Blätter) nachgerechnet.
 - **[Task_26] Parallele Maschinen:** Migration v11 `study.parallel` (parallel zum Gruppenmitglied davor). Maschinen mit fester Taktzeit sind Einfach-Studien mit genau einer Runde – keine neue `StudyMode`, damit alle Auswertungen, Exporte, Revisionen und das Backup ohne Sonderfälle funktionieren.
+- **[Task_27] Parallelstationen & Ausfallrisiko:** `LineAnalysis` arbeitet stationsweise (`LineStation.machines`); `line.stations` ist damit **nicht** mehr 1:1 zu den Gruppenmitgliedern – Code, der nach Mitgliedsindex auf Stationen zugreift, muss über die Maschinen gehen. `FailureRisk` = Ausfallszenarien je Maschine.
 
 ## Auffälligkeiten & Details
 

@@ -963,7 +963,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lineAnalysis => 'Line analysis';
 
   @override
-  String get lineTotalLabel => 'Sum of cycle times (lead time)';
+  String get lineTotalLabel => 'Sum of cycle times';
 
   @override
   String get lineCycleLabel => 'Line cycle time (bottleneck)';
@@ -1062,4 +1062,42 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get setCycleTimeHint =>
       'Replaces the times of this study. The previous times are kept as a revision.';
+
+  @override
+  String get lineLeadLabel => 'Lead time of one part';
+
+  @override
+  String lineParallelMachines(int count) {
+    return '$count machines in parallel';
+  }
+
+  @override
+  String get failureRisk => 'Failure risk';
+
+  @override
+  String get failureRiskHint =>
+      'Output of the line while one machine is down. Parallel machines take over part of the work; a station with a single machine stops the whole line.';
+
+  @override
+  String singlePointsOfFailure(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count stations without a spare machine: each failure stops the line',
+      one: '1 station without a spare machine: its failure stops the line',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String outputDuringFailure(String output) {
+    return 'Output during the failure: $output / h';
+  }
+
+  @override
+  String get standstill => 'Standstill';
+
+  @override
+  String get noLoss => 'No loss';
 }

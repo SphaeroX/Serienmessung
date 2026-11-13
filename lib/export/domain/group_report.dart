@@ -97,6 +97,7 @@ class GroupReportInput {
         mode: x.study.mode,
         current: x.analysis,
         previous: x.previousAnalysis,
+        parallel: x.study.parallel,
       ),
   ]);
 }

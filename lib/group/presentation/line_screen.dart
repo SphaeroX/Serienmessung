@@ -5,6 +5,7 @@ import '../../core/time_format.dart';
 import '../../export/domain/group_report.dart';
 import '../../export/presentation/export_menu.dart';
 import '../../l10n/app_localizations.dart';
+import '../domain/failure_risk.dart';
 import '../domain/line_analysis.dart';
 
 /// The studies of a group looked at as one line: key figures, a stacked bar
@@ -133,6 +134,7 @@ class _LineBody extends StatelessWidget {
             ? null
             : l.lineVsPrevious(delta(line.lineCycleDelta, null)),
       ),
+      figure(l.lineLeadLabel, 'lineLead', t(line.leadTime)),
       figure(l.lineBottleneckLabel, 'lineBottleneck', bottleneck?.name ?? '–'),
       figure(
         l.lineBalanceLabel,
@@ -203,6 +205,11 @@ class _LineBody extends StatelessWidget {
                         l.lineShare(
                           '${formatNumber(st.share * 100, 1, locale: locale)} %',
                         ),
+                        if (st.isParallel) ...[
+                          l.lineParallelMachines(st.machines.length),
+                          for (final m in st.machines)
+                            '  ${m.name}: ${m.cycleTime == null ? l.lineNotMeasured : t(m.cycleTime!)}',
+                        ],
                         if (st.isBottleneck)
                           l.lineBottleneckLabel
                         else
@@ -230,8 +237,62 @@ class _LineBody extends StatelessWidget {
                     ),
             ),
           ),
+        ..._risk(FailureRisk.of(line), locale),
       ],
     );
+  }
+
+  List<Widget> _risk(FailureRisk risk, String locale) {
+    if (risk.baseOutput == null) return const [];
+    final singles = risk.singlePoints.length;
+    return [
+      const SizedBox(height: 16),
+      Text(l.failureRisk, style: theme.textTheme.titleMedium),
+      const SizedBox(height: 4),
+      Text(l.failureRiskHint, style: theme.textTheme.bodySmall),
+      if (singles > 0)
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Text(
+            l.singlePointsOfFailure(singles),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      for (var i = 0; i < risk.failures.length; i++)
+        Card(
+          key: Key('risk_$i'),
+          margin: const EdgeInsets.symmetric(vertical: 3),
+          child: ListTile(
+            dense: true,
+            title: Text(
+              '${risk.failures[i].station.position + 1}. ${risk.failures[i].machine}',
+            ),
+            subtitle: Text(
+              l.outputDuringFailure(
+                formatNumber(risk.failures[i].outputAfter, 1, locale: locale),
+              ),
+            ),
+            trailing: Text(
+              risk.failures[i].standstill
+                  ? l.standstill
+                  : risk.failures[i].loss == 0
+                  ? l.noLoss
+                  : formatRatioDelta(-risk.failures[i].loss, locale: locale),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: risk.failures[i].standstill
+                    ? theme.colorScheme.error
+                    : risk.failures[i].loss == 0
+                    ? Colors.green.shade700
+                    : theme.colorScheme.tertiary,
+              ),
+            ),
+          ),
+        ),
+    ];
   }
 
   static List<Color> _palette(ThemeData theme) => [
@@ -306,6 +367,14 @@ class YamazumiPainter extends CustomPainter {
             ..strokeWidth = 0.5,
         );
         base += seg.micros;
+      }
+      if (st.isParallel && st.cycleTime != null) {
+        // Number of parallel machines inside the bar.
+        final count = text('×${st.machines.length}', color: Colors.white);
+        final barTop = y(st.cycleTime!);
+        if (y(0) - barTop > count.height + 4) {
+          count.paint(canvas, Offset(cx - count.width / 2, barTop + 4));
+        }
       }
       if (st.isBottleneck && st.cycleTime != null) {
         canvas.drawRect(

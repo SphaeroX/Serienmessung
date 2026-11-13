@@ -51,8 +51,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
 
 ## Offene Fragen / Annahmen
 
@@ -66,15 +66,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `LineStationInput.parallel`, `LineMachine`, `LineStation.machines/leadTime/isParallel/measuredMachines`, `parallelCycleTime`, `LineAnalysis.leadTime`; `FailureRisk`/`MachineFailure` (`lib/group/domain/failure_risk.dart`). `GroupReportInput.line` übergibt `study.parallel`. Linien-Bildschirm: Kachel "Durchlaufzeit eines Teils", Maschinen je Parallelstation, "×n" im Balken, Abschnitt "Ausfallrisiko" (Hinweis, Stationen ohne Ersatzmaschine, Liste mit Ausbringung während des Ausfalls und Verlust bzw. "Stillstand"/"Kein Verlust"). Kachel "Summe der Taktzeiten" ohne Zusatz "(Durchlauf)", weil die Durchlaufzeit jetzt eigene Kennzahl ist.
+- **Learnings & Stolpersteine:** Bestehende Linien-Tests blieben unverändert grün, weil ohne Parallel-Kennzeichnung jede Station genau eine Maschine hat.
+- **Wichtige Entscheidungen und ihre Gründe:** Summe der Taktzeiten und Austaktung auf Basis der wirksamen Stationstaktzeiten; Durchlaufzeit über die mittlere Maschinentaktzeit (ein Teil läuft über eine Maschine). Vorrevisionswert einer Parallelstation nur, wenn alle gemessenen Maschinen einen haben. Risiko ohne Verfügbarkeitsstatistik (reine Szenarien "Maschine X steht").
+- **Auswirkungen auf Folge-Tasks:** Task_28: Das Excel-Linienblatt greift bisher per Mitgliedsindex auf `line.stations` zu – muss auf Stationen mit Maschinen umgestellt werden (sonst falsche Zuordnung bei Parallelstationen).
+- **Hinweise zu Tests und Befehlen:** `tests/group/domain/parallel_line_test.dart` (Parallelstationen, Risiko), `tests/group/presentation/line_risk_screen_test.dart`. Screenshot-Szene der Gruppe enthält jetzt drei parallele Prüfstände.

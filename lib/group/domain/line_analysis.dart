@@ -1,13 +1,15 @@
 import '../../analysis/domain/analysis.dart';
 import '../../study/domain/study.dart';
+import 'stations.dart';
 
-/// One study of a group as a station of the line.
+/// One study of a group (a machine of the line).
 class LineStationInput {
   const LineStationInput({
     required this.name,
     required this.mode,
     required this.current,
     this.previous,
+    this.parallel = false,
   });
 
   final String name;
@@ -16,6 +18,9 @@ class LineStationInput {
 
   /// Analysis of the most recently archived revision (optional).
   final StudyAnalysis? previous;
+
+  /// Works in parallel with the input before it (same station).
+  final bool parallel;
 }
 
 /// Part of a station bar: one step (or the whole cycle without steps).
@@ -26,13 +31,35 @@ class LineSegment {
   final double micros;
 }
 
-/// A station with its figures relative to the whole line.
+/// A machine of a station.
+class LineMachine {
+  const LineMachine({
+    required this.name,
+    required this.mode,
+    required this.cycleTime,
+    required this.previousCycleTime,
+  });
+
+  final String name;
+  final StudyMode mode;
+
+  /// Real cycle time (µs); null without complete cycles (or step timer).
+  final double? cycleTime;
+  final double? previousCycleTime;
+
+  bool get measured => cycleTime != null;
+}
+
+/// A station of the line: one machine, or several machines working in
+/// parallel whose capacities add up.
 class LineStation {
   const LineStation({
     required this.name,
     required this.position,
     required this.mode,
+    required this.machines,
     required this.cycleTime,
+    required this.leadTime,
     required this.previousCycleTime,
     required this.share,
     required this.idle,
@@ -40,14 +67,25 @@ class LineStation {
     required this.isBottleneck,
   });
 
+  /// Machine name, or the names of the parallel machines.
   final String name;
 
-  /// 0-based place in the group.
+  /// 0-based place of the station in the line.
   final int position;
-  final StudyMode mode;
 
-  /// Real cycle time (µs); null without complete cycles (or step timer).
+  /// Mode of the first machine.
+  final StudyMode mode;
+  final List<LineMachine> machines;
+
+  /// Effective cycle time (µs): 1 / Σ(1 / machine cycle time) over the
+  /// measured machines; null if none is measured.
   final double? cycleTime;
+
+  /// Time one part spends in the station (mean machine cycle time, µs).
+  final double? leadTime;
+
+  /// Effective cycle time of the previous revisions; null unless every
+  /// measured machine has one.
   final double? previousCycleTime;
 
   /// Share of the sum of all station cycle times (0..1).
@@ -56,17 +94,32 @@ class LineStation {
   /// Waiting time per cycle compared with the bottleneck (µs).
   final double? idle;
 
-  /// Step times scaled so that they add up to [cycleTime].
+  /// Step times scaled so that they add up to [cycleTime] (parallel
+  /// stations: one segment).
   final List<LineSegment> segments;
   final bool isBottleneck;
 
   bool get measured => cycleTime != null;
+
+  bool get isParallel => machines.length > 1;
+
+  List<LineMachine> get measuredMachines => [
+    for (final m in machines)
+      if (m.measured) m,
+  ];
+}
+
+/// Effective cycle time of machines working in parallel (µs).
+double? parallelCycleTime(Iterable<double> times) {
+  final rate = times.fold<double>(0, (a, t) => a + 1 / t);
+  return rate == 0 ? null : 1 / rate;
 }
 
 /// The studies of a group looked at as one line (stations in group order).
 ///
-/// - [totalTime]: sum of the station cycle times = processing time of one
-///   part through the line (no buffers or transport).
+/// - [totalTime]: sum of the (effective) station cycle times.
+/// - [leadTime]: time one part needs through the line (one machine per
+///   station, no buffers or transport).
 /// - [lineCycleTime]: the slowest station (bottleneck) paces the line.
 /// - [balance]: total / (stations × bottleneck), 1 = perfectly balanced.
 /// - [outputPerHour]: parts per hour at the bottleneck pace.
@@ -74,6 +127,7 @@ class LineAnalysis {
   const LineAnalysis({
     required this.stations,
     required this.totalTime,
+    required this.leadTime,
     required this.lineCycleTime,
     required this.previousTotalTime,
     required this.previousLineCycleTime,
@@ -84,8 +138,32 @@ class LineAnalysis {
         a == null || mode == StudyMode.stepTimer || a.cycleStats.n == 0
         ? null
         : a.realCycleTime;
-    final times = [for (final i in inputs) cycle(i.current, i.mode)];
-    final previous = [for (final i in inputs) cycle(i.previous, i.mode)];
+    final groups = stationGroups([for (final i in inputs) i.parallel]);
+    final machines = [
+      for (final group in groups)
+        [
+          for (final k in group)
+            LineMachine(
+              name: inputs[k].name,
+              mode: inputs[k].mode,
+              cycleTime: cycle(inputs[k].current, inputs[k].mode),
+              previousCycleTime: cycle(inputs[k].previous, inputs[k].mode),
+            ),
+        ],
+    ];
+    final times = [
+      for (final ms in machines)
+        parallelCycleTime([for (final m in ms) ?m.cycleTime]),
+    ];
+    final previous = [
+      for (final ms in machines)
+        ms.any((m) => m.measured && m.previousCycleTime == null)
+            ? null
+            : parallelCycleTime([
+                for (final m in ms)
+                  if (m.measured) m.previousCycleTime!,
+              ]),
+    ];
     final measured = [for (final t in times) ?t];
     final total = measured.fold<double>(0, (a, b) => a + b);
     final max = measured.isEmpty
@@ -95,29 +173,43 @@ class LineAnalysis {
     final comparable =
         measured.isNotEmpty &&
         [
-          for (var k = 0; k < inputs.length; k++)
+          for (var k = 0; k < groups.length; k++)
             if (times[k] != null) previous[k],
         ].every((p) => p != null);
     final prevTimes = [
-      for (var k = 0; k < inputs.length; k++)
+      for (var k = 0; k < groups.length; k++)
         if (times[k] != null && previous[k] != null) previous[k]!,
     ];
+    double? lead(List<LineMachine> ms) {
+      final t = [for (final m in ms) ?m.cycleTime];
+      return t.isEmpty ? null : t.reduce((a, b) => a + b) / t.length;
+    }
+
+    final stations = [
+      for (var k = 0; k < groups.length; k++)
+        LineStation(
+          name: machines[k].map((m) => m.name).join(' / '),
+          position: k,
+          mode: machines[k].first.mode,
+          machines: machines[k],
+          cycleTime: times[k],
+          leadTime: lead(machines[k]),
+          previousCycleTime: previous[k],
+          share: times[k] == null || total == 0 ? 0 : times[k]! / total,
+          idle: times[k] == null ? null : max! - times[k]!,
+          segments: machines[k].length == 1
+              ? _segments(inputs[groups[k].single], times[k])
+              : times[k] == null
+              ? const []
+              : [LineSegment(machines[k].first.name, times[k]!)],
+          isBottleneck: k == bottleneck,
+        ),
+    ];
     return LineAnalysis(
-      stations: [
-        for (var k = 0; k < inputs.length; k++)
-          LineStation(
-            name: inputs[k].name,
-            position: k,
-            mode: inputs[k].mode,
-            cycleTime: times[k],
-            previousCycleTime: previous[k],
-            share: times[k] == null || total == 0 ? 0 : times[k]! / total,
-            idle: times[k] == null ? null : max! - times[k]!,
-            segments: _segments(inputs[k], times[k]),
-            isBottleneck: k == bottleneck,
-          ),
-      ],
+      stations: stations,
       totalTime: total,
+      leadTime: [for (final s in stations) ?s.leadTime]
+          .fold<double>(0, (a, b) => a + b),
       lineCycleTime: max,
       previousTotalTime: comparable
           ? prevTimes.fold<double>(0, (a, b) => a + b)
@@ -144,6 +236,7 @@ class LineAnalysis {
 
   final List<LineStation> stations;
   final double totalTime;
+  final double leadTime;
   final double? lineCycleTime;
   final double? previousTotalTime;
   final double? previousLineCycleTime;
