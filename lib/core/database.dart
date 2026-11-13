@@ -171,6 +171,18 @@ final List<Migration> migrations = [
       );
     }
   },
+  // v14: special cycles and planned stops of a machine.
+  (db) async {
+    await db.execute('''
+      CREATE TABLE special_cycle (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        study_id INTEGER NOT NULL REFERENCES study(id) ON DELETE CASCADE,
+        name TEXT NOT NULL DEFAULT '',
+        kind TEXT NOT NULL,
+        interval INTEGER NOT NULL,
+        duration_us INTEGER NOT NULL
+      )''');
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.

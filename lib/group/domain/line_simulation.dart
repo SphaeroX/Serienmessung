@@ -1,11 +1,22 @@
 import 'line_analysis.dart';
+import 'special_cycle.dart';
 
 /// A machine of a simulated station with its (deterministic) cycle time.
 class SimMachine {
-  const SimMachine({required this.name, required this.cycleMicros});
+  const SimMachine({
+    required this.name,
+    required this.cycleMicros,
+    this.specialCycles = const [],
+  });
 
   final String name;
+
+  /// Measured cycle time without special cycles.
   final int cycleMicros;
+
+  /// Every N-th part takes extra time; planned stops come first after half
+  /// their interval, then every interval.
+  final List<SpecialCycle> specialCycles;
 }
 
 /// A buffer before a station: a machine of its own that stores parts only
@@ -183,9 +194,16 @@ int _waitFor(List<_Machine> machines, int queued, int t) {
 enum _Phase { idle, busy, holding }
 
 class _Machine {
-  _Machine(this.cycle);
+  _Machine(this.cycle, this.specialCycles);
 
   final int cycle;
+  final List<SpecialCycle> specialCycles;
+
+  /// Parts started so far (for the every-N-parts rules).
+  int parts = 0;
+
+  /// Time stopped within the horizon (failures and planned stops).
+  int down = 0;
   _Phase phase = _Phase.idle;
   int busyUntil = 0;
   int holdSince = 0;
@@ -279,7 +297,11 @@ class LineSimulation {
           name: st.name,
           machines: [
             for (final m in st.measuredMachines)
-              SimMachine(name: m.name, cycleMicros: m.cycleTime!.round()),
+              SimMachine(
+                name: m.name,
+                cycleMicros: (m.baseCycleTime ?? m.cycleTime!).round(),
+                specialCycles: m.specialCycles,
+              ),
           ],
           bufferBefore: st.bufferBefore == null
               ? null
@@ -351,8 +373,32 @@ class LineSimulation {
     final h = horizonMicros;
     final machines = [
       for (final s in stations)
-        [for (final m in s.machines) _Machine(m.cycleMicros)],
+        [for (final m in s.machines) _Machine(m.cycleMicros, m.specialCycles)],
     ];
+    // Stops of all machines (planned stops and the failure), by start time:
+    // (start, duration, station, machine).
+    final stops = <(int, int, int, int)>[
+      for (var si = 0; si < stations.length; si++)
+        for (var mi = 0; mi < stations[si].machines.length; mi++)
+          for (final c in stations[si].machines[mi].specialCycles)
+            if (c.kind == SpecialCycleKind.time &&
+                c.interval > 0 &&
+                c.durationMicros > 0)
+              for (
+                var at = c.interval ~/ 2;
+                at <= horizonMicros;
+                at += c.interval
+              )
+                (at, c.durationMicros, si, mi),
+      if (failure != null)
+        (
+          failure.startMicros,
+          failure.durationMicros,
+          failure.station,
+          failure.machine,
+        ),
+    ]..sort((a, b) => a.$1.compareTo(b.$1));
+    var nextStop = 0;
     final buffers = [
       for (var i = 0; i < stations.length; i++)
         i > 0 && stations[i].bufferBefore != null
@@ -366,13 +412,21 @@ class LineSimulation {
             : null,
     ];
     var output = 0;
-    var failureApplied = failure == null;
     final last = stations.length - 1;
 
     void start(_Machine m, int t) {
       final from = m.isDown(t) ? m.downUntil : t;
+      m.parts += 1;
+      var time = m.cycle;
+      for (final c in m.specialCycles) {
+        if (c.kind == SpecialCycleKind.parts &&
+            c.interval > 0 &&
+            m.parts % c.interval == 0) {
+          time += c.durationMicros;
+        }
+      }
       m.phase = _Phase.busy;
-      m.busyUntil = from + m.cycle;
+      m.busyUntil = from + time;
       if (from < h) m.busy += (m.busyUntil < h ? m.busyUntil : h) - from;
     }
 
@@ -512,19 +566,21 @@ class LineSimulation {
           }
         }
       }
-      if (!failureApplied) consider(failure!.startMicros);
+      if (nextStop < stops.length) consider(stops[nextStop].$1);
       if (next == null || next! > h) break;
       final t = next!;
       now = t;
 
-      if (!failureApplied && failure!.startMicros == t) {
-        failureApplied = true;
-        final m = machines[failure.station][failure.machine];
-        m
-          ..downFrom = t
-          ..downUntil = t + failure.durationMicros;
+      while (nextStop < stops.length && stops[nextStop].$1 == t) {
+        final (_, duration, si, mi) = stops[nextStop++];
+        final m = machines[si][mi];
+        // A stop during another one only extends it.
+        final until = m.isDown(t) ? m.downUntil + duration : t + duration;
+        if (!m.isDown(t)) m.downFrom = t;
+        m.down += (until < h ? until : h) - (m.downUntil > t ? m.downUntil : t);
+        m.downUntil = until;
         if (m.phase == _Phase.busy && m.busyUntil > t) {
-          m.busyUntil += failure.durationMicros;
+          m.busyUntil += duration;
         }
       }
       for (var si = 0; si <= last; si++) {
@@ -570,10 +626,7 @@ class LineSimulation {
         }
       }
     }
-    int down(_Machine m) {
-      if (m.downFrom < 0 || m.downFrom >= h) return 0;
-      return (m.downUntil < h ? m.downUntil : h) - m.downFrom;
-    }
+    int down(_Machine m) => m.down;
 
     return SimResult(
       output: output,

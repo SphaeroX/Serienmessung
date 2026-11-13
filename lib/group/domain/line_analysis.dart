@@ -1,5 +1,6 @@
 import '../../analysis/domain/analysis.dart';
 import '../../study/domain/study.dart';
+import 'special_cycle.dart';
 import 'stations.dart';
 
 /// One study of a group (a machine of the line).
@@ -12,7 +13,11 @@ class LineStationInput {
     this.parallel = false,
     this.buffer,
     this.conveyor,
+    this.specialCycles = const [],
   });
+
+  /// Special cycles and planned stops of this machine.
+  final List<SpecialCycle> specialCycles;
 
   /// Conveyor before this member's station (first member only).
   final LineConveyor? conveyor;
@@ -69,14 +74,21 @@ class LineMachine {
     required this.mode,
     required this.cycleTime,
     required this.previousCycleTime,
+    this.baseCycleTime,
+    this.specialCycles = const [],
   });
 
   final String name;
   final StudyMode mode;
 
-  /// Real cycle time (µs); null without complete cycles (or step timer).
+  /// Effective cycle time (µs) including the [specialCycles]; null without
+  /// complete cycles (or step timer).
   final double? cycleTime;
   final double? previousCycleTime;
+
+  /// Measured real cycle time without special cycles.
+  final double? baseCycleTime;
+  final List<SpecialCycle> specialCycles;
 
   bool get measured => cycleTime != null;
 }
@@ -177,6 +189,10 @@ class LineAnalysis {
         a == null || mode == StudyMode.stepTimer || a.cycleStats.n == 0
         ? null
         : a.realCycleTime;
+    double? effective(double? base, List<SpecialCycle> cycles) =>
+        base == null || cycles.isEmpty
+        ? base
+        : effectiveCycleTime(base, cycles);
     final groups = stationGroups([for (final i in inputs) i.parallel]);
     final machines = [
       for (final group in groups)
@@ -185,8 +201,16 @@ class LineAnalysis {
             LineMachine(
               name: inputs[k].name,
               mode: inputs[k].mode,
-              cycleTime: cycle(inputs[k].current, inputs[k].mode),
-              previousCycleTime: cycle(inputs[k].previous, inputs[k].mode),
+              cycleTime: effective(
+                cycle(inputs[k].current, inputs[k].mode),
+                inputs[k].specialCycles,
+              ),
+              previousCycleTime: effective(
+                cycle(inputs[k].previous, inputs[k].mode),
+                inputs[k].specialCycles,
+              ),
+              baseCycleTime: cycle(inputs[k].current, inputs[k].mode),
+              specialCycles: inputs[k].specialCycles,
             ),
         ],
     ];

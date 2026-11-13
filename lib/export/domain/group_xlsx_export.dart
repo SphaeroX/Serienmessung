@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../core/time_format.dart';
 import '../../group/domain/line_analysis.dart';
 import '../../group/domain/line_simulation.dart';
+import '../../group/domain/special_cycle.dart';
 import '../../recording/domain/measurement.dart';
 import '../../study/domain/study.dart';
 import '../../group/domain/failure_risk.dart';
@@ -435,6 +436,42 @@ void _writeLine(
       ]);
     }
   }
+  final sl = ll.specials;
+  final machines = [
+    for (final st in line.stations)
+      for (final m in st.machines)
+        if (m.specialCycles.isNotEmpty) m,
+  ];
+  if (sl != null && machines.isNotEmpty) {
+    sh.appendRow([t(sl.title)]);
+    header(sh, [
+      sl.machine,
+      sl.name,
+      sl.rule,
+      '${sl.time} [${unit.label}]',
+      '${sl.measured} [${unit.label}]',
+      '${sl.effective} [${unit.label}]',
+    ]);
+    CellValue? value(double? micros) => micros == null
+        ? null
+        : DoubleCellValue(
+            double.parse(
+              unit.fromMicros(micros.round()).toStringAsFixed(decimals),
+            ),
+          );
+    for (final m in machines) {
+      for (final c in m.specialCycles) {
+        sh.appendRow([
+          t(m.name),
+          t(c.name),
+          t(_rule(sl, c)),
+          value(c.durationMicros.toDouble()),
+          value(m.baseCycleTime),
+          value(m.cycleTime),
+        ]);
+      }
+    }
+  }
 }
 
 /// Failure scenarios: line output while each machine is down.
@@ -505,6 +542,20 @@ Map<(int, String), FailureScenario>? simulatedLosses(GroupReportInput g) {
   ];
   return {for (final x in scenarios) (measured[x.station], x.machine): x};
 }
+
+/// "every 50 parts" / "every 24 h".
+String _rule(SpecialReportLabels sl, SpecialCycle c) =>
+    c.kind == SpecialCycleKind.parts
+    ? sl.everyParts(c.interval)
+    : sl.everyHours(_hours(c.interval));
+
+String _hours(int micros) {
+  final h = micros / 3600000000;
+  return h == h.roundToDouble() ? '${h.round()}' : h.toStringAsFixed(1);
+}
+
+/// Shared with the PDF report.
+String specialRule(SpecialReportLabels sl, SpecialCycle c) => _rule(sl, c);
 
 double _round(double v, int decimals) {
   var f = 1.0;

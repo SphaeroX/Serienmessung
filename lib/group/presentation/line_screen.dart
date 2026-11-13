@@ -256,6 +256,10 @@ class _LineBody extends StatelessWidget {
                           for (final m in st.machines)
                             '  ${m.name}: ${m.cycleTime == null ? l.lineNotMeasured : t(m.cycleTime!)}',
                         ],
+                        for (final m in st.machines)
+                          if (m.specialCycles.isNotEmpty &&
+                              m.baseCycleTime != null)
+                            l.lineSpecialIncluded(m.name, t(m.baseCycleTime!)),
                         if (st.isBottleneck)
                           l.lineBottleneckLabel
                         else

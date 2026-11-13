@@ -1,6 +1,7 @@
 import '../../core/time_format.dart';
 import '../../group/domain/line_analysis.dart';
 import '../../group/domain/line_simulation.dart';
+import '../../group/domain/special_cycle.dart';
 import '../../group/domain/study_group.dart';
 import 'export_data.dart';
 
@@ -49,7 +50,31 @@ class LineReportLabels {
     required this.studies,
     this.risk,
     this.buffers,
+    this.specials,
   });
+
+  /// Texts of the special cycles table; without them it is left out.
+  final SpecialReportLabels? specials;
+
+  LineReportLabels withSpecials(SpecialReportLabels specials) =>
+      LineReportLabels(
+        contents: contents,
+        lineAnalysis: lineAnalysis,
+        station: station,
+        totalTime: totalTime,
+        lineCycleTime: lineCycleTime,
+        bottleneck: bottleneck,
+        balance: balance,
+        outputPerHour: outputPerHour,
+        waiting: waiting,
+        share: share,
+        sheet: sheet,
+        backToContents: backToContents,
+        studies: studies,
+        risk: risk,
+        buffers: buffers,
+        specials: specials,
+      );
 
   /// Texts of the buffer table; without them it is left out.
   final BufferReportLabels? buffers;
@@ -70,6 +95,7 @@ class LineReportLabels {
     studies: studies,
     risk: risk,
     buffers: buffers,
+    specials: specials,
   );
 
   /// Texts of the failure risk chapter/sheet; without them it is left out.
@@ -91,6 +117,7 @@ class LineReportLabels {
     studies: studies,
     risk: risk,
     buffers: buffers,
+    specials: specials,
   );
 
   final String contents;
@@ -165,6 +192,35 @@ class RiskReportLabels {
   final String Function(int count) singlePoints;
 }
 
+/// Texts of the special cycles table.
+class SpecialReportLabels {
+  const SpecialReportLabels({
+    required this.title,
+    required this.machine,
+    required this.name,
+    required this.rule,
+    required this.time,
+    required this.measured,
+    required this.effective,
+    required this.everyParts,
+    required this.everyHours,
+  });
+
+  final String title;
+  final String machine;
+  final String name;
+  final String rule;
+
+  /// Extra time or stop duration.
+  final String time;
+
+  /// Measured and effective cycle time of the machine.
+  final String measured;
+  final String effective;
+  final String Function(int parts) everyParts;
+  final String Function(String hours) everyHours;
+}
+
 /// Texts of the buffer table.
 class BufferReportLabels {
   const BufferReportLabels({
@@ -205,7 +261,11 @@ class GroupReportInput {
     required this.exportLabels,
     this.simulationHorizonMicros,
     this.simulationFailureMicros,
+    this.specialCycles = const {},
   });
+
+  /// Special cycles and planned stops per study id.
+  final Map<int, List<SpecialCycle>> specialCycles;
 
   /// Period and failure duration for the simulated failure scenarios
   /// (both needed; only used when the line has buffers).
@@ -255,6 +315,7 @@ class GroupReportInput {
                 retrieveMicros: x.study.bufferRetrieveMicros,
               )
             : null,
+        specialCycles: specialCycles[x.study.id] ?? const [],
         conveyor: x.study.hasConveyor
             ? LineConveyor(
                 capacity: x.study.conveyorCapacity,

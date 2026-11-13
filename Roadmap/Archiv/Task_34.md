@@ -56,8 +56,8 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
 
 ## Offene Fragen / Annahmen
 
@@ -71,15 +71,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Migration v14, `SpecialCycle`/`SpecialCycleKind`, `availability`, `effectiveCycleTime`, `SpecialCycleRepository`; Kopie und Backup; `LineMachine.baseCycleTime/specialCycles`; Simulation mit Teilezähler je Maschine und allgemeinen Stillstandsfenstern (Störung = ein Fenster); `SpecialCyclesScreen`, Menüpunkt und Zähler im Gruppen-Bildschirm, Hinweis "inkl. Sonderzyklen (gemessen …)" in der Linienbetrachtung; Report-Tabelle `SpecialReportLabels`. Version 1.2.0.
+- **Learnings & Stolpersteine:** Die Simulation darf nicht die wirksame Taktzeit verwenden (sonst doppelt), daher `baseCycleTime` in `LineSimulation.fromLine`.
+- **Wichtige Entscheidungen und ihre Gründe:** Zwei einfache Regelarten statt allgemeiner Verteilungen. Erster Stillstand nach der halben Intervallzeit (sonst käme ein 24-h-Werkzeugwechsel in einem 24-h-Lauf nie vor). Mehrere gleichzeitige Stillstände verlängern einander.
+- **Auswirkungen auf Folge-Tasks:** Keine.
+- **Hinweise zu Tests und Befehlen:** `tests/group/domain/special_cycle_test.dart`, `tests/group/data/special_cycle_repository_test.dart`, `tests/group/presentation/special_cycles_screen_test.dart`, `tests/export/group_report_special_test.dart`.

@@ -103,6 +103,17 @@ LineReportLabels lineReportLabels(AppLocalizations l) => LineReportLabels(
   sheet: l.reportSheet,
   backToContents: l.reportBackToContents,
   studies: l.reportStudies,
+  specials: SpecialReportLabels(
+    title: l.specialCycles,
+    machine: l.reportMachine,
+    name: l.specialCycleColumn,
+    rule: l.specialRuleColumn,
+    time: l.specialTimeColumn,
+    measured: l.specialMeasuredColumn,
+    effective: l.specialEffectiveColumn,
+    everyParts: l.specialEveryPartsRule,
+    everyHours: l.specialEveryHoursRule,
+  ),
   buffers: BufferReportLabels(
     title: l.reportBuffers,
     before: l.reportBufferBefore,
@@ -315,6 +326,9 @@ Future<GroupReportInput?> loadGroupReport(
     locale: locale,
     exportedAt: now,
     labels: groupReportLabels(l),
+    specialCycles: await ref.read(specialCycleRepositoryProvider).listFor([
+      for (final x in entries) x.study.id,
+    ]),
     simulationHorizonMicros: settings.shiftMinutes * 60 * 1000000,
     simulationFailureMicros: settings.failureMinutes * 60 * 1000000,
     exportLabels: exportLabels(

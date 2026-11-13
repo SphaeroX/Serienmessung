@@ -14,6 +14,7 @@ import '../../core/time_format.dart';
 import '../domain/stations.dart';
 import 'group_dialogs.dart';
 import 'machine_dialogs.dart';
+import 'special_cycles_screen.dart';
 import 'line_screen.dart';
 
 /// One group: its studies in order (drag to reorder), adding, moving,
@@ -35,6 +36,7 @@ enum _StudyAction {
   cycleTime,
   buffer,
   conveyor,
+  specialCycles,
   moveToGroup,
   copyToGroup,
   remove,
@@ -45,6 +47,9 @@ enum _GroupAction { edit, delete }
 class _GroupScreenState extends ConsumerState<GroupScreen> {
   StudyGroup? _group;
   List<StudySummary> _members = const [];
+
+  /// Number of special cycles per member study.
+  Map<int, int> _specialCounts = const {};
   bool _loaded = false;
 
   @override
@@ -60,10 +65,14 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     final members = await ref
         .read(studyRepositoryProvider)
         .listStudies(groupId: widget.groupId);
+    final counts = await ref.read(specialCycleRepositoryProvider).countFor([
+      for (final m in members) m.study.id,
+    ]);
     if (!mounted) return;
     setState(() {
       _group = group;
       _members = members;
+      _specialCounts = counts;
       _loaded = true;
     });
   }
@@ -121,6 +130,14 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         await _editBuffer(study);
       case _StudyAction.conveyor:
         await _editConveyor(study);
+      case _StudyAction.specialCycles:
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) =>
+                SpecialCyclesScreen(studyId: study.id, studyName: study.name),
+          ),
+        );
+        await _load();
       case _StudyAction.moveToGroup:
         if (await moveStudyToGroup(context, ref, study)) await _changed();
       case _StudyAction.copyToGroup:
@@ -420,6 +437,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         onAction: (a) => _studyAction(a, i),
         onBuffer: () => _editBuffer(_members[i].study),
         onConveyor: () => _editConveyor(_members[i].study),
+        specialCount: _specialCounts[_members[i].study.id] ?? 0,
         unit: ref.read(settingsProvider).defaultUnit,
       ),
     );
@@ -439,7 +457,11 @@ class _MemberTile extends StatelessWidget {
     required this.onBuffer,
     required this.onConveyor,
     required this.unit,
+    this.specialCount = 0,
   });
+
+  /// Number of special cycles of the member.
+  final int specialCount;
 
   final VoidCallback onBuffer;
   final VoidCallback onConveyor;
@@ -552,7 +574,8 @@ class _MemberTile extends StatelessWidget {
               ? l.lapsLabel
               : study.mode == StudyMode.stepTimer
               ? l.measurementsLabel
-              : l.cyclesLabel}',
+              : l.cyclesLabel}'
+          '${specialCount > 0 ? ' · ${l.specialCycleCount(specialCount)}' : ''}',
         ),
         trailing: PopupMenuButton<_StudyAction>(
           key: Key('groupStudyMenu_${study.id}'),
@@ -595,6 +618,11 @@ class _MemberTile extends StatelessWidget {
                 value: _StudyAction.cycleTime,
                 child: Text(l.setCycleTime),
               ),
+            PopupMenuItem(
+              key: const Key('specialCycles'),
+              value: _StudyAction.specialCycles,
+              child: Text(l.specialCyclesMenu),
+            ),
             PopupMenuItem(
               key: const Key('moveToGroup'),
               value: _StudyAction.moveToGroup,

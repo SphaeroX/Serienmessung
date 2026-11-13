@@ -15,6 +15,8 @@ import 'package:cyclescope/core/providers.dart';
 import 'package:cyclescope/core/time_format.dart';
 import 'package:cyclescope/group/data/group_repository.dart';
 import 'package:cyclescope/group/data/machine_service.dart';
+import 'package:cyclescope/group/data/special_cycle_repository.dart';
+import 'package:cyclescope/group/domain/special_cycle.dart';
 import 'package:cyclescope/group/presentation/group_screen.dart';
 import 'package:cyclescope/group/presentation/line_screen.dart';
 import 'package:cyclescope/group/presentation/simulation_screen.dart';
@@ -435,8 +437,15 @@ void main() {
             cycleMicros: 95 * _s,
             parallel: i > 1,
           );
-          // A buffer in front of the test benches.
+          // A buffer in front of the test benches, and a tool change.
           if (i == 1) {
+            await SpecialCycleRepository(db).add(
+              bench,
+              name: lang == 'de' ? 'Werkzeugwechsel' : 'Tool change',
+              kind: SpecialCycleKind.time,
+              interval: 24 * 3600 * _s,
+              durationMicros: 300 * _s,
+            );
             await groups.setBuffer(
               bench,
               capacity: 40,

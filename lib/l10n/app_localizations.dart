@@ -2269,6 +2269,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Conveyor places'**
   String get reportConveyorPlaces;
+
+  /// No description provided for @specialCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'Special cycles'**
+  String get specialCycles;
+
+  /// No description provided for @specialCyclesMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Special cycles & stops…'**
+  String get specialCyclesMenu;
+
+  /// No description provided for @specialCyclesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring extra work and planned stops of this machine, e.g. taking a part to the measuring place every 50 parts or a tool change every 24 hours. Line analysis, simulation and reports include them.'**
+  String get specialCyclesHint;
+
+  /// No description provided for @noSpecialCycles.
+  ///
+  /// In en, this message translates to:
+  /// **'No special cycles yet'**
+  String get noSpecialCycles;
+
+  /// No description provided for @addSpecialCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add special cycle'**
+  String get addSpecialCycle;
+
+  /// No description provided for @specialCycleName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (optional)'**
+  String get specialCycleName;
+
+  /// No description provided for @specialCycleNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. measuring part, tool change'**
+  String get specialCycleNameHint;
+
+  /// No description provided for @everyParts.
+  ///
+  /// In en, this message translates to:
+  /// **'Every N parts'**
+  String get everyParts;
+
+  /// No description provided for @everyHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Every X hours'**
+  String get everyHours;
+
+  /// No description provided for @intervalParts.
+  ///
+  /// In en, this message translates to:
+  /// **'Every how many parts'**
+  String get intervalParts;
+
+  /// No description provided for @intervalHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Every how many hours'**
+  String get intervalHours;
+
+  /// No description provided for @extraTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra time'**
+  String get extraTime;
+
+  /// No description provided for @stopDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop duration'**
+  String get stopDuration;
+
+  /// No description provided for @specialEveryParts.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {count} parts · +{time}'**
+  String specialEveryParts(int count, String time);
+
+  /// No description provided for @specialEveryHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {hours} h · stop {time}'**
+  String specialEveryHours(String hours, String time);
+
+  /// No description provided for @specialCycleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 special cycle} other{{count} special cycles}}'**
+  String specialCycleCount(int count);
+
+  /// No description provided for @lineSpecialIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: incl. special cycles (measured {time})'**
+  String lineSpecialIncluded(String name, String time);
+
+  /// No description provided for @specialCycleColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Special cycle'**
+  String get specialCycleColumn;
+
+  /// No description provided for @specialRuleColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule'**
+  String get specialRuleColumn;
+
+  /// No description provided for @specialTimeColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get specialTimeColumn;
+
+  /// No description provided for @specialMeasuredColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Measured cycle time'**
+  String get specialMeasuredColumn;
+
+  /// No description provided for @specialEffectiveColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective cycle time'**
+  String get specialEffectiveColumn;
+
+  /// No description provided for @specialEveryPartsRule.
+  ///
+  /// In en, this message translates to:
+  /// **'every {count} parts'**
+  String specialEveryPartsRule(int count);
+
+  /// No description provided for @specialEveryHoursRule.
+  ///
+  /// In en, this message translates to:
+  /// **'every {hours} h'**
+  String specialEveryHoursRule(String hours);
 }
 
 class _AppLocalizationsDelegate

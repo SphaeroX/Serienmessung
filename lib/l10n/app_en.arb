@@ -772,5 +772,80 @@
       }
     }
   },
-  "reportConveyorPlaces": "Conveyor places"
+  "reportConveyorPlaces": "Conveyor places",
+  "specialCycles": "Special cycles",
+  "specialCyclesMenu": "Special cycles & stops…",
+  "specialCyclesHint": "Recurring extra work and planned stops of this machine, e.g. taking a part to the measuring place every 50 parts or a tool change every 24 hours. Line analysis, simulation and reports include them.",
+  "noSpecialCycles": "No special cycles yet",
+  "addSpecialCycle": "Add special cycle",
+  "specialCycleName": "Name (optional)",
+  "specialCycleNameHint": "e.g. measuring part, tool change",
+  "everyParts": "Every N parts",
+  "everyHours": "Every X hours",
+  "intervalParts": "Every how many parts",
+  "intervalHours": "Every how many hours",
+  "extraTime": "Extra time",
+  "stopDuration": "Stop duration",
+  "specialEveryParts": "Every {count} parts · +{time}",
+  "@specialEveryParts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "specialEveryHours": "Every {hours} h · stop {time}",
+  "@specialEveryHours": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "specialCycleCount": "{count, plural, =1{1 special cycle} other{{count} special cycles}}",
+  "@specialCycleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "lineSpecialIncluded": "{name}: incl. special cycles (measured {time})",
+  "@lineSpecialIncluded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "specialCycleColumn": "Special cycle",
+  "specialRuleColumn": "Rule",
+  "specialTimeColumn": "Time",
+  "specialMeasuredColumn": "Measured cycle time",
+  "specialEffectiveColumn": "Effective cycle time",
+  "specialEveryPartsRule": "every {count} parts",
+  "@specialEveryPartsRule": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "specialEveryHoursRule": "every {hours} h",
+  "@specialEveryHoursRule": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -112,6 +112,20 @@ class BackupService {
             },
         ],
         'revisions': await _exportRevisions(db, id),
+        'specialCycles': [
+          for (final c in await db.query(
+            'special_cycle',
+            where: 'study_id = ?',
+            whereArgs: [id],
+            orderBy: 'id',
+          ))
+            {
+              'name': c['name'],
+              'kind': c['kind'],
+              'interval': c['interval'],
+              'duration': c['duration_us'],
+            },
+        ],
       });
     }
     return const JsonEncoder.withIndent(' ').convert({
@@ -198,6 +212,7 @@ class BackupService {
     return _db.db.transaction((txn) async {
       if (replace) {
         await txn.delete('run_state');
+        await txn.delete('special_cycle');
         await txn.delete('revision_measurement');
         await txn.delete('revision_step');
         await txn.delete('revision');
@@ -294,6 +309,16 @@ class BackupService {
           s['revisions'] as List? ?? const [],
           stepIds,
         );
+        for (final x in s['specialCycles'] as List? ?? const []) {
+          final c = x as Map;
+          await txn.insert('special_cycle', {
+            'study_id': studyId,
+            'name': c['name'] ?? '',
+            'kind': c['kind'],
+            'interval': c['interval'],
+            'duration_us': c['duration'],
+          });
+        }
         imported++;
         if (s['mode'] == 'video') videos++;
       }
@@ -432,7 +457,16 @@ class BackupService {
           (s['measurements'] as List).every(time) &&
           (s['revisions'] == null ||
               (s['revisions'] is List &&
-                  (s['revisions'] as List).every(revision)));
+                  (s['revisions'] as List).every(revision))) &&
+          (s['specialCycles'] == null ||
+              (s['specialCycles'] is List &&
+                  (s['specialCycles'] as List).every(
+                    (c) =>
+                        c is Map &&
+                        const {'parts', 'time'}.contains(c['kind']) &&
+                        c['interval'] is int &&
+                        c['duration'] is int,
+                  )));
       if (!ok) {
         throw const BackupException(BackupError.invalid, 'malformed study');
       }

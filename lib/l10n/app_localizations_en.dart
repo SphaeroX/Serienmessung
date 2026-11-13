@@ -1282,4 +1282,95 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportConveyorPlaces => 'Conveyor places';
+
+  @override
+  String get specialCycles => 'Special cycles';
+
+  @override
+  String get specialCyclesMenu => 'Special cycles & stops…';
+
+  @override
+  String get specialCyclesHint =>
+      'Recurring extra work and planned stops of this machine, e.g. taking a part to the measuring place every 50 parts or a tool change every 24 hours. Line analysis, simulation and reports include them.';
+
+  @override
+  String get noSpecialCycles => 'No special cycles yet';
+
+  @override
+  String get addSpecialCycle => 'Add special cycle';
+
+  @override
+  String get specialCycleName => 'Name (optional)';
+
+  @override
+  String get specialCycleNameHint => 'e.g. measuring part, tool change';
+
+  @override
+  String get everyParts => 'Every N parts';
+
+  @override
+  String get everyHours => 'Every X hours';
+
+  @override
+  String get intervalParts => 'Every how many parts';
+
+  @override
+  String get intervalHours => 'Every how many hours';
+
+  @override
+  String get extraTime => 'Extra time';
+
+  @override
+  String get stopDuration => 'Stop duration';
+
+  @override
+  String specialEveryParts(int count, String time) {
+    return 'Every $count parts · +$time';
+  }
+
+  @override
+  String specialEveryHours(String hours, String time) {
+    return 'Every $hours h · stop $time';
+  }
+
+  @override
+  String specialCycleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count special cycles',
+      one: '1 special cycle',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String lineSpecialIncluded(String name, String time) {
+    return '$name: incl. special cycles (measured $time)';
+  }
+
+  @override
+  String get specialCycleColumn => 'Special cycle';
+
+  @override
+  String get specialRuleColumn => 'Rule';
+
+  @override
+  String get specialTimeColumn => 'Time';
+
+  @override
+  String get specialMeasuredColumn => 'Measured cycle time';
+
+  @override
+  String get specialEffectiveColumn => 'Effective cycle time';
+
+  @override
+  String specialEveryPartsRule(int count) {
+    return 'every $count parts';
+  }
+
+  @override
+  String specialEveryHoursRule(String hours) {
+    return 'every $hours h';
+  }
 }

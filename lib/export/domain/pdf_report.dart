@@ -12,7 +12,7 @@ import 'export_data.dart';
 import '../../group/domain/failure_risk.dart';
 import '../../group/domain/line_analysis.dart';
 import 'group_report.dart';
-import 'group_xlsx_export.dart' show simulatedLosses;
+import 'group_xlsx_export.dart' show simulatedLosses, specialRule;
 
 /// Texts only the PDF report needs.
 class PdfLabels {
@@ -555,6 +555,35 @@ List<pw.Widget> _lineSection(
                     : _fmt(g, st.conveyorBefore!.transportMicros),
               ],
             ],
+        ],
+      ),
+    ],
+    if (ll.specials != null &&
+        line.stations.any(
+          (st) => st.machines.any((m) => m.specialCycles.isNotEmpty),
+        )) ...[
+      _section(ll.specials!.title),
+      _table(
+        [
+          ll.specials!.machine,
+          ll.specials!.name,
+          ll.specials!.rule,
+          ll.specials!.time,
+          ll.specials!.measured,
+          ll.specials!.effective,
+        ],
+        [
+          for (final st in line.stations)
+            for (final m in st.machines)
+              for (final c in m.specialCycles)
+                [
+                  m.name,
+                  c.name,
+                  specialRule(ll.specials!, c),
+                  _fmt(g, c.durationMicros),
+                  m.baseCycleTime == null ? '' : _fmt(g, m.baseCycleTime!),
+                  m.cycleTime == null ? '' : _fmt(g, m.cycleTime!),
+                ],
         ],
       ),
     ],

@@ -260,6 +260,19 @@ class StudyRepository {
       await txn.insert('measurement', row);
     }
     await _copyRevisions(txn, id, copy, stepIds);
+    for (final c in await txn.query(
+      'special_cycle',
+      where: 'study_id = ?',
+      whereArgs: [id],
+      orderBy: 'id',
+    )) {
+      await txn.insert(
+        'special_cycle',
+        Map<String, Object?>.of(c)
+          ..remove('id')
+          ..['study_id'] = copy,
+      );
+    }
     return copy;
   });
 
