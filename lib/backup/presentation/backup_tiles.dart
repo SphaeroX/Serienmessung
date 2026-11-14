@@ -35,7 +35,7 @@ class BackupTiles extends ConsumerWidget {
       await file.writeAsString(json, flush: true);
       await ref
           .read(fileSharerProvider)
-          .share(file.path, mimeType: 'application/json', subject: name);
+          .share(file.path, mimeType: 'application/json');
     } on Object catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(l.exportFailed('$e'))));
     }

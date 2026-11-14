@@ -22,11 +22,8 @@ class FakeFileSharer implements FileSharer {
   final shared = <(String, String)>[];
 
   @override
-  Future<void> share(
-    String path, {
-    required String mimeType,
-    String? subject,
-  }) async => shared.add((path, mimeType));
+  Future<void> share(String path, {required String mimeType}) async =>
+      shared.add((path, mimeType));
 }
 
 void main() {

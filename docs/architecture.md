@@ -12,7 +12,7 @@
 - `speech_to_text` – push-to-talk dictation of steps (platform recognizer, no own model).
 - `wakelock_plus` – keep the screen on while recording.
 - `video_player` – video playback (ExoPlayer) for video studies; `file_picker` – choosing videos (and backup files).
-- `excel` – .xlsx export; `share_plus` – system share sheet for export/backup files.
+- `excel` – .xlsx export; `share_plus` – system share sheet for export/backup files. `shareParamsFor` (`export/platform/file_sharer.dart`) sets the share subject to the file name with extension, because Google Drive names saved files after the subject.
 - `pdf` – PDF report (pure Dart, built-in Latin-1 fonts; shared via the share sheet instead of the `printing` plugin). Characters outside Latin-1 are mapped in `_latin1` (e.g. `Δ` → `Delta`).
 
 ## Architecture

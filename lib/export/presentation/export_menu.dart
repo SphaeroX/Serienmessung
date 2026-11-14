@@ -221,9 +221,7 @@ class ExportButton extends ConsumerWidget {
       };
       final file = File(p.join(dir.path, exportFileName(study.name, now, ext)));
       await file.writeAsBytes(bytes, flush: true);
-      await ref
-          .read(fileSharerProvider)
-          .share(file.path, mimeType: mime, subject: study.name);
+      await ref.read(fileSharerProvider).share(file.path, mimeType: mime);
     } on Object catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(l.exportFailed('$e'))));
     }
@@ -402,9 +400,7 @@ class GroupExportButton extends ConsumerWidget {
         ),
       );
       await file.writeAsBytes(bytes, flush: true);
-      await ref
-          .read(fileSharerProvider)
-          .share(file.path, mimeType: mime, subject: input.group.name);
+      await ref.read(fileSharerProvider).share(file.path, mimeType: mime);
     } on Object catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(l.exportFailed('$e'))));
     }
