@@ -24,14 +24,18 @@ const _jitter = [0.0, 0.6, -0.4, 1.1, -0.8, 0.3, -0.2, 0.5, -0.6, 0.9, -0.3];
 /// cycle time, a simple study with laps) and a step-timer study outside
 /// the group. Existing data is left alone; every load adds a new copy.
 ///
+/// The times are chosen so that the simulation of 24 hours without a
+/// failure gives exactly 1000 parts (line cycle time about 85.7 s; the
+/// line starts empty, so the first parts come late).
+///
 /// The line (stations in order):
-/// 1. Saw – typed 38 s, blade change every 8 h (10 min).
-/// 2. Milling centre 1 (time study, ~115 s, measured before) and milling
-///    centre 2 (typed 110 s) in parallel – the bottleneck; buffer before.
-/// 3. Washer – typed 30 s; conveyor before.
-/// 4. Assembly (time study, ~45 s with one outlier, measured before).
-/// 5. Test benches 1–3 in parallel – typed 150 s each; buffer before.
-/// 6. Packing – simple study with 15 laps (~36 s); conveyor before.
+/// 1. Saw – typed 57 s, blade change every 8 h (10 min).
+/// 2. Milling centre 1 (time study, ~173 s, measured before) and milling
+///    centre 2 (typed 167 s) in parallel – the bottleneck; buffer before.
+/// 3. Washer – typed 45 s; conveyor before.
+/// 4. Assembly (time study, ~68 s with one outlier, measured before).
+/// 5. Test benches 1–3 in parallel – typed 225 s each; buffer before.
+/// 6. Packing – simple study with 15 laps (~54 s); conveyor before.
 class DemoDataService {
   DemoDataService(this._db, {required this.now});
 
@@ -59,7 +63,7 @@ class DemoDataService {
     final saw = await machines.createMachine(
       name: t.saw,
       groupId: groupId,
-      cycleMicros: 38 * _s,
+      cycleMicros: 57 * _s,
     );
     await rules.add(
       saw,
@@ -73,7 +77,7 @@ class DemoDataService {
     final milling = await _timeStudy(
       name: t.millingCentre(1),
       steps: t.millingSteps,
-      base: const [12, 58, 31, 14],
+      base: const [18, 87.7, 46, 21],
       cycles: 12,
       previousScale: 1.08,
       special: (cycle: 5, step: 1, seconds: 25, note: t.chipJam),
@@ -103,7 +107,7 @@ class DemoDataService {
     await machines.createMachine(
       name: t.millingCentre(2),
       groupId: groupId,
-      cycleMicros: 110 * _s,
+      cycleMicros: 167 * _s,
       parallel: true,
     );
 
@@ -111,7 +115,7 @@ class DemoDataService {
     final washer = await machines.createMachine(
       name: t.washer,
       groupId: groupId,
-      cycleMicros: 30 * _s,
+      cycleMicros: 45 * _s,
     );
     await groups.setConveyor(washer, capacity: 8, transportMicros: 60 * _s);
 
@@ -119,11 +123,11 @@ class DemoDataService {
     final assembly = await _timeStudy(
       name: t.assembly,
       steps: t.assemblySteps,
-      base: const [6.5, 9, 22, 7.5],
+      base: const [10, 13.5, 33, 11.5],
       cycles: 10,
       previousScale: 1.12,
       special: (cycle: 4, step: 0, seconds: 40, note: t.materialMissing),
-      outlier: (cycle: 7, step: 2, seconds: 18),
+      outlier: (cycle: 7, step: 2, seconds: 27),
       method: CycleTimeMethod.iqr,
       today: today,
     );
@@ -134,7 +138,7 @@ class DemoDataService {
       final bench = await machines.createMachine(
         name: t.testBench(i),
         groupId: groupId,
-        cycleMicros: 150 * _s,
+        cycleMicros: 225 * _s,
         parallel: i > 1,
       );
       if (i == 1) {
@@ -260,7 +264,7 @@ class DemoDataService {
     }
   }
 
-  /// Simple study with 15 laps of about 36 s.
+  /// Simple study with 15 laps of about 54 s.
   Future<int> _laps(String name, DateTime today) async {
     final id = await StudyRepository(_db).createStudy(
       name: name,
@@ -274,7 +278,7 @@ class DemoDataService {
     );
     var at = 0;
     for (var lap = 1; lap <= 15; lap++) {
-      final d = ((36 + _jitter[lap % _jitter.length] * 2) * _s).round();
+      final d = ((54 + _jitter[lap % _jitter.length] * 2) * _s).round();
       await times.insert(
         id,
         MeasurementDraft(

@@ -176,21 +176,6 @@ class FailureScenario {
   int get savedByBuffers => lostWithoutBuffers - lostWithBuffers;
 }
 
-/// Time until the station [machines] can take a part from the conveyor:
-/// the ([queued] + 1)-th machine to become free, counting from [t].
-int _waitFor(List<_Machine> machines, int queued, int t) {
-  const never = 1 << 62;
-  final free = [
-    for (final m in machines)
-      switch (m.phase) {
-        _Phase.idle => m.isDown(t) ? m.downUntil - t : 0,
-        _Phase.busy => m.busyUntil - t,
-        _Phase.holding => never,
-      },
-  ]..sort();
-  return queued < free.length ? free[queued] : never;
-}
-
 enum _Phase { idle, busy, holding }
 
 class _Machine {
@@ -253,17 +238,12 @@ class _Conveyor {
   /// Times at which the parts on the conveyor reach its end, ascending.
   final parts = <int>[];
 
-  /// Places held for parts the buffer is retrieving onto the conveyor.
-  int reserved = 0;
   int maxLevel = 0;
 
-  int get level => parts.length + reserved;
+  bool get hasRoom => parts.length < spec.capacity;
 
-  bool get hasRoom => level < spec.capacity;
-
-  void _track() {
-    if (level > maxLevel) maxLevel = level;
-  }
+  /// A part is at the end of the conveyor at [t].
+  bool waiting(int t) => parts.isNotEmpty && parts.first <= t;
 
   void add(int readyAt) {
     var i = parts.length;
@@ -271,18 +251,7 @@ class _Conveyor {
       i--;
     }
     parts.insert(i, readyAt);
-    _track();
-  }
-
-  void reserve() {
-    reserved += 1;
-    _track();
-  }
-
-  /// A retrieved part placed at the end of the conveyor, ready at [t].
-  void place(int t) {
-    reserved -= 1;
-    add(t);
+    if (parts.length > maxLevel) maxLevel = parts.length;
   }
 }
 
@@ -307,15 +276,22 @@ class _Buffer {
 /// Deterministic, event-driven simulation of a line: stations in order,
 /// unlimited raw parts before the first station, no space between stations
 /// without a buffer (a finished part blocks its machine until the next
-/// station takes it), the line starts empty.
+/// station takes it), the line starts empty. Of several free machines of a
+/// station the fastest takes the next part.
 ///
 /// A buffer before a station is a machine of its own with one place in
 /// front of the station. It stores a waiting part only on a real jam – when
-/// the station stays busy longer than storing takes; a part that can move
-/// on passes on the conveyor. Otherwise it brings a stored part to the
-/// place in front of the station (also while the station works), which the
-/// station takes before parts on the conveyor. The buffer handles one part
-/// at a time, so it empties itself whenever the station has spare time.
+/// the station cannot take the part before the buffer could have stored and
+/// retrieved it; a part that can move on sooner passes on the conveyor.
+/// Otherwise it brings a stored part to the place in front of the station
+/// (also while the station works), which the station takes before parts on
+/// the conveyor. The buffer handles one part at a time, so it empties
+/// itself whenever the station has spare time.
+///
+/// A buffer at a conveyor stands at the station: on such a jam it takes the
+/// part at the end of the full conveyor, which makes room for the next
+/// part, and brings it back in front of the station once no part waits at
+/// the end of the conveyor. Every part travels the conveyor.
 class LineSimulation {
   const LineSimulation(this.stations);
 
@@ -479,6 +455,64 @@ class LineSimulation {
 
     bool available(_Machine m, int t) => m.phase == _Phase.idle && !m.isDown(t);
 
+    // Machines waiting with a finished part, the oldest part first; of
+    // parts finished at the same time the fastest machine's.
+    List<_Machine> waiting(List<_Machine> row) =>
+        [
+          for (final m in row)
+            if (m.phase == _Phase.holding) m,
+        ]..sort((a, b) {
+          final c = a.holdSince.compareTo(b.holdSince);
+          return c != 0 ? c : a.cycle.compareTo(b.cycle);
+        });
+
+    // Times from [t] until station [si] can take its next [count] parts:
+    // its machines in the order they become free, each again one cycle
+    // later. A machine waiting with a finished part is free when the
+    // station behind it takes that part.
+    List<int> takeTimes(int si, int count, int t) {
+      final own = machines[si];
+      final holders = waiting(own);
+      var leave = const <int>[];
+      if (holders.isNotEmpty) {
+        final c = conveyors[si + 1];
+        // Parts the next station takes first.
+        final ahead = buffers[si + 1]?.infeed ?? 0;
+        final next = takeTimes(si + 1, ahead + holders.length, t);
+        leave = [
+          for (var k = 0; k < holders.length; k++)
+            // A place on a full conveyor: when its part is taken.
+            c != null && k < c.parts.length && c.parts[k] - t > next[ahead + k]
+                ? c.parts[k] - t
+                : next[ahead + k],
+        ];
+      }
+      final free = [
+        for (final m in own)
+          switch (m.phase) {
+            _Phase.idle => m.isDown(t) ? m.downUntil - t : 0,
+            _Phase.busy => m.busyUntil - t,
+            _Phase.holding => leave[holders.indexOf(m)],
+          },
+      ];
+      final times = <int>[];
+      while (times.length < count) {
+        var first = 0;
+        for (var k = 1; k < free.length; k++) {
+          if (free[k] < free[first]) first = k;
+        }
+        times.add(free[first]);
+        free[first] += own[first].cycle;
+      }
+      return times;
+    }
+
+    // A real jam: the station takes its ([queued] + 1)-th part later than
+    // the buffer [b] needs to store a part and bring it back.
+    bool jam(int si, _Buffer b, int queued, int t) =>
+        takeTimes(si, queued + 1, t).last >
+        b.spec.storeMicros + b.spec.retrieveMicros;
+
     void dispatch(int t) {
       var changed = true;
       while (changed) {
@@ -494,21 +528,24 @@ class LineSimulation {
             }
             continue;
           }
+          // A part goes to the fastest free machine.
           final free = [
             for (final m in own)
               if (available(m, t)) m,
-          ];
-          final holders = [
-            for (final m in machines[si - 1])
-              if (m.phase == _Phase.holding) m,
-          ]..sort((a, b) => a.holdSince.compareTo(b.holdSince));
+          ]..sort((a, b) => a.cycle.compareTo(b.cycle));
+          final holders = waiting(machines[si - 1]);
           final b = buffers[si];
           final c = conveyors[si];
+          // A retrieved part waiting in front of the station is older than
+          // anything on the conveyor: it goes first.
+          while (b != null && b.infeed > 0 && free.isNotEmpty) {
+            b.infeed -= 1;
+            start(free.removeAt(0), t);
+            changed = true;
+          }
           if (c != null) {
             // Parts at the end of the conveyor go to free machines.
-            while (free.isNotEmpty &&
-                c.parts.isNotEmpty &&
-                c.parts.first <= t) {
+            while (free.isNotEmpty && c.waiting(t)) {
               c.parts.removeAt(0);
               start(free.removeAt(0), t);
               changed = true;
@@ -520,18 +557,23 @@ class LineSimulation {
               changed = true;
             }
             if (b == null || !b.idle) continue;
-            if (holders.isNotEmpty && b.level < b.spec.capacity) {
-              // The conveyor is full: store the oldest waiting part.
+            if (holders.isNotEmpty &&
+                b.level < b.spec.capacity &&
+                c.waiting(t) &&
+                jam(si, b, b.infeed, t)) {
+              // The conveyor is full and jammed: store the part at its end,
+              // the oldest waiting part takes the free place.
+              c.parts.removeAt(0);
               release(holders.removeAt(0), t);
+              c.add(t + c.spec.transportMicros);
               b
                 ..storing = true
                 ..busyUntil = t + b.spec.storeMicros
                 ..stores += 1;
               changed = true;
-            } else if (b.level > 0 && c.hasRoom) {
-              // Room on the conveyor: put a stored part on it in front of
-              // the station.
-              c.reserve();
+            } else if (b.level > 0 && b.infeed == 0 && !c.waiting(t)) {
+              // No part waits at the end of the conveyor: bring a stored
+              // part in front of the station.
               b
                 ..level -= 1
                 ..retrieving = true
@@ -540,13 +582,6 @@ class LineSimulation {
               changed = true;
             }
             continue;
-          }
-          // A retrieved part waiting in front of the station is older than
-          // anything on the conveyor: it goes first.
-          while (b != null && b.infeed > 0 && free.isNotEmpty) {
-            b.infeed -= 1;
-            start(free.removeAt(0), t);
-            changed = true;
           }
           // Direct pass on the conveyor.
           while (free.isNotEmpty && holders.isNotEmpty) {
@@ -557,9 +592,9 @@ class LineSimulation {
           if (b == null || !b.idle) continue;
           if (holders.isNotEmpty &&
               b.level < b.spec.capacity &&
-              _waitFor(own, b.infeed, t) > b.spec.storeMicros) {
-            // Real jam (the station stays busy longer than storing takes):
-            // store the oldest waiting part, its machine is free again.
+              jam(si, b, b.infeed, t)) {
+            // Real jam: store the oldest waiting part, its machine is free
+            // again.
             release(holders.removeAt(0), t);
             b
               ..storing = true
@@ -645,13 +680,9 @@ class LineSimulation {
             ..level += 1;
           if (b.level > b.maxLevel) b.maxLevel = b.level;
         } else {
-          b.retrieving = false;
-          final c = conveyors[i];
-          if (c == null) {
-            b.infeed += 1;
-          } else {
-            c.place(t);
-          }
+          b
+            ..retrieving = false
+            ..infeed += 1;
         }
       }
       dispatch(t);

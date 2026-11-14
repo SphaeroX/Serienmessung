@@ -83,6 +83,18 @@ void main() {
       expect(r.output, 296);
     });
 
+    test('a part goes to the fastest free machine, whatever their order', () {
+      // Both presses are free when the first part comes: the fast one
+      // takes it, so the saw is blocked less.
+      int output(List<int> presses) => run([
+        station('Saw', [10]),
+        station('P', presses),
+        station('Wash', [10]),
+      ], 8 * 3600).output;
+      expect(output([30, 20]), output([20, 30]));
+      expect(output([30, 20]), 2158);
+    });
+
     test('a failure costs its duration at the bottleneck', () {
       final line = [
         station('A', [10]),

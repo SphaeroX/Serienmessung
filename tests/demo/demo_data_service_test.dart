@@ -240,7 +240,8 @@ void main() {
     expect(line.stations.every((st) => st.measured), isTrue);
     final bottleneck = line.stations.singleWhere((st) => st.isBottleneck);
     expect(bottleneck.position, 1);
-    expect(line.lineCycleTime! / _s, inInclusiveRange(55, 59));
+    // About 1000 parts in 24 hours at the pace of the milling centres.
+    expect(line.outputPerHour! * 24, closeTo(1000, 10));
     expect(
       [for (final st in line.stations) st.bufferBefore != null],
       [false, true, false, false, true, false],
@@ -257,6 +258,22 @@ void main() {
     final result = LineSimulation.fromLine(line).run(horizonMicros: shift);
     expect(result.output, greaterThan(0));
     expect(result.output, lessThanOrEqualTo(shift ~/ line.lineCycleTime!));
+  });
+
+  test('the line makes 1000 parts in 24 hours when nothing fails', () async {
+    final line = await lineOf(await demo.load(t));
+    final sim = LineSimulation.fromLine(line);
+
+    const day = 24 * 3600 * _s;
+    final result = sim.run(horizonMicros: day);
+    expect(result.output, 1000);
+    // The milling centres work all the time, every other station waits.
+    expect(result.stations[1].utilization, greaterThan(0.98));
+    for (final i in [0, 2, 3, 4, 5]) {
+      expect(result.stations[i].utilization, lessThan(0.95), reason: '$i');
+    }
+    // Without the buffers the blade changes of the saw cost parts.
+    expect(sim.withoutBuffers().run(horizonMicros: day).output, lessThan(990));
   });
 
   test('own data stays; loading twice adds a second demo line', () async {
