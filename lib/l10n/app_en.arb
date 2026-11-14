@@ -172,6 +172,21 @@
   },
   "stepsSection": "Steps",
   "stepsEditHint": "Tap to rename, drag to reorder. Recorded times stay with their step.",
+  "stepsEditList": "List",
+  "stepsEditText": "Text",
+  "stepsTextHint": "One line per step. Edited lines keep their recorded times; removed lines delete their step.",
+  "deleteSteps": "Delete steps",
+  "deleteStepsWithTimes": "Delete removed steps ({steps}) including {count, plural, =1{1 recorded time} other{{count} recorded times}}?",
+  "@deleteStepsWithTimes": {
+    "placeholders": {
+      "steps": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "newStepHint": "New step",
   "addStep": "Add step",
   "tabAnalysis": "Analysis",

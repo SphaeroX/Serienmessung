@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/database.dart';
+import '../domain/step_text_sync.dart';
 import '../domain/study.dart';
 
 /// Persistence of studies and step definitions.
@@ -229,6 +230,52 @@ class StudyRepository {
       );
     }
   });
+
+  /// Number of recorded times attached to any of [stepIds].
+  Future<int> countTimesOfSteps(List<int> stepIds) async {
+    if (stepIds.isEmpty) return 0;
+    final marks = List.filled(stepIds.length, '?').join(', ');
+    final r = await _db.db.rawQuery(
+      'SELECT COUNT(*) AS n FROM measurement WHERE step_id IN ($marks)',
+      stepIds,
+    );
+    return r.first['n'] as int;
+  }
+
+  /// Applies a step list edited as text in one transaction: deletes steps
+  /// (with their times), renames and inserts steps and sets the new order.
+  Future<void> applyStepPlan(int studyId, StepTextPlan plan) =>
+      _db.db.transaction((txn) async {
+        for (final id in plan.deletedIds) {
+          await txn.delete(
+            'measurement',
+            where: 'step_id = ?',
+            whereArgs: [id],
+          );
+          await txn.delete(
+            'step_definition',
+            where: 'id = ? AND study_id = ?',
+            whereArgs: [id, studyId],
+          );
+        }
+        for (var i = 0; i < plan.steps.length; i++) {
+          final step = plan.steps[i];
+          if (step.id == null) {
+            await txn.insert('step_definition', {
+              'study_id': studyId,
+              'position': i,
+              'name': step.name,
+            });
+          } else {
+            await txn.update(
+              'step_definition',
+              {'position': i, 'name': step.name},
+              where: 'id = ? AND study_id = ?',
+              whereArgs: [step.id, studyId],
+            );
+          }
+        }
+      });
 
   /// Ends the step definition of a video study (first cycle closed).
   Future<void> closeSteps(int id) => _db.db.update(

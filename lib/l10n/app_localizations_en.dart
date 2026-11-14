@@ -326,6 +326,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap to rename, drag to reorder. Recorded times stay with their step.';
 
   @override
+  String get stepsEditList => 'List';
+
+  @override
+  String get stepsEditText => 'Text';
+
+  @override
+  String get stepsTextHint =>
+      'One line per step. Edited lines keep their recorded times; removed lines delete their step.';
+
+  @override
+  String get deleteSteps => 'Delete steps';
+
+  @override
+  String deleteStepsWithTimes(String steps, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recorded times',
+      one: '1 recorded time',
+    );
+    return 'Delete removed steps ($steps) including $_temp0?';
+  }
+
+  @override
   String get newStepHint => 'New step';
 
   @override

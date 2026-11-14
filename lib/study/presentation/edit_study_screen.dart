@@ -3,12 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
 import '../../l10n/app_localizations.dart';
+import '../domain/step_parser.dart';
+import '../domain/step_text_sync.dart';
 import '../domain/study.dart';
 import 'dictation_button.dart';
 
 /// Edits name, description and step definitions of a study.
 ///
-/// Steps are changed immediately (rename, reorder, add, delete). Measurements
+/// Steps are edited either as a list (rename, reorder, add, delete; changed
+/// immediately) or as a text area with one line per step, applied when
+/// switching back to the list or saving (see [planStepText]). Measurements
 /// reference steps by id, so reordering never moves recorded times. Only
 /// opened while no recording is running.
 class EditStudyScreen extends ConsumerStatefulWidget {
@@ -24,6 +28,8 @@ class _EditStudyScreenState extends ConsumerState<EditStudyScreen> {
   final _name = TextEditingController();
   final _description = TextEditingController();
   final _newStep = TextEditingController();
+  final _stepsText = TextEditingController();
+  bool _textMode = false;
   Study? _study;
   List<StepDefinition> _steps = const [];
 
@@ -38,6 +44,7 @@ class _EditStudyScreenState extends ConsumerState<EditStudyScreen> {
     _name.dispose();
     _description.dispose();
     _newStep.dispose();
+    _stepsText.dispose();
     super.dispose();
   }
 
@@ -64,6 +71,7 @@ class _EditStudyScreenState extends ConsumerState<EditStudyScreen> {
           .showSnackBar(SnackBar(content: Text(l.nameRequired)));
       return;
     }
+    if (_textMode && !await _applyText()) return;
     await ref
         .read(studyRepositoryProvider)
         .updateStudy(
@@ -72,6 +80,57 @@ class _EditStudyScreenState extends ConsumerState<EditStudyScreen> {
           description: _description.text.trim(),
         );
     if (mounted) Navigator.of(context).maybePop(true);
+  }
+
+  Future<void> _setTextMode(bool text) async {
+    if (text == _textMode) return;
+    if (text) {
+      _stepsText.text = stepsToText(_steps.map((s) => s.name).toList());
+      setState(() => _textMode = true);
+    } else if (await _applyText() && mounted) {
+      setState(() => _textMode = false);
+    }
+  }
+
+  /// Applies the step text area; false if it was rejected or cancelled.
+  Future<bool> _applyText() async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final repo = ref.read(studyRepositoryProvider);
+    final plan = planStepText(_steps, _stepsText.text);
+    if (plan.steps.isEmpty) {
+      messenger.showSnackBar(SnackBar(content: Text(l.stepsRequired)));
+      return false;
+    }
+    final times = await repo.countTimesOfSteps(plan.deletedIds);
+    if (!mounted) return false;
+    if (times > 0) {
+      final names = _steps
+          .where((s) => plan.deletedIds.contains(s.id))
+          .map((s) => s.name)
+          .join(', ');
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l.deleteSteps),
+          content: Text(l.deleteStepsWithTimes(names, times)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(l.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(l.delete),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return false;
+    }
+    await repo.applyStepPlan(widget.studyId, plan);
+    await _load(fields: false);
+    return true;
   }
 
   Future<void> _rename(StepDefinition step) async {
@@ -204,70 +263,126 @@ class _EditStudyScreenState extends ConsumerState<EditStudyScreen> {
                       l.stepsSection,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    subtitle: Text(l.stepsEditHint),
-                  ),
-                  Expanded(
-                    child: ReorderableListView.builder(
-                      buildDefaultDragHandles: false,
-                      itemCount: _steps.length,
-                      onReorderItem: _reorder,
-                      itemBuilder: (context, i) {
-                        final s = _steps[i];
-                        return ListTile(
-                          key: ValueKey(s.id),
-                          leading: ReorderableDragStartListener(
-                            index: i,
-                            child: const Icon(Icons.drag_handle),
+                    subtitle: Text(
+                      _textMode ? l.stepsTextHint : l.stepsEditHint,
+                    ),
+                    trailing: SegmentedButton<bool>(
+                      showSelectedIcon: false,
+                      segments: [
+                        ButtonSegment(
+                          value: false,
+                          icon: const Icon(Icons.list),
+                          tooltip: l.stepsEditList,
+                          label: Text(
+                            l.stepsEditList,
+                            key: const Key('stepsListMode'),
                           ),
-                          title: Text(s.name),
-                          subtitle: Text(l.stepOf(i + 1, _steps.length)),
-                          onTap: () => _rename(s),
-                          trailing: IconButton(
-                            key: Key('deleteStep-$i'),
-                            tooltip: l.deleteStep,
-                            icon: const Icon(Icons.delete_outline),
-                            onPressed: () => _delete(s),
+                        ),
+                        ButtonSegment(
+                          value: true,
+                          icon: const Icon(Icons.notes),
+                          tooltip: l.stepsEditText,
+                          label: Text(
+                            l.stepsEditText,
+                            key: const Key('stepsTextMode'),
                           ),
-                        );
-                      },
+                        ),
+                      ],
+                      selected: {_textMode},
+                      onSelectionChanged: (v) => _setTextMode(v.first),
                     ),
                   ),
-                  SafeArea(
-                    top: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 8, 8),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  key: const Key('newStepField'),
-                                  controller: _newStep,
-                                  decoration: InputDecoration(
-                                    hintText: l.newStepHint,
-                                  ),
-                                  onSubmitted: (_) => _add(),
-                                ),
-                              ),
-                              IconButton(
-                                key: const Key('addStepButton'),
-                                tooltip: l.addStep,
-                                icon: const Icon(Icons.add_circle),
-                                onPressed: _add,
-                              ),
-                            ],
+                  if (_textMode) ...[
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: TextField(
+                          key: const Key('stepsField'),
+                          controller: _stepsText,
+                          expands: true,
+                          minLines: null,
+                          maxLines: null,
+                          keyboardType: TextInputType.multiline,
+                          textAlignVertical: TextAlignVertical.top,
+                          decoration: InputDecoration(
+                            labelText: l.stepsLabel,
+                            alignLabelWithHint: true,
+                            border: const OutlineInputBorder(),
                           ),
-                          const SizedBox(height: 4),
-                          DictationButton(
-                            controller: _newStep,
-                            multiline: false,
-                          ),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                    SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                        child: DictationButton(controller: _stepsText),
+                      ),
+                    ),
+                  ] else ...[
+                    Expanded(
+                      child: ReorderableListView.builder(
+                        buildDefaultDragHandles: false,
+                        itemCount: _steps.length,
+                        onReorderItem: _reorder,
+                        itemBuilder: (context, i) {
+                          final s = _steps[i];
+                          return ListTile(
+                            key: ValueKey(s.id),
+                            leading: ReorderableDragStartListener(
+                              index: i,
+                              child: const Icon(Icons.drag_handle),
+                            ),
+                            title: Text(s.name),
+                            subtitle: Text(l.stepOf(i + 1, _steps.length)),
+                            onTap: () => _rename(s),
+                            trailing: IconButton(
+                              key: Key('deleteStep-$i'),
+                              tooltip: l.deleteStep,
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () => _delete(s),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 8, 8),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    key: const Key('newStepField'),
+                                    controller: _newStep,
+                                    decoration: InputDecoration(
+                                      hintText: l.newStepHint,
+                                    ),
+                                    onSubmitted: (_) => _add(),
+                                  ),
+                                ),
+                                IconButton(
+                                  key: const Key('addStepButton'),
+                                  tooltip: l.addStep,
+                                  icon: const Icon(Icons.add_circle),
+                                  onPressed: _add,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            DictationButton(
+                              controller: _newStep,
+                              multiline: false,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ] else
                   const Spacer(),
               ],
