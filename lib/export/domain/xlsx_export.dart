@@ -4,10 +4,12 @@ import 'package:intl/intl.dart';
 import '../../recording/domain/measurement.dart';
 import '../../study/domain/study.dart';
 import 'export_data.dart';
+import 'xlsx_layout.dart';
 
 /// Builds an Excel workbook with the sheets Measurements, Cycles (not for
 /// the step timer) and Analysis. Times are numeric cells in the export unit
-/// (the stopwatch format is exported as seconds).
+/// (the stopwatch format is exported as seconds). [SheetLayout] gives the
+/// sheets their look and column widths.
 List<int> buildXlsx(ExportInput x) {
   final l = x.labels;
   final excel = Excel.createExcel();
@@ -15,24 +17,14 @@ List<int> buildXlsx(ExportInput x) {
   final unit = x.numericUnit.label;
   CellValue t(String s) => TextCellValue(s);
   CellValue d(num micros) =>
-      DoubleCellValue(_round(x.value(micros), x.decimals));
+      fixed(DoubleCellValue(_round(x.value(micros), x.decimals)), x.decimals);
+  CellValue pct(double ratio) =>
+      fixed(DoubleCellValue(_round(ratio * 100, 1)), 1);
   CellValue i(int v) => IntCellValue(v);
-  final bold = CellStyle(bold: true);
-
-  void header(Sheet sheet, List<String> titles) {
-    sheet.appendRow([for (final s in titles) t(s)]);
-    final row = sheet.maxRows - 1;
-    for (var c = 0; c < titles.length; c++) {
-      sheet
-              .cell(CellIndex.indexByColumnRow(columnIndex: c, rowIndex: row))
-              .cellStyle =
-          bold;
-    }
-  }
 
   // Measurements.
-  final ms = excel[l.measurementsSheet];
-  header(ms, [
+  final ms = SheetLayout(excel[l.measurementsSheet]);
+  ms.header([
     l.cycle,
     l.stepNo,
     l.step,
@@ -45,7 +37,7 @@ List<int> buildXlsx(ExportInput x) {
   final base = x.timeBase;
   for (final m in x.measurements) {
     final no = x.stepNumber(m);
-    ms.appendRow([
+    ms.row([
       i(m.cycle),
       no.isEmpty ? null : i(int.parse(no)),
       t(x.stepName(m)),
@@ -53,15 +45,16 @@ List<int> buildXlsx(ExportInput x) {
       d(m.endMicros - base),
       d(m.durationMicros),
       t(m.kind == MeasurementKind.special ? l.special : l.normal),
-      t(m.note),
+      m.note.isEmpty ? null : t(m.note),
     ]);
   }
+  ms.finish();
 
   // Cycle matrix: one row per cycle, one column per step.
   if (x.study.mode != StudyMode.stepTimer) {
-    final cs = excel[l.cyclesSheet];
+    final cs = SheetLayout(excel[l.cyclesSheet]);
     final steps = x.study.mode.usesSteps ? x.steps : const <StepDefinition>[];
-    header(cs, [
+    cs.header([
       l.cycle,
       for (final s in steps) '${s.position + 1}. ${s.name} [$unit]',
       '${l.total} [$unit]',
@@ -69,7 +62,7 @@ List<int> buildXlsx(ExportInput x) {
       l.complete,
     ]);
     for (final g in x.cycles) {
-      cs.appendRow([
+      cs.row([
         i(g.cycle),
         for (final s in steps)
           () {
@@ -84,40 +77,45 @@ List<int> buildXlsx(ExportInput x) {
         t(g.isComplete ? l.yes : l.no),
       ]);
     }
+    cs.finish();
   }
 
-  // Analysis with header information.
+  // Analysis: title, study information, key figures, steps.
   final a = x.analysis;
-  final an = excel[l.analysisSheet];
-  void kv(String k, CellValue? v) => an.appendRow([t(k), v]);
-  kv(l.study, t(x.study.name));
-  if (x.study.description.isNotEmpty) kv(l.description, t(x.study.description));
-  if (x.study.notes.isNotEmpty) kv(l.notes, t(x.study.notes));
-  kv(l.mode, t(l.modeName));
+  final an = SheetLayout(excel[l.analysisSheet]);
+  an.title(l.analysisSheet);
+  an.keyValue(l.study, t(x.study.name));
+  if (x.study.description.isNotEmpty) {
+    an.keyValue(l.description, t(x.study.description));
+  }
+  if (x.study.notes.isNotEmpty) an.keyValue(l.notes, t(x.study.notes));
+  an.keyValue(l.mode, t(l.modeName));
   final r = l.revision;
   if (r != null) {
-    kv(r.revision, t('${x.study.revision}'));
-    if (x.lastMeasuredText != null) kv(r.lastMeasured, t(x.lastMeasuredText!));
+    an.keyValue(r.revision, t('${x.study.revision}'));
+    if (x.lastMeasuredText != null) {
+      an.keyValue(r.lastMeasured, t(x.lastMeasuredText!));
+    }
   }
-  kv(l.date, t(DateFormat('yyyy-MM-dd HH:mm').format(x.exportedAt)));
-  kv(l.unit, t(unit));
-  kv(l.method, t(l.methodName));
-  an.appendRow([]);
+  an.keyValue(l.date, t(DateFormat('yyyy-MM-dd HH:mm').format(x.exportedAt)));
+  an.keyValue(l.unit, t(unit));
+  an.keyValue(l.method, t(l.methodName));
+  an.gap();
   if (x.study.mode != StudyMode.stepTimer && a.cycleStats.n > 0) {
-    kv(l.realCycleTime, d(a.realCycleTime));
-    kv(l.n, i(a.cycleStats.n));
-    kv(l.mean, d(a.cycleStats.mean));
-    kv(l.median, d(a.cycleStats.median));
-    kv(l.min, d(a.cycleStats.min));
-    kv(l.max, d(a.cycleStats.max));
-    kv(l.stdDev, d(a.cycleStats.stdDev));
-    kv('${l.cv} [%]', DoubleCellValue(_round(a.cycleStats.cv * 100, 1)));
-    kv(l.outliersRemoved, i(a.removedCycles));
+    an.keyValue(l.realCycleTime, d(a.realCycleTime));
+    an.keyValue(l.n, i(a.cycleStats.n));
+    an.keyValue(l.mean, d(a.cycleStats.mean));
+    an.keyValue(l.median, d(a.cycleStats.median));
+    an.keyValue(l.min, d(a.cycleStats.min));
+    an.keyValue(l.max, d(a.cycleStats.max));
+    an.keyValue(l.stdDev, d(a.cycleStats.stdDev));
+    an.keyValue('${l.cv} [%]', pct(a.cycleStats.cv));
+    an.keyValue(l.outliersRemoved, i(a.removedCycles));
   }
-  kv(l.specialTotal, d(a.specialTotal));
+  an.keyValue(l.specialTotal, d(a.specialTotal));
   if (a.steps.isNotEmpty) {
-    an.appendRow([]);
-    header(an, [
+    an.gap();
+    an.header([
       l.stepNo,
       l.step,
       l.n,
@@ -130,7 +128,7 @@ List<int> buildXlsx(ExportInput x) {
       '${l.share} [%]',
     ]);
     for (final s in a.steps) {
-      an.appendRow([
+      an.row([
         i(s.step.position + 1),
         t(s.step.name),
         i(s.stats.n),
@@ -140,10 +138,11 @@ List<int> buildXlsx(ExportInput x) {
         d(s.stats.max),
         d(s.stats.stdDev),
         d(s.realTime),
-        DoubleCellValue(_round(s.share * 100, 1)),
+        pct(s.share),
       ]);
     }
   }
+  an.finish();
 
   excel.setDefaultSheet(l.analysisSheet);
   excel.delete(defaultSheet);

@@ -10,12 +10,14 @@ import '../../study/domain/study.dart';
 import '../../group/domain/failure_risk.dart';
 import '../../group/domain/stations.dart';
 import 'group_report.dart';
+import 'xlsx_layout.dart';
 
 /// Builds the compact group workbook: an overview sheet (all studies in
 /// group order with revision, last measurement, real cycle time and the
 /// deviation from the previous revision) and one sheet per study (key
 /// figures, steps with deviation, cycle matrix). Times are numeric cells in
-/// the report unit.
+/// the report unit; [SheetLayout] gives the sheets their look and column
+/// widths.
 List<int> buildGroupXlsx(GroupReportInput g) => _build(g, null);
 
 /// Builds the full, linked group workbook: a contents sheet with links to
@@ -27,16 +29,14 @@ List<int> buildGroupXlsx(GroupReportInput g) => _build(g, null);
 List<int> buildGroupReportXlsx(GroupReportInput g, LineReportLabels labels) =>
     _build(g, labels);
 
-/// Quotes a sheet name for formulas (`'name'`).
-String _ref(String sheet) => "'${sheet.replaceAll("'", "''")}'";
-
-/// `HYPERLINK` formula to cell A1 of [sheet].
-String _link(String sheet, String text) =>
-    'HYPERLINK("#${_ref(sheet).replaceAll('"', '""')}!A1",'
-    '"${text.replaceAll('"', '""')}")';
-
 /// Column letter of a 0-based column index (A-Z is enough here).
 String _col(int index) => String.fromCharCode('A'.codeUnitAt(0) + index);
+
+int _decimalsOf(TimeUnit unit) => switch (unit) {
+  TimeUnit.hm => 2,
+  TimeUnit.tmu => 1,
+  _ => 3,
+};
 
 List<int> _build(GroupReportInput g, LineReportLabels? ll) {
   final excel = Excel.createExcel();
@@ -45,32 +45,20 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
   final el = g.exportLabels;
   final rl = el.revision;
   final numericUnit = g.unit == TimeUnit.stopwatch ? TimeUnit.seconds : g.unit;
-  final decimals = switch (numericUnit) {
-    TimeUnit.hm => 2,
-    TimeUnit.tmu => 1,
-    _ => 3,
-  };
+  final decimals = _decimalsOf(numericUnit);
   final unit = numericUnit.label;
   CellValue t(String s) => TextCellValue(s);
   CellValue? d(num? micros) => micros == null
       ? null
-      : DoubleCellValue(
-          _round(numericUnit.fromMicros(micros.round()), decimals),
+      : fixed(
+          DoubleCellValue(
+            _round(numericUnit.fromMicros(micros.round()), decimals),
+          ),
+          decimals,
         );
   CellValue? pct(double? ratio) =>
-      ratio == null ? null : DoubleCellValue(_round(ratio * 100, 1));
+      ratio == null ? null : fixed(DoubleCellValue(_round(ratio * 100, 1)), 1);
   CellValue i(int v) => IntCellValue(v);
-  final bold = CellStyle(bold: true);
-  void header(Sheet sheet, List<String> titles) {
-    sheet.appendRow([for (final s in titles) t(s)]);
-    final row = sheet.maxRows - 1;
-    for (var c = 0; c < titles.length; c++) {
-      sheet
-              .cell(CellIndex.indexByColumnRow(columnIndex: c, rowIndex: row))
-              .cellStyle =
-          bold;
-    }
-  }
 
   // Sheets are created in their final order; contents and line are filled
   // last because they refer to the study sheets.
@@ -86,16 +74,16 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
   );
 
   // Overview.
-  final ov = excel[gl.overview];
-  void kv(Sheet sheet, String k, CellValue? v) => sheet.appendRow([t(k), v]);
-  kv(ov, gl.group, t(g.group.name));
+  final ov = SheetLayout(excel[gl.overview]);
+  ov.title(gl.overview);
+  ov.keyValue(gl.group, t(g.group.name));
   if (g.group.description.isNotEmpty) {
-    kv(ov, el.description, t(g.group.description));
+    ov.keyValue(el.description, t(g.group.description));
   }
-  kv(ov, el.date, t(DateFormat('yyyy-MM-dd HH:mm').format(g.exportedAt)));
-  kv(ov, el.unit, t(unit));
-  ov.appendRow([]);
-  header(ov, [
+  ov.keyValue(el.date, t(DateFormat('yyyy-MM-dd HH:mm').format(g.exportedAt)));
+  ov.keyValue(el.unit, t(unit));
+  ov.gap();
+  ov.header([
     gl.position,
     el.study,
     el.mode,
@@ -115,7 +103,7 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
     final c = x.comparison;
     final hasCycles = x.study.mode != StudyMode.stepTimer && a.cycleStats.n > 0;
     if (hasCycles) total += a.realCycleTime;
-    ov.appendRow([
+    ov.row([
       i(k + 1),
       t(x.study.name),
       t(x.labels.modeName),
@@ -126,10 +114,11 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
       d(c?.previousCycleTime),
       d(c?.cycleDelta),
       pct(c?.cycleDeltaRatio),
-      if (ll != null) FormulaCellValue(_link(names[k], names[k])),
+      if (ll != null) sheetLink(names[k], names[k]),
     ]);
   }
-  ov.appendRow([t(gl.total), null, null, null, null, null, d(total)]);
+  ov.row([t(gl.total), null, null, null, null, null, d(total)], total: true);
+  ov.finish();
 
   // One sheet per study. In the linked workbook the row of the real cycle
   // time (1-based) is remembered for the line formulas.
@@ -139,47 +128,45 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
     final l = x.labels;
     final a = x.analysis;
     final c = x.comparison;
-    final sh = excel[names[k]];
-    if (ll != null) {
-      sh.appendRow([FormulaCellValue(_link(ll.contents, ll.backToContents))]);
-    }
-    kv(sh, l.study, t(x.study.name));
+    final sh = SheetLayout(excel[names[k]]);
+    if (ll != null) sh.cells([sheetLink(ll.contents, ll.backToContents)]);
+    sh.title(x.study.name);
+    sh.keyValue(l.study, t(x.study.name));
     if (x.study.description.isNotEmpty) {
-      kv(sh, l.description, t(x.study.description));
+      sh.keyValue(l.description, t(x.study.description));
     }
-    if (x.study.notes.isNotEmpty) kv(sh, l.notes, t(x.study.notes));
-    kv(sh, l.mode, t(l.modeName));
+    if (x.study.notes.isNotEmpty) sh.keyValue(l.notes, t(x.study.notes));
+    sh.keyValue(l.mode, t(l.modeName));
     if (rl != null) {
-      kv(sh, rl.revision, i(x.study.revision));
+      sh.keyValue(rl.revision, i(x.study.revision));
       if (x.lastMeasuredText != null) {
-        kv(sh, rl.lastMeasured, t(x.lastMeasuredText!));
+        sh.keyValue(rl.lastMeasured, t(x.lastMeasuredText!));
       }
     }
-    kv(sh, l.unit, t(unit));
-    kv(sh, l.method, t(l.methodName));
-    sh.appendRow([]);
+    sh.keyValue(l.unit, t(unit));
+    sh.keyValue(l.method, t(l.methodName));
+    sh.gap();
     if (x.study.mode != StudyMode.stepTimer && a.cycleStats.n > 0) {
-      kv(sh, l.realCycleTime, d(a.realCycleTime));
-      cycleRows[k] = sh.maxRows;
+      cycleRows[k] = sh.keyValue(l.realCycleTime, d(a.realCycleTime));
       if (c?.previousCycleTime != null) {
-        kv(sh, gl.previous, d(c!.previousCycleTime));
-        kv(sh, '${rl?.delta ?? 'Δ'} [$unit]', d(c.cycleDelta));
-        kv(sh, '${rl?.delta ?? 'Δ'} [%]', pct(c.cycleDeltaRatio));
+        sh.keyValue(gl.previous, d(c!.previousCycleTime));
+        sh.keyValue('${rl?.delta ?? 'Δ'} [$unit]', d(c.cycleDelta));
+        sh.keyValue('${rl?.delta ?? 'Δ'} [%]', pct(c.cycleDeltaRatio));
       }
-      kv(sh, l.n, i(a.cycleStats.n));
-      kv(sh, l.mean, d(a.cycleStats.mean));
-      kv(sh, l.median, d(a.cycleStats.median));
-      kv(sh, l.min, d(a.cycleStats.min));
-      kv(sh, l.max, d(a.cycleStats.max));
-      kv(sh, l.stdDev, d(a.cycleStats.stdDev));
-      kv(sh, '${l.cv} [%]', pct(a.cycleStats.cv));
-      kv(sh, l.outliersRemoved, i(a.removedCycles));
+      sh.keyValue(l.n, i(a.cycleStats.n));
+      sh.keyValue(l.mean, d(a.cycleStats.mean));
+      sh.keyValue(l.median, d(a.cycleStats.median));
+      sh.keyValue(l.min, d(a.cycleStats.min));
+      sh.keyValue(l.max, d(a.cycleStats.max));
+      sh.keyValue(l.stdDev, d(a.cycleStats.stdDev));
+      sh.keyValue('${l.cv} [%]', pct(a.cycleStats.cv));
+      sh.keyValue(l.outliersRemoved, i(a.removedCycles));
     }
-    kv(sh, l.specialTotal, d(a.specialTotal));
+    sh.keyValue(l.specialTotal, d(a.specialTotal));
 
     if (a.steps.isNotEmpty) {
-      sh.appendRow([]);
-      header(sh, [
+      sh.gap();
+      sh.header([
         l.stepNo,
         l.step,
         l.n,
@@ -199,7 +186,7 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
       for (var s = 0; s < a.steps.length; s++) {
         final st = a.steps[s];
         final dev = c?.steps[s];
-        sh.appendRow([
+        sh.row([
           i(st.step.position + 1),
           t(st.step.name),
           i(st.stats.n),
@@ -221,8 +208,8 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
 
     if (x.study.mode != StudyMode.stepTimer && x.cycles.isNotEmpty) {
       final steps = x.study.mode.usesSteps ? x.steps : const <StepDefinition>[];
-      sh.appendRow([]);
-      header(sh, [
+      sh.gap();
+      sh.header([
         l.cycle,
         for (final st in steps) '${st.position + 1}. ${st.name} [$unit]',
         '${l.total} [$unit]',
@@ -230,7 +217,7 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
         l.complete,
       ]);
       for (final cy in x.cycles) {
-        sh.appendRow([
+        sh.row([
           i(cy.cycle),
           for (final st in steps)
             () {
@@ -247,12 +234,13 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
         ]);
       }
     }
+    sh.finish();
   }
 
   if (ll != null) {
-    _writeLine(lineSheet!, g, ll, names, cycleRows, numericUnit, header, kv);
-    if (riskSheet != null) _writeRisk(riskSheet, g, ll, header, kv);
-    _writeContents(contents!, g, ll, names, kv);
+    _writeLine(SheetLayout(lineSheet!), g, ll, names, cycleRows, numericUnit);
+    if (riskSheet != null) _writeRisk(SheetLayout(riskSheet), g, ll);
+    _writeContents(SheetLayout(contents!), g, ll, names);
   }
 
   excel.setDefaultSheet(ll?.contents ?? gl.overview);
@@ -261,68 +249,65 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
 }
 
 void _writeContents(
-  Sheet sh,
+  SheetLayout sh,
   GroupReportInput g,
   LineReportLabels ll,
   List<String> names,
-  void Function(Sheet, String, CellValue?) kv,
 ) {
   CellValue t(String s) => TextCellValue(s);
-  sh.appendRow([t(g.labels.title)]);
-  sh.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 0)).cellStyle =
-      CellStyle(bold: true, fontSize: 14);
-  kv(sh, g.labels.group, t(g.group.name));
+  sh.title(g.labels.title);
+  sh.keyValue(g.labels.group, t(g.group.name));
   if (g.group.description.isNotEmpty) {
-    kv(sh, g.exportLabels.description, t(g.group.description));
+    sh.keyValue(g.exportLabels.description, t(g.group.description));
   }
-  kv(
-    sh,
+  sh.keyValue(
     g.exportLabels.date,
     t(DateFormat('yyyy-MM-dd HH:mm').format(g.exportedAt)),
   );
-  sh.appendRow([]);
-  sh.appendRow([t(ll.contents)]);
-  sh.appendRow([FormulaCellValue(_link(ll.lineAnalysis, ll.lineAnalysis))]);
+  sh.gap();
+  sh.section(ll.contents);
+  sh.cells([sheetLink(ll.lineAnalysis, ll.lineAnalysis)]);
   if (ll.risk != null) {
-    sh.appendRow([FormulaCellValue(_link(ll.risk!.title, ll.risk!.title))]);
+    sh.cells([sheetLink(ll.risk!.title, ll.risk!.title)]);
   }
-  sh.appendRow([FormulaCellValue(_link(g.labels.overview, g.labels.overview))]);
-  sh.appendRow([]);
-  sh.appendRow([t(ll.studies)]);
+  sh.cells([sheetLink(g.labels.overview, g.labels.overview)]);
+  sh.gap();
+  sh.section(ll.studies);
   for (var k = 0; k < names.length; k++) {
-    sh.appendRow([
-      FormulaCellValue(_link(names[k], names[k])),
-      t(g.entries[k].study.name),
-    ]);
+    sh.cells([sheetLink(names[k], names[k]), t(g.entries[k].study.name)]);
   }
+  sh.finish();
 }
 
 /// Line analysis with formulas: station cycle times refer to the real cycle
 /// time cell of each study sheet, the line figures are computed from them.
 void _writeLine(
-  Sheet sh,
+  SheetLayout sh,
   GroupReportInput g,
   LineReportLabels ll,
   List<String> names,
   Map<int, int> cycleRows,
   TimeUnit unit,
-  void Function(Sheet, List<String>) header,
-  void Function(Sheet, String, CellValue?) kv,
 ) {
   CellValue t(String s) => TextCellValue(s);
   final el = g.exportLabels;
   final gl = g.labels;
-  final decimals = switch (unit) {
-    TimeUnit.hm => 2,
-    TimeUnit.tmu => 1,
-    _ => 3,
-  };
+  final decimals = _decimalsOf(unit);
+  CellValue number(String formula, [int? digits]) =>
+      fixed(FormulaCellValue(formula), digits ?? decimals);
+  CellValue time(num micros) => fixed(
+    DoubleCellValue(
+      double.parse(unit.fromMicros(micros.round()).toStringAsFixed(decimals)),
+    ),
+    decimals,
+  );
   // Seconds per unit, for the output per hour.
   final secondsPerUnit = 1 / unit.fromMicros(1000000);
-  kv(sh, gl.group, t(g.group.name));
-  kv(sh, el.unit, t(unit.label));
-  sh.appendRow([]);
-  header(sh, [
+  sh.title(ll.lineAnalysis);
+  sh.keyValue(gl.group, t(g.group.name));
+  sh.keyValue(el.unit, t(unit.label));
+  sh.gap();
+  sh.header([
     gl.position,
     ll.station,
     '${el.realCycleTime} [${unit.label}]',
@@ -333,13 +318,13 @@ void _writeLine(
   ]);
   final line = g.line;
   final groups = stationGroups([for (final x in g.entries) x.study.parallel]);
-  final first = sh.maxRows + 1; // 1-based row of the first station
+  final first = sh.nextRow; // 1-based row of the first station
   final last = first + line.stations.length - 1;
   String range(int col) => '${_col(col)}$first:${_col(col)}$last';
-  // Sum and maximum follow directly behind the stations (the excel package
-  // does not write empty rows); their values are in column B.
-  final sumCell = '\$B\$${last + 1}';
-  final maxCell = '\$B\$${last + 2}';
+  // Sum and maximum follow the stations after one empty row; their values
+  // are in column B.
+  final sumCell = '\$B\$${last + 2}';
+  final maxCell = '\$B\$${last + 3}';
   for (var k = 0; k < line.stations.length; k++) {
     final row = first + k;
     final station = line.stations[k];
@@ -350,7 +335,7 @@ void _writeLine(
       for (var j = 0; j < groups[k].length; j++)
         if (cycleRows[groups[k][j]] != null && station.machines[j].measured)
           _effective(
-            '${_ref(names[groups[k][j]])}!B${cycleRows[groups[k][j]]}',
+            '${sheetRef(names[groups[k][j]])}!B${cycleRows[groups[k][j]]}',
             station.machines[j].specialCycles,
             unit,
           ),
@@ -361,57 +346,47 @@ void _writeLine(
     final cycleFormula = refs.length == 1
         ? refs.single
         : '1/(${[for (final r in refs) '1/${r.contains('/') ? '($r)' : r}'].join('+')})';
-    sh.appendRow([
+    sh.row([
       IntCellValue(k + 1),
       groups[k].length == 1
-          ? FormulaCellValue(
-              _link(
-                names[groups[k].single],
-                g.entries[groups[k].single].study.name,
-              ),
+          ? sheetLink(
+              names[groups[k].single],
+              g.entries[groups[k].single].study.name,
             )
           : t('${station.name} (×${groups[k].length})'),
-      measured ? FormulaCellValue(cycleFormula) : null,
-      measured ? FormulaCellValue('ROUND(C$row/$sumCell*100,1)') : null,
-      measured ? FormulaCellValue('ROUND($maxCell-C$row,$decimals)') : null,
-      prev == null
-          ? null
-          : DoubleCellValue(
-              double.parse(
-                unit.fromMicros(prev.round()).toStringAsFixed(decimals),
-              ),
-            ),
-      prev == null || !measured
-          ? null
-          : FormulaCellValue('ROUND(C$row-F$row,$decimals)'),
+      measured ? number(cycleFormula) : null,
+      measured ? number('ROUND(C$row/$sumCell*100,1)', 1) : null,
+      measured ? number('ROUND($maxCell-C$row,$decimals)') : null,
+      prev == null ? null : time(prev),
+      prev == null || !measured ? null : number('ROUND(C$row-F$row,$decimals)'),
     ]);
   }
-  kv(sh, ll.totalTime, FormulaCellValue('SUM(${range(2)})'));
-  kv(sh, ll.lineCycleTime, FormulaCellValue('MAX(${range(2)})'));
-  kv(
-    sh,
+  sh.gap();
+  final sumRow = sh.keyValue(ll.totalTime, number('SUM(${range(2)})'));
+  assert(sumRow == last + 2, 'the station formulas point at the sum row');
+  sh.keyValue(ll.lineCycleTime, number('MAX(${range(2)})'));
+  sh.keyValue(
     ll.bottleneck,
     FormulaCellValue(
       'INDEX(\$B\$$first:\$B\$$last,MATCH($maxCell,${range(2)},0))',
     ),
   );
-  kv(
-    sh,
+  sh.keyValue(
     '${ll.balance} [%]',
-    FormulaCellValue('ROUND($sumCell/(COUNT(${range(2)})*$maxCell)*100,1)'),
+    number('ROUND($sumCell/(COUNT(${range(2)})*$maxCell)*100,1)', 1),
   );
-  kv(
-    sh,
+  sh.keyValue(
     ll.outputPerHour,
-    FormulaCellValue('ROUND(3600/($maxCell*$secondsPerUnit),1)'),
+    number('ROUND(3600/($maxCell*$secondsPerUnit),1)', 1),
   );
   final bl = ll.buffers;
   final conveyors = bl != null && bl.withConveyors;
   bool listed(LineStation st) =>
       st.bufferBefore != null || (conveyors && st.conveyorBefore != null);
   if (bl != null && line.stations.any(listed)) {
-    sh.appendRow([t(bl.title)]);
-    header(sh, [
+    sh.gap();
+    sh.section(bl.title);
+    sh.header([
       gl.position,
       bl.before,
       bl.places,
@@ -422,21 +397,18 @@ void _writeLine(
         '${bl.conveyorTime} [${unit.label}]',
       ],
     ]);
-    CellValue value(int micros) => DoubleCellValue(
-      double.parse(unit.fromMicros(micros).toStringAsFixed(decimals)),
-    );
     for (final st in line.stations.where(listed)) {
       final b = st.bufferBefore;
       final c = st.conveyorBefore;
-      sh.appendRow([
+      sh.row([
         IntCellValue(st.position + 1),
         t(st.name),
         b == null ? null : IntCellValue(b.capacity),
-        b == null ? null : value(b.storeMicros),
-        b == null ? null : value(b.retrieveMicros),
+        b == null ? null : time(b.storeMicros),
+        b == null ? null : time(b.retrieveMicros),
         if (conveyors) ...[
           c == null ? null : IntCellValue(c.capacity),
-          c == null ? null : value(c.transportMicros),
+          c == null ? null : time(c.transportMicros),
         ],
       ]);
     }
@@ -448,8 +420,9 @@ void _writeLine(
         if (m.specialCycles.isNotEmpty) m,
   ];
   if (sl != null && machines.isNotEmpty) {
-    sh.appendRow([t(sl.title)]);
-    header(sh, [
+    sh.gap();
+    sh.section(sl.title);
+    sh.header([
       sl.machine,
       sl.name,
       sl.rule,
@@ -457,26 +430,22 @@ void _writeLine(
       '${sl.measured} [${unit.label}]',
       '${sl.effective} [${unit.label}]',
     ]);
-    CellValue? value(double? micros) => micros == null
-        ? null
-        : DoubleCellValue(
-            double.parse(
-              unit.fromMicros(micros.round()).toStringAsFixed(decimals),
-            ),
-          );
     for (final m in machines) {
+      final measured = m.baseCycleTime;
+      final effective = m.cycleTime;
       for (final c in m.specialCycles) {
-        sh.appendRow([
+        sh.row([
           t(m.name),
           t(c.name),
           t(_rule(sl, c)),
-          value(c.durationMicros.toDouble()),
-          value(m.baseCycleTime),
-          value(m.cycleTime),
+          time(c.durationMicros),
+          measured == null ? null : time(measured),
+          effective == null ? null : time(effective),
         ]);
       }
     }
   }
+  sh.finish();
 }
 
 /// Formula of a machine's effective cycle time: `(ref + extra time per
@@ -498,39 +467,32 @@ String _plain(double v) => v
     .replaceFirst(RegExp(r'\.$'), '');
 
 /// Failure scenarios: line output while each machine is down.
-void _writeRisk(
-  Sheet sh,
-  GroupReportInput g,
-  LineReportLabels ll,
-  void Function(Sheet, List<String>) header,
-  void Function(Sheet, String, CellValue?) kv,
-) {
+void _writeRisk(SheetLayout sh, GroupReportInput g, LineReportLabels ll) {
   CellValue t(String s) => TextCellValue(s);
+  CellValue one(double v) => fixed(DoubleCellValue(_round(v, 1)), 1);
   final rl = ll.risk!;
   final risk = FailureRisk.of(g.line);
   final gl = g.labels;
-  kv(sh, gl.group, t(g.group.name));
-  kv(sh, rl.title, t(rl.hint));
+  sh.title(rl.title);
+  sh.note(rl.hint);
+  sh.keyValue(gl.group, t(g.group.name));
   final base = risk.baseOutput;
-  if (base != null) {
-    kv(sh, ll.outputPerHour, DoubleCellValue(_round(base, 1)));
-  }
+  if (base != null) sh.keyValue(ll.outputPerHour, one(base));
   if (risk.singlePoints.isNotEmpty) {
-    sh.appendRow([t(rl.singlePoints(risk.singlePoints.length))]);
+    sh.note(rl.singlePoints(risk.singlePoints.length));
   }
   final simulated = simulatedLosses(g);
   final withSim = simulated != null && rl.lostWithBuffers != null;
   if (withSim && rl.simulationNote != null) {
-    sh.appendRow([
-      t(
-        rl.simulationNote!(
-          formatDuration(g.simulationHorizonMicros!),
-          g.simulationFailureMicros! ~/ 60000000,
-        ),
+    sh.note(
+      rl.simulationNote!(
+        formatDuration(g.simulationHorizonMicros!),
+        g.simulationFailureMicros! ~/ 60000000,
       ),
-    ]);
+    );
   }
-  header(sh, [
+  sh.gap();
+  sh.header([
     gl.position,
     rl.machine,
     '${rl.outputDuring} [1/h]',
@@ -540,18 +502,20 @@ void _writeRisk(
   ]);
   for (final f in risk.failures) {
     final lost = withSim ? simulated[(f.station.position, f.machine)] : null;
-    sh.appendRow([
+    final state = f.standstill ? rl.standstill : (f.loss == 0 ? rl.noLoss : '');
+    sh.row([
       IntCellValue(f.station.position + 1),
       t(f.machine),
-      DoubleCellValue(_round(f.outputAfter, 1)),
-      DoubleCellValue(_round(f.loss * 100, 1)),
-      t(f.standstill ? rl.standstill : (f.loss == 0 ? rl.noLoss : '')),
+      one(f.outputAfter),
+      one(f.loss * 100),
+      state.isEmpty ? null : t(state),
       if (withSim) ...[
         lost == null ? null : IntCellValue(lost.lostWithoutBuffers),
         lost == null ? null : IntCellValue(lost.lostWithBuffers),
       ],
     ]);
   }
+  sh.finish();
 }
 
 /// Simulated failure scenarios by (station position, machine name); null
