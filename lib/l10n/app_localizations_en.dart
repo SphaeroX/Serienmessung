@@ -1195,10 +1195,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hoursLabel => 'Hours';
 
   @override
-  String get simulationFailure => 'Failure';
+  String get simulationFailure => 'Failures';
 
   @override
   String get noFailure => 'No failure';
+
+  @override
+  String get addFailure => 'Add failure';
+
+  @override
+  String get removeFailure => 'Remove failure';
 
   @override
   String get failureStart => 'Start after [h]';
@@ -1216,7 +1222,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get simPartsNormal => 'Parts without failure';
 
   @override
-  String get simPartsFailure => 'Parts with failure';
+  String get simPartsFailure => 'Parts with failures';
 
   @override
   String get simLost => 'Lost parts';

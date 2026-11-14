@@ -2123,7 +2123,7 @@ abstract class AppLocalizations {
   /// No description provided for @simulationFailure.
   ///
   /// In en, this message translates to:
-  /// **'Failure'**
+  /// **'Failures'**
   String get simulationFailure;
 
   /// No description provided for @noFailure.
@@ -2131,6 +2131,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No failure'**
   String get noFailure;
+
+  /// No description provided for @addFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Add failure'**
+  String get addFailure;
+
+  /// No description provided for @removeFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove failure'**
+  String get removeFailure;
 
   /// No description provided for @failureStart.
   ///
@@ -2165,7 +2177,7 @@ abstract class AppLocalizations {
   /// No description provided for @simPartsFailure.
   ///
   /// In en, this message translates to:
-  /// **'Parts with failure'**
+  /// **'Parts with failures'**
   String get simPartsFailure;
 
   /// No description provided for @simLost.

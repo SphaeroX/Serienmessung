@@ -11,8 +11,9 @@ import '../domain/line_simulation.dart';
 enum _Horizon { shift, day, custom }
 
 /// Simulation of a group's line over a shift, 24 hours or a free period,
-/// optionally with one machine failing: parts with and without the failure
-/// and with and without the buffers, buffer and station figures.
+/// optionally with one or more machine failures: parts with and without
+/// the failures and with and without the buffers, buffer and station
+/// figures.
 class SimulationScreen extends ConsumerStatefulWidget {
   const SimulationScreen({super.key, required this.groupId});
 
@@ -27,15 +28,15 @@ class _Run {
     required this.base,
     required this.failed,
     required this.plainLost,
-    required this.failure,
+    required this.failures,
   });
 
   final SimResult base;
   final SimResult? failed;
 
-  /// Parts lost by the failure if the line had no buffers.
+  /// Parts lost by the failures if the line had no buffers.
   final int? plainLost;
-  final SimFailure? failure;
+  final List<SimFailure> failures;
 
   SimResult get shown => failed ?? base;
 }
@@ -49,20 +50,23 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
   List<int> _numbers = const [];
   _Horizon _horizon = _Horizon.shift;
   final _hours = TextEditingController(text: '8');
-  final _start = TextEditingController();
-  final _duration = TextEditingController();
 
-  /// Failing machine as (station, machine), null = no failure.
-  (int, int)? _machine;
+  /// Failures to simulate; the first row always exists (without a machine
+  /// = no failure), more rows are added once it has one.
+  final List<_FailureRow> _failures = [];
   _Run? _run;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    final s = ref.read(settingsProvider);
-    _duration.text = '${s.failureMinutes}';
+    _failures.add(_newRow());
   }
+
+  /// A further failure starts on the machine of the one before it.
+  _FailureRow _newRow() =>
+      _FailureRow('${ref.read(settingsProvider).failureMinutes}')
+        ..machine = _failures.isEmpty ? null : _failures.last.machine;
 
   @override
   void didChangeDependencies() {
@@ -73,8 +77,9 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
   @override
   void dispose() {
     _hours.dispose();
-    _start.dispose();
-    _duration.dispose();
+    for (final f in _failures) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -118,34 +123,37 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
       setState(() => _error = l.invalidTime);
       return;
     }
-    SimFailure? failure;
-    final machine = _machine;
-    if (machine != null) {
-      final start = _start.text.trim().isEmpty
+    final failures = <SimFailure>[];
+    for (final row in _failures) {
+      final machine = row.machine;
+      if (machine == null) continue;
+      final start = row.start.text.trim().isEmpty
           ? h ~/ 4
-          : ((_number(_start.text) ?? -1) * 3600 * 1000000).round();
-      final minutes = _number(_duration.text);
+          : ((_number(row.start.text) ?? -1) * 3600 * 1000000).round();
+      final minutes = _number(row.duration.text);
       if (start < 0 || minutes == null || minutes <= 0) {
         setState(() => _error = l.invalidTime);
         return;
       }
-      failure = SimFailure(
-        station: machine.$1,
-        machine: machine.$2,
-        startMicros: start,
-        durationMicros: (minutes * 60 * 1000000).round(),
+      failures.add(
+        SimFailure(
+          station: machine.$1,
+          machine: machine.$2,
+          startMicros: start,
+          durationMicros: (minutes * 60 * 1000000).round(),
+        ),
       );
     }
     final base = sim.run(horizonMicros: h);
-    final failed = failure == null
+    final failed = failures.isEmpty
         ? null
-        : sim.run(horizonMicros: h, failure: failure);
+        : sim.run(horizonMicros: h, failures: failures);
     int? plainLost;
-    if (failure != null && sim.hasBuffers) {
+    if (failures.isNotEmpty && sim.hasBuffers) {
       final plain = sim.withoutBuffers();
       plainLost =
           plain.run(horizonMicros: h).output -
-          plain.run(horizonMicros: h, failure: failure).output;
+          plain.run(horizonMicros: h, failures: failures).output;
     }
     setState(() {
       _error = null;
@@ -153,7 +161,7 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
         base: base,
         failed: failed,
         plainLost: plainLost,
-        failure: failure,
+        failures: failures,
       );
     });
   }
@@ -213,57 +221,17 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
                   ),
                 const SizedBox(height: 16),
                 Text(l.simulationFailure, style: theme.textTheme.titleSmall),
-                DropdownButton<(int, int)?>(
-                  key: const Key('failureMachine'),
-                  isExpanded: true,
-                  value: _machine,
-                  items: [
-                    DropdownMenuItem(value: null, child: Text(l.noFailure)),
-                    for (var si = 0; si < sim.stations.length; si++)
-                      for (
-                        var mi = 0;
-                        mi < sim.stations[si].machines.length;
-                        mi++
-                      )
-                        DropdownMenuItem(
-                          value: (si, mi),
-                          child: Text(
-                            '${_numbers[si]}. ${sim.stations[si].machines[mi].name}',
-                          ),
-                        ),
-                  ],
-                  onChanged: (v) => setState(() => _machine = v),
-                ),
-                if (_machine != null)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          key: const Key('failureStartField'),
-                          controller: _start,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration: InputDecoration(
-                            labelText: l.failureStart,
-                            hintText: l.failureStartHint,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          key: const Key('failureDurationField'),
-                          controller: _duration,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          decoration: InputDecoration(
-                            labelText: l.failureDurationMinutes,
-                          ),
-                        ),
-                      ),
-                    ],
+                for (var i = 0; i < _failures.length; i++)
+                  _failureRow(i, sim, l),
+                if (_failures.first.machine != null)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextButton.icon(
+                      key: const Key('addFailure'),
+                      onPressed: () => setState(() => _failures.add(_newRow())),
+                      icon: const Icon(Icons.add),
+                      label: Text(l.addFailure),
+                    ),
                   ),
                 const SizedBox(height: 12),
                 FilledButton.icon(
@@ -283,6 +251,93 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
                 if (_run != null) ..._results(_run!, sim, input, l, theme),
               ],
             ),
+    );
+  }
+
+  /// Machine, start and duration of failure [i]; the first row keeps the
+  /// plain keys, the others are numbered and can be removed.
+  Widget _failureRow(int i, LineSimulation sim, AppLocalizations l) {
+    final row = _failures[i];
+    final suffix = i == 0 ? '' : '_$i';
+    final dropdown = DropdownButton<(int, int)?>(
+      key: Key('failureMachine$suffix'),
+      isExpanded: true,
+      value: row.machine,
+      items: [
+        // Further failures are removed with their button instead.
+        if (i == 0) DropdownMenuItem(value: null, child: Text(l.noFailure)),
+        for (var si = 0; si < sim.stations.length; si++)
+          for (var mi = 0; mi < sim.stations[si].machines.length; mi++)
+            DropdownMenuItem(
+              value: (si, mi),
+              child: Text(
+                '${_numbers[si]}. ${sim.stations[si].machines[mi].name}',
+              ),
+            ),
+      ],
+      onChanged: (v) => setState(() {
+        row.machine = v;
+        // Without a first failure there are no further ones.
+        if (i == 0 && v == null) {
+          for (final f in _failures.skip(1)) {
+            f.dispose();
+          }
+          _failures.removeRange(1, _failures.length);
+        }
+      }),
+    );
+    return Column(
+      key: ObjectKey(row),
+      children: [
+        if (i == 0)
+          dropdown
+        else
+          Row(
+            children: [
+              Expanded(child: dropdown),
+              IconButton(
+                key: Key('removeFailure$suffix'),
+                tooltip: l.removeFailure,
+                icon: const Icon(Icons.close),
+                onPressed: () => setState(() {
+                  _failures.removeAt(i).dispose();
+                }),
+              ),
+            ],
+          ),
+        if (row.machine != null)
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  key: Key('failureStartField$suffix'),
+                  controller: row.start,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: l.failureStart,
+                    hintText: l.failureStartHint,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  key: Key('failureDurationField$suffix'),
+                  controller: row.duration,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: l.failureDurationMinutes,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        if (i < _failures.length - 1) const SizedBox(height: 8),
+      ],
     );
   }
 
@@ -422,5 +477,20 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
           ),
         ),
     ];
+  }
+}
+
+/// One failure being edited: machine as (station, machine), null = none;
+/// start in hours (empty = a quarter of the period), duration in minutes.
+class _FailureRow {
+  _FailureRow(String minutes) : duration = TextEditingController(text: minutes);
+
+  (int, int)? machine;
+  final start = TextEditingController();
+  final TextEditingController duration;
+
+  void dispose() {
+    start.dispose();
+    duration.dispose();
   }
 }

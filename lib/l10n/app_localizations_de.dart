@@ -1202,10 +1202,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get hoursLabel => 'Stunden';
 
   @override
-  String get simulationFailure => 'Störung';
+  String get simulationFailure => 'Störungen';
 
   @override
   String get noFailure => 'Keine Störung';
+
+  @override
+  String get addFailure => 'Störung hinzufügen';
+
+  @override
+  String get removeFailure => 'Störung entfernen';
 
   @override
   String get failureStart => 'Beginn nach [h]';
@@ -1223,7 +1229,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get simPartsNormal => 'Teile ohne Störung';
 
   @override
-  String get simPartsFailure => 'Teile mit Störung';
+  String get simPartsFailure => 'Teile mit Störungen';
 
   @override
   String get simLost => 'Verlorene Teile';
