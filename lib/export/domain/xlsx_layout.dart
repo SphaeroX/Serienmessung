@@ -14,11 +14,24 @@ const _fontSize = 11;
 const _minWidth = 9.0;
 const _maxWidth = 50.0;
 
-/// Texts longer than this wrap inside a table instead of widening it.
+/// Widest second column of a sheet without tables (a contents sheet), so
+/// that a description fits next to its label.
+const _wideWidth = 60.0;
+
+/// Room around the text of a cell, in characters.
+const _padding = 2.5;
+
+/// Width of an average text character relative to the "0" that Excel
+/// measures column widths in (Calibri). Used to decide whether a text needs
+/// more than one line.
+const _textFactor = 0.9;
+
+/// Texts longer than this may wrap inside a table instead of widening it.
 const _wrapChars = 46;
 
 /// Longest text of a key figure that still widens its column; longer texts
-/// (descriptions, notes) run over the empty cells to their right.
+/// (descriptions, notes) run over the empty cells to their right, or widen
+/// the second column of a sheet without tables.
 const _valueChars = 24;
 
 const _rowHeight = 18.0;
@@ -64,6 +77,17 @@ class SheetLayout {
   /// Widest content per column, in characters.
   final _chars = <int, double>{};
 
+  /// Highest column index that holds a value.
+  int _lastColumn = 0;
+
+  /// Long texts that wrap when their column turns out too narrow; decided
+  /// in [finish], once the column widths are known.
+  final _wrapping = <_LongText>[];
+
+  /// Long key values: they widen the second column of a sheet without
+  /// tables and run over the empty cells to their right otherwise.
+  final _longValues = <_LongText>[];
+
   // The table that is being written.
   int? _headerRow;
   List<String> _titles = const [];
@@ -100,9 +124,15 @@ class SheetLayout {
     _put(0, TextCellValue(key), _style(bold: true, color: _label));
     _measure(0, key.length, bold: true);
     if (value != null) {
-      _put(1, value, _style(value: value, numbersLeft: true));
+      CellStyle style(bool wrap) =>
+          _style(value: value, numbersLeft: true, wrap: wrap);
+      _put(1, value, style(false));
       final chars = _charsOf(value);
-      if (value is! TextCellValue || chars <= _valueChars) _measure(1, chars);
+      if (value is! TextCellValue || chars <= _valueChars) {
+        _measure(1, chars);
+      } else {
+        _longValues.add(_LongText(_row, 1, chars, style));
+      }
     }
     return _next(_rowHeight);
   }
@@ -138,42 +168,63 @@ class SheetLayout {
     final count = values.length > _titles.length
         ? values.length
         : _titles.length;
-    var lines = 1;
     for (var c = 0; c < count; c++) {
       final v = c < values.length ? values[c] : null;
       final chars = v == null ? 0 : _charsOf(v);
-      final wrap = v is TextCellValue && chars > _wrapChars;
-      if (wrap) {
-        final needed = (chars / _wrapChars).ceil();
-        if (needed > lines) lines = needed;
-      }
-      _put(
-        c,
-        v,
-        _style(
-          value: v,
-          bold: total,
-          fill: total ? _brandTint : (banded ? _band : ExcelColor.none),
-          wrap: wrap,
-          border: _line,
-          topBorder: total ? _brand : _line,
-        ),
+      final long = v is TextCellValue && chars > _wrapChars;
+      CellStyle style(bool wrap) => _style(
+        value: v,
+        bold: total,
+        fill: total ? _brandTint : (banded ? _band : ExcelColor.none),
+        wrap: wrap,
+        border: _line,
+        topBorder: total ? _brand : _line,
       );
+      _put(c, v, style(false));
       if (v == null) continue;
+      if (long) _wrapping.add(_LongText(_row, c, chars, style));
       if (!total) (_isNumber(v) ? _numbers : _texts).add(c);
-      _measure(c, wrap ? _wrapChars : chars, bold: total);
+      _measure(c, long ? _wrapChars : chars, bold: total);
     }
     _dataRows++;
-    return _next(lines == 1 ? _rowHeight : lines * 15.0 + 3);
+    return _next(_rowHeight);
   }
 
-  /// Sets the column widths; call once after the last row.
+  /// Sets the column widths and wraps the texts that do not fit their
+  /// column; call once after the last row.
   void finish() {
     _endTable();
+    // Without tables the second column takes the long key values.
+    final wide = _lastColumn <= 1;
+    if (wide) {
+      for (final v in _longValues) {
+        _measure(v.column, v.chars);
+        _wrapping.add(v);
+      }
+    }
+    final widths = <int, double>{};
     _chars.forEach((column, chars) {
-      final width = (chars + 2.5).clamp(_minWidth, _maxWidth);
-      sheet.setColumnWidth(column, (width * 10).ceil() / 10);
+      final max = wide && column == 1 ? _wideWidth : _maxWidth;
+      final width = (chars + _padding).clamp(_minWidth, max);
+      widths[column] = (width * 10).ceil() / 10;
+      sheet.setColumnWidth(column, widths[column]!);
     });
+    final heights = <int, double>{};
+    for (final t in _wrapping) {
+      final room = (widths[t.column] ?? _minWidth) - _padding;
+      final lines = (t.chars * _textFactor / room).ceil();
+      if (lines < 2) continue;
+      sheet
+          .cell(
+            CellIndex.indexByColumnRow(columnIndex: t.column, rowIndex: t.row),
+          )
+          .cellStyle = t.style(
+        true,
+      );
+      final height = lines * 15.0 + 3;
+      if (height > (heights[t.row] ?? 0)) heights[t.row] = height;
+    }
+    heights.forEach(sheet.setRowHeight);
   }
 
   void _heading(String text, int size, double height) {
@@ -213,11 +264,14 @@ class SheetLayout {
     border: _brand,
   );
 
-  void _put(int column, CellValue? value, CellStyle style) => sheet.updateCell(
-    CellIndex.indexByColumnRow(columnIndex: column, rowIndex: _row),
-    value,
-    cellStyle: style,
-  );
+  void _put(int column, CellValue? value, CellStyle style) {
+    if (value != null && column > _lastColumn) _lastColumn = column;
+    sheet.updateCell(
+      CellIndex.indexByColumnRow(columnIndex: column, rowIndex: _row),
+      value,
+      cellStyle: style,
+    );
+  }
 
   /// Finishes the current row with [height]; returns its row number.
   int _next(double height) {
@@ -229,6 +283,16 @@ class SheetLayout {
     final width = chars * (bold ? 1.1 : 1.0);
     if (width > (_chars[column] ?? 0)) _chars[column] = width;
   }
+}
+
+/// A long text in [row] and [column]; [style] gives its look, wrapped or not.
+class _LongText {
+  _LongText(this.row, this.column, this.chars, this.style);
+
+  final int row;
+  final int column;
+  final int chars;
+  final CellStyle Function(bool wrap) style;
 }
 
 /// Style of a cell in the workbook font; [value] decides the number format

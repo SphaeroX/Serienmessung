@@ -148,6 +148,60 @@ void main() {
       expect(sheet.getRowHeight(2), greaterThan(sheet.getRowHeight(1) * 2));
       expect(sheet.getColumnWidth(0), lessThanOrEqualTo(50));
     });
+
+    test('a text that still fits its column does not make the row higher', () {
+      // Texts are narrower than the "0" Excel measures widths in: 50
+      // characters fit into the column of the longest text.
+      final sheet = Excel.createExcel()['Table'];
+      SheetLayout(sheet)
+        ..header(['Station'])
+        ..row([TextCellValue('short')])
+        ..row([
+          TextCellValue('Bearbeitungszentrum 1 / Bearbeitungszentrum 2 (×2)'),
+        ])
+        ..finish();
+      final station = sheet.cell(
+        CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: 2),
+      );
+      expect(sheet.getRowHeight(2), sheet.getRowHeight(1));
+      expect(station.cellStyle!.wrap, isNot(TextWrapping.WrapText));
+    });
+
+    test('on a sheet with two columns a long value widens the second', () {
+      const text = 'Beispieldaten – vom Rohteil bis zum verpackten Gehäuse';
+      final sheet = Excel.createExcel()['Contents'];
+      SheetLayout(sheet)
+        ..title('Report')
+        ..keyValue('Description', TextCellValue(text))
+        ..cells([sheetLink('1 Saw', '1 Saw'), TextCellValue('Saw')])
+        ..finish();
+      expect(sheet.getColumnWidth(1), greaterThanOrEqualTo(text.length));
+      expect(sheet.getRowHeight(1), sheet.getRowHeight(2));
+    });
+
+    test('on a sheet with two columns a very long value wraps', () {
+      final sheet = Excel.createExcel()['Contents'];
+      SheetLayout(sheet)
+        ..keyValue('Name', TextCellValue('Line'))
+        ..keyValue('Description', TextCellValue('A long description. ' * 9))
+        ..finish();
+      final value = sheet.cell(
+        CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: 1),
+      );
+      expect(value.cellStyle!.wrap, TextWrapping.WrapText);
+      expect(sheet.getRowHeight(1), greaterThan(sheet.getRowHeight(0) * 2));
+      expect(sheet.getColumnWidth(1), lessThanOrEqualTo(60));
+    });
+
+    test('a long value does not widen a column of a table', () {
+      final sheet = Excel.createExcel()['Study'];
+      SheetLayout(sheet)
+        ..keyValue('Description', TextCellValue('A long description. ' * 3))
+        ..header(['Pos.', 'Step', 'Time [s]'])
+        ..row([IntCellValue(1), TextCellValue('Cut'), DoubleCellValue(1.5)])
+        ..finish();
+      expect(sheet.getColumnWidth(1), lessThan(20));
+    });
   });
 
   group('single study workbook', () {

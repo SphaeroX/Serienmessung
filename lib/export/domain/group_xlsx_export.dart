@@ -353,7 +353,7 @@ void _writeLine(
               names[groups[k].single],
               g.entries[groups[k].single].study.name,
             )
-          : t('${station.name} (×${groups[k].length})'),
+          : t(_stationName(station, groups[k].length)),
       measured ? number(cycleFormula) : null,
       measured ? number('ROUND(C$row/$sumCell*100,1)', 1) : null,
       measured ? number('ROUND($maxCell-C$row,$decimals)') : null,
@@ -402,7 +402,7 @@ void _writeLine(
       final c = st.conveyorBefore;
       sh.row([
         IntCellValue(st.position + 1),
-        t(st.name),
+        t(_stationName(st, groups[st.position].length)),
         b == null ? null : IntCellValue(b.capacity),
         b == null ? null : time(b.storeMicros),
         b == null ? null : time(b.retrieveMicros),
@@ -447,6 +447,11 @@ void _writeLine(
   }
   sh.finish();
 }
+
+/// Name of a station of [machines] machines: parallel machines get their
+/// number (`A / B (×2)`).
+String _stationName(LineStation station, int machines) =>
+    machines == 1 ? station.name : '${station.name} (×$machines)';
 
 /// Formula of a machine's effective cycle time: `(ref + extra time per
 /// part) / availability`, with [ref] the cell of its measured cycle time.

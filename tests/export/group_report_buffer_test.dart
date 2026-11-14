@@ -44,6 +44,7 @@ ExportInput machine(
   String name,
   int seconds, {
   int bufferCapacity = 0,
+  bool parallel = false,
 }) => ExportInput(
   study: Study(
     id: id,
@@ -52,6 +53,7 @@ ExportInput machine(
     mode: StudyMode.simple,
     createdAt: DateTime(2026),
     lastActiveAt: DateTime(2026),
+    parallel: parallel,
     bufferCapacity: bufferCapacity,
     bufferStoreMicros: bufferCapacity > 0 ? 2 * s : 0,
     bufferRetrieveMicros: bufferCapacity > 0 ? 2 * s : 0,
@@ -145,6 +147,33 @@ void main() {
       );
     },
   );
+
+  test('Excel: a parallel station is named like in the station table', () {
+    final input = GroupReportInput(
+      group: StudyGroup(
+        id: 1,
+        name: 'Parallel line',
+        description: '',
+        createdAt: DateTime(2026),
+      ),
+      entries: [
+        machine(1, 'A', 10),
+        machine(2, 'B', 5, bufferCapacity: 20),
+        machine(3, 'C', 5, parallel: true),
+      ],
+      unit: TimeUnit.seconds,
+      locale: 'en',
+      exportedAt: DateTime(2026, 3, 20),
+      labels: groupLabels,
+      exportLabels: fullLabels,
+    );
+    final book = Excel.decodeBytes(buildGroupReportXlsx(input, labels));
+    final line = rows(book.tables['Line analysis']!);
+    final stations = line.indexWhere((r) => r.contains('Pos.'));
+    final buffers = line.indexWhere((r) => r.contains('Places'));
+    expect(line[stations + 2][1], 'B / C (×2)');
+    expect(line[buffers + 1][1], 'B / C (×2)');
+  });
 
   test('PDF: buffer table and simulated losses', () async {
     final bytes = await buildGroupReportPdf(
