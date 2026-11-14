@@ -632,6 +632,36 @@ abstract class AppLocalizations {
   /// **'Tap to rename, drag to reorder. Recorded times stay with their step.'**
   String get stepsEditHint;
 
+  /// No description provided for @stepsEditList.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get stepsEditList;
+
+  /// No description provided for @stepsEditText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get stepsEditText;
+
+  /// No description provided for @stepsTextHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One line per step. Edited lines keep their recorded times; removed lines delete their step.'**
+  String get stepsTextHint;
+
+  /// No description provided for @deleteSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete steps'**
+  String get deleteSteps;
+
+  /// No description provided for @deleteStepsWithTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete removed steps ({steps}) including {count, plural, =1{1 recorded time} other{{count} recorded times}}?'**
+  String deleteStepsWithTimes(String steps, int count);
+
   /// No description provided for @newStepHint.
   ///
   /// In en, this message translates to:

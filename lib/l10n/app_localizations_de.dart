@@ -329,6 +329,30 @@ class AppLocalizationsDe extends AppLocalizations {
       'Tippen zum Umbenennen, ziehen zum Umsortieren. Erfasste Zeiten bleiben beim Schritt.';
 
   @override
+  String get stepsEditList => 'Liste';
+
+  @override
+  String get stepsEditText => 'Text';
+
+  @override
+  String get stepsTextHint =>
+      'Eine Zeile pro Schritt. Geänderte Zeilen behalten ihre erfassten Zeiten; entfernte Zeilen löschen ihren Schritt.';
+
+  @override
+  String get deleteSteps => 'Schritte löschen';
+
+  @override
+  String deleteStepsWithTimes(String steps, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count erfasster Zeiten',
+      one: '1 erfasster Zeit',
+    );
+    return 'Entfernte Schritte ($steps) inklusive $_temp0 löschen?';
+  }
+
+  @override
   String get newStepHint => 'Neuer Schritt';
 
   @override
