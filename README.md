@@ -27,7 +27,7 @@ flutter run
 
 ## Download
 
-Signed APKs are on the [Releases page](https://github.com/SphaeroX/Serienmessung/releases). A release is built by pushing a version tag (`git tag v1.5.0 && git push origin v1.5.0`), see [release.yml](.github/workflows/release.yml).
+Signed APKs are on the [Releases page](https://github.com/SphaeroX/Serienmessung/releases). A release is built by pushing a version tag (`git tag v1.6.0 && git push origin v1.6.0`), see [release.yml](.github/workflows/release.yml).
 
 ## Screenshots
 
