@@ -90,6 +90,23 @@ void main() {
     },
   );
 
+  test(
+    'the local store deletes a legacy absolute path in the documents folder',
+    () async {
+      final documents = await Directory.systemTemp.createTemp(
+        'cyclescope_documents',
+      );
+      addTearDown(() => documents.delete(recursive: true));
+      final file = File(p.join(documents.path, 'videos', 'x.mp4'))
+        ..createSync(recursive: true);
+      final store = LocalVideoFiles(
+        paths: VideoPaths(documentsDirectory: () async => documents),
+      );
+      await store.delete('/old/container/Documents/videos/x.mp4');
+      expect(file.existsSync(), isFalse);
+    },
+  );
+
   group('study list', () {
     Widget app() => ProviderScope(
       overrides: [
