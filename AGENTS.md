@@ -1,6 +1,6 @@
 # CycleScope
 
-Flutter app (Android first, iOS-capable code) for time and motion studies (REFA/MTM): define work steps, measure cycles live via volume keys or from an imported video, edit recordings, and analyse step times and the real cycle time. Local data only. English-first UI with German translation.
+Flutter app (Android and iOS) for time and motion studies (REFA/MTM): define work steps, measure cycles live (on Android also via volume keys) or from an imported video, edit recordings, and analyse step times and the real cycle time. Local data only. English-first UI with German translation.
 
 ## Top rules
 
@@ -24,6 +24,7 @@ flutter analyze
 dart format .
 flutter run
 flutter build apk --debug
+flutter build ios --no-codesign   # macOS only
 ```
 
 ## Documentation (load on demand)
@@ -44,6 +45,6 @@ Work on roadmap tasks follows [Roadmap/AGENTS.md](Roadmap/AGENTS.md). Current ta
 
 - No cloud services, accounts or network calls; all data stays on the device (backup only via file export).
 - Measurement time comes from a monotonic clock behind an injectable interface – never `DateTime.now()` for durations.
-- Platform features (volume keys, microphone, video, foreground service) only behind Dart interfaces with test fakes.
+- Platform features (volume keys, microphone, video, foreground service) only behind Dart interfaces with test fakes. iOS gets the Swift side of the platform channel (`ios/Runner/AppDelegate.swift`); Android-only features (volume keys, recording notification) are gated by `platformFeaturesProvider`.
 - Do not implement standard time (performance rating, allowances) – explicit non-goal for now.
 - Never commit secrets; none are needed. If a key ever becomes necessary, add `.env.example` and document it first.
