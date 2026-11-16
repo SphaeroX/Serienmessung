@@ -1,13 +1,20 @@
 name: Pages
 
-# Publishes site/ (privacy policy for Google Play) to GitHub Pages.
+# Publishes site/ (landing page and the privacy policy for Google Play) to GitHub Pages.
 on:
   push:
     branches: [main]
     paths:
       - 'site/**'
       - 'assets/branding/app_icon_512.png'
+      - 'screenshots/**'
       - '.github/workflows/pages.yml'
+  # Commits pushed by the Screenshots workflow do not trigger push events,
+  # so redeploy once it has finished to pick up new screenshots.
+  workflow_run:
+    workflows: [Screenshots]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -27,8 +34,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Add app icon
-        run: cp assets/branding/app_icon_512.png site/icon.png
+      - name: Add app icon and screenshots
+        run: |
+          cp assets/branding/app_icon_512.png site/icon.png
+          mkdir -p site/screenshots
+          cp -r screenshots/en screenshots/de site/screenshots/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

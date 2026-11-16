@@ -62,3 +62,7 @@ desktop.ini
 
 # Google Play store listing material (local only, see tool/generate_store_assets.py)
 /store/
+
+# Copied in by the Pages workflow (local preview only)
+/site/icon.png
+/site/screenshots/

@@ -3,19 +3,436 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CycleScope</title>
-<link rel="stylesheet" href="style.css">
+<title>CycleScope – Time study stopwatch for REFA &amp; MTM</title>
+<meta name="description" content="CycleScope turns your Android phone into a time study stopwatch: define work steps, measure cycles hands-free with the volume keys or from a video, and get the real cycle time. Free, open source, no cloud.">
+<meta name="theme-color" content="#0b6b8a">
+<meta property="og:type" content="website">
+<meta property="og:title" content="CycleScope – Time study stopwatch for REFA &amp; MTM">
+<meta property="og:description" content="Measure work steps hands-free with the volume keys or from a video and get the real cycle time. All data stays on your device.">
+<meta property="og:image" content="https://sphaerox.github.io/Serienmessung/icon.png">
+<meta property="og:url" content="https://sphaerox.github.io/Serienmessung/">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="alternate" hreflang="en" href="https://sphaerox.github.io/Serienmessung/?lang=en">
+<link rel="alternate" hreflang="de" href="https://sphaerox.github.io/Serienmessung/?lang=de">
+<link rel="stylesheet" href="landing.css">
+<script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
+
+<!-- Inline icon sprite -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M8 12.3l2.8 2.8L16.2 9.6"/></g></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></g></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c2.6 2.8 3.8 6 3.8 9.5s-1.2 6.7-3.8 9.5c-2.6-2.8-3.8-6-3.8-9.5S9.4 5.3 12 2.5z"/></g></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></symbol>
+    <symbol id="i-modes" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></g></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="2.5" y="5.5" width="13" height="13" rx="2.5"/><path d="M15.5 10l6-3.5v11l-6-3.5z"/></g></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20h16"/><path d="M7 16v-5M12 16V6M17 16v-8"/></g></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></g></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3.5 4v4.5H8"/><path d="M12 7.5V12l3 2"/></g></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M6 2.5h8l5 5v14H6z"/><path d="M14 2.5v5h5M9 13h7M9 17h7"/></g></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7"/></g></symbol>
+  </defs>
+</svg>
+
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="icon.png" alt="" width="34" height="34">CycleScope</a>
+    <nav aria-label="Sections">
+      <a href="#how" data-i18n="nav.how">How it works</a>
+      <a href="#features" data-i18n="nav.features">Features</a>
+      <a href="#screens" data-i18n="nav.screens">Screenshots</a>
+      <a href="#download" data-i18n="nav.download">Download</a>
+    </nav>
+    <div class="lang" role="group" aria-label="Language / Sprache">
+      <button type="button" data-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-lang="de" aria-pressed="false">DE</button>
+    </div>
+  </div>
+</header>
+
 <main>
-<img class="icon" src="icon.png" alt="CycleScope app icon">
-<h1>CycleScope</h1>
-<p>Time study stopwatch for REFA and MTM: define work steps, measure cycles hands-free with the volume keys or from a video, and get the real cycle time. All data stays on your device.</p>
-<p>Zeitaufnahme-Stoppuhr für REFA und MTM: Arbeitsschritte anlegen, Zyklen freihändig über die Lautstärketasten oder aus einem Video messen und die reale Taktzeit ermitteln. Alle Daten bleiben auf dem Gerät.</p>
-<ul>
-<li><a href="privacy/">Privacy Policy / Datenschutzerklärung</a></li>
-<li><a href="https://github.com/SphaeroX/Serienmessung">Source code / Quellcode</a></li>
-</ul>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow"><span class="dot"></span><span data-i18n="hero.eyebrow">Time study stopwatch for REFA &amp; MTM</span></span>
+      <h1 data-i18n="hero.title">Measure every cycle. <em>Keep your eyes on the work.</em></h1>
+      <p class="lead" data-i18n="hero.lead">CycleScope turns your Android phone into a time study stopwatch. Define the work steps, measure them hands-free with the volume keys or from a video, and get the real cycle time – from a single workstation up to a whole production line.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/SphaeroX/Serienmessung/releases/latest"><svg><use href="#i-download"/></svg><span data-i18n="cta.download">Download for Android</span></a>
+        <a class="btn btn-ghost" href="https://github.com/SphaeroX/Serienmessung"><svg><use href="#i-github"/></svg><span data-i18n="cta.github">View on GitHub</span></a>
+      </div>
+      <ul class="chips">
+        <li><svg><use href="#i-heart"/></svg><span data-i18n="chip.free">Free &amp; open source</span></li>
+        <li><svg><use href="#i-lock"/></svg><span data-i18n="chip.local">No account, no cloud</span></li>
+        <li><svg><use href="#i-globe"/></svg><span data-i18n="chip.lang">English &amp; German</span></li>
+      </ul>
+    </div>
+    <div class="hero-visual">
+      <div class="phone"><img class="shot" data-shot="05_analysis" src="screenshots/en/05_analysis.png" width="1078" height="2398" alt="Analysis screen with the real cycle time" data-i18n-alt="alt.analysis"></div>
+      <div class="phone"><img class="shot" data-shot="03_recording_live" src="screenshots/en/03_recording_live.png" width="1078" height="2398" alt="Live recording screen with the current step" data-i18n-alt="alt.live" fetchpriority="high"></div>
+    </div>
+  </div>
+</div>
+
+<!-- How it works -->
+<section class="alt" id="how">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="kicker" data-i18n="how.kicker">How it works</div>
+      <h2 data-i18n="how.title">From work step to cycle time in three moves</h2>
+    </div>
+    <ol class="steps">
+      <li class="reveal">
+        <h3 data-i18n="how.1.t">Define the steps</h3>
+        <p data-i18n="how.1.d">Type one work step per line – or hold the button and simply dictate them.</p>
+      </li>
+      <li class="reveal">
+        <h3 data-i18n="how.2.t">Measure blind</h3>
+        <p data-i18n="how.2.d">Start the recording and press volume up at every step change. Your eyes stay on the operator, not on the screen.</p>
+      </li>
+      <li class="reveal">
+        <h3 data-i18n="how.3.t">Analyse &amp; share</h3>
+        <p data-i18n="how.3.d">Mean, median, spread and the real cycle time per step and cycle – exported as PDF, Excel or CSV.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- Volume keys spotlight -->
+<section>
+  <div class="wrap spotlight">
+    <div class="visual reveal">
+      <div class="phone"><img class="shot" data-shot="03_recording_live" src="screenshots/en/03_recording_live.png" width="1078" height="2398" alt="Live recording screen with the current step" data-i18n-alt="alt.live" loading="lazy"></div>
+      <div class="keys" aria-hidden="true"><span></span><span></span></div>
+    </div>
+    <div class="reveal">
+      <div class="kicker" data-i18n="keys.kicker">Hands-free</div>
+      <div class="section-head" style="margin-bottom:0">
+        <h2 data-i18n="keys.title">The volume keys are your stopwatch</h2>
+        <p data-i18n="keys.lead">No tapping on glass while you watch the line. The current step is always shown in large type, and the recording keeps running in the background, with the screen off and even after an app restart.</p>
+      </div>
+      <ul class="keylist">
+        <li><span class="key" data-i18n="keys.up.k">Volume up</span><span><strong data-i18n="keys.up.t">Next step</strong><small data-i18n="keys.up.d">Before the start it starts the recording.</small></span></li>
+        <li><span class="key warm" data-i18n="keys.hold.k">Hold volume up</span><span><strong data-i18n="keys.hold.t">Special time</strong><small data-i18n="keys.hold.d">For interruptions – not counted in the cycle time.</small></span></li>
+        <li><span class="key" data-i18n="keys.down.k">Volume down</span><span><strong data-i18n="keys.down.t">Start / stop</strong><small data-i18n="keys.down.d">Pause and resume without looking.</small></span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="alt" id="features">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <div class="kicker" data-i18n="feat.kicker">Features</div>
+      <h2 data-i18n="feat.title">Everything a time study needs. Nothing it doesn’t.</h2>
+    </div>
+    <div class="features">
+      <article class="feature reveal">
+        <div class="ico"><svg><use href="#i-modes"/></svg></div>
+        <h3 data-i18n="feat.1.t">Four study modes</h3>
+        <p data-i18n="feat.1.d">Time study with a fixed step sequence, video study, a simple stopwatch with laps and a step timer for any order.</p>
+      </article>
+      <article class="feature reveal">
+        <div class="ico"><svg><use href="#i-video"/></svg></div>
+        <h3 data-i18n="feat.2.t">Video study</h3>
+        <p data-i18n="feat.2.d">Import a video, play it at 0.25× to 2×, step frame by frame and set markers on a smooth timeline.</p>
+      </article>
+      <article class="feature reveal">
+        <div class="ico"><svg><use href="#i-chart"/></svg></div>
+        <h3 data-i18n="feat.3.t">Clean statistics</h3>
+        <p data-i18n="feat.3.d">Sum, mean, median, min/max and spread. Real cycle time by mean, median or IQR without outliers – in HM, seconds, mm:ss.SSS or TMU.</p>
+      </article>
+      <article class="feature reveal">
+        <div class="ico"><svg><use href="#i-edit"/></svg></div>
+        <h3 data-i18n="feat.4.t">Edit afterwards</h3>
+        <p data-i18n="feat.4.d">Delete cycles or single times, rename and reorder steps, add notes – later, at your desk.</p>
+      </article>
+      <article class="feature reveal">
+        <div class="ico"><svg><use href="#i-history"/></svg></div>
+        <h3 data-i18n="feat.5.t">Revisions</h3>
+        <p data-i18n="feat.5.d">Measure a study again a year later. Earlier rounds are archived and the deviation per step is shown.</p>
+      </article>
+      <article class="feature reveal">
+        <div class="ico"><svg><use href="#i-file"/></svg></div>
+        <h3 data-i18n="feat.6.t">Reports &amp; backup</h3>
+        <p data-i18n="feat.6.d">CSV, Excel and PDF per study, linked reports for a whole line, and a complete backup in one file.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- Line analysis -->
+<section>
+  <div class="wrap split">
+    <div class="reveal">
+      <div class="kicker" data-i18n="line.kicker">Beyond one station</div>
+      <div class="section-head" style="margin-bottom:0">
+        <h2 data-i18n="line.title">From one workstation to the whole line</h2>
+        <p data-i18n="line.lead">Group your studies into a production line and CycleScope shows where it really hurts.</p>
+      </div>
+      <ul class="ticks">
+        <li><svg><use href="#i-check-circle"/></svg><span data-i18n="line.1"><strong>Line analysis:</strong> sum of cycle times, lead time, bottleneck, line balance and output per hour.</span></li>
+        <li><svg><use href="#i-check-circle"/></svg><span data-i18n="line.2"><strong>Parallel machines:</strong> several machines share one station; stations without a measurement get a fixed average time.</span></li>
+        <li><svg><use href="#i-check-circle"/></svg><span data-i18n="line.3"><strong>Special cycles &amp; planned stops:</strong> “every N parts extra time” or “a tool change every X hours” flow into the effective cycle time.</span></li>
+        <li><svg><use href="#i-check-circle"/></svg><span data-i18n="line.4"><strong>Buffers &amp; simulation:</strong> play a shift or 24 hours through, add machine failures and see the parts lost with and without buffers.</span></li>
+      </ul>
+    </div>
+    <div class="visual reveal">
+      <div class="phone"><img class="shot" data-shot="10_line" src="screenshots/en/10_line.png" width="1078" height="2398" alt="Line analysis with bottleneck chart" data-i18n-alt="alt.line" loading="lazy"></div>
+      <div class="phone"><img class="shot" data-shot="11_simulation" src="screenshots/en/11_simulation.png" width="1078" height="2398" alt="Simulation of a shift with a machine failure" data-i18n-alt="alt.sim" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Screenshots -->
+<section class="alt" id="screens">
+  <div class="wrap">
+    <div class="section-head center reveal">
+      <div class="kicker" data-i18n="shots.kicker">Screenshots</div>
+      <h2 data-i18n="shots.title">A look inside</h2>
+    </div>
+  </div>
+  <div class="gallery-wrap">
+    <div class="gallery" id="gallery" tabindex="0" aria-label="Screenshots"></div>
+    <div class="gallery-nav">
+      <button type="button" data-dir="-1" aria-label="Previous" data-i18n-aria="shots.prev"><svg><use href="#i-left"/></svg></button>
+      <button type="button" data-dir="1" aria-label="Next" data-i18n-aria="shots.next"><svg><use href="#i-right"/></svg></button>
+    </div>
+  </div>
+</section>
+
+<!-- Privacy -->
+<section>
+  <div class="wrap">
+    <div class="privacy-band reveal">
+      <div>
+        <h2 data-i18n="priv.title">Your data stays on your phone.</h2>
+        <p data-i18n="priv.lead">CycleScope has no internet access. Studies, times and videos live only in the app’s private storage – backups and exports exist only when you create them.</p>
+        <p><a href="privacy/" data-i18n="priv.link">Read the privacy policy →</a></p>
+      </div>
+      <ul class="no-list">
+        <li><svg><use href="#i-x"/></svg><span data-i18n="priv.1">No account</span></li>
+        <li><svg><use href="#i-x"/></svg><span data-i18n="priv.2">No cloud</span></li>
+        <li><svg><use href="#i-x"/></svg><span data-i18n="priv.3">No ads</span></li>
+        <li><svg><use href="#i-x"/></svg><span data-i18n="priv.4">No tracking</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Download -->
+<section class="download" id="download">
+  <div class="wrap reveal">
+    <img class="icon-big" src="icon.png" alt="CycleScope app icon" width="96" height="96" data-i18n-alt="alt.icon">
+    <h2 data-i18n="dl.title">Ready for your next time study?</h2>
+    <p data-i18n="dl.lead">CycleScope is free and open source. Get the latest signed APK from the GitHub releases.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/SphaeroX/Serienmessung/releases/latest"><svg><use href="#i-download"/></svg><span data-i18n="dl.apk">Download APK</span></a>
+      <a class="btn btn-ghost" href="https://github.com/SphaeroX/Serienmessung"><svg><use href="#i-github"/></svg><span data-i18n="dl.src">Source code</span></a>
+    </div>
+    <p class="meta" data-i18n="dl.meta">Android 8.0 or newer · English &amp; German</p>
+  </div>
+</section>
+
 </main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 CycleScope</span>
+    <nav aria-label="Footer">
+      <a href="privacy/" data-i18n="foot.privacy">Privacy policy</a>
+      <a href="https://github.com/SphaeroX/Serienmessung">GitHub</a>
+      <a href="mailto:prompt-engineered@protonmail.com" data-i18n="foot.contact">Contact</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var SHOTS = [
+    ["01_study_list", "Studies", "All studies at a glance", "Studien", "Alle Studien auf einen Blick"],
+    ["02_new_study", "New study", "Type or dictate the steps", "Neue Studie", "Schritte tippen oder diktieren"],
+    ["03_recording_live", "Live recording", "Big step, big buttons", "Live-Aufnahme", "Großer Schritt, große Tasten"],
+    ["04_cycles", "Cycles", "Edit every single time", "Zyklen", "Jede einzelne Zeit bearbeiten"],
+    ["05_analysis", "Analysis", "Real cycle time and statistics", "Auswertung", "Reale Taktzeit und Statistik"],
+    ["06_video_study", "Video study", "Mark steps frame by frame", "Video-Studie", "Schritte bildgenau markieren"],
+    ["08_group", "Group", "Stations of a line, parallel machines", "Gruppe", "Stationen einer Linie, parallele Maschinen"],
+    ["09_revisions", "Revisions", "Then and now, per step", "Revisionen", "Damals und heute, pro Schritt"],
+    ["10_line", "Line analysis", "Bottleneck and line balance", "Linienanalyse", "Engpass und Austaktung"],
+    ["11_simulation", "Simulation", "Shifts, failures and buffers", "Simulation", "Schichten, Ausfälle und Puffer"],
+    ["07_settings", "Settings", "Units, keys and behaviour", "Einstellungen", "Einheiten, Tasten und Verhalten"]
+  ];
+
+  var DE = {
+    "meta.title": "CycleScope – Zeitaufnahme-Stoppuhr für REFA & MTM",
+    "meta.desc": "CycleScope macht dein Android-Smartphone zur Zeitaufnahme-Stoppuhr: Arbeitsschritte anlegen, Zyklen freihändig über die Lautstärketasten oder aus einem Video messen und die reale Taktzeit ermitteln. Kostenlos, Open Source, ohne Cloud.",
+    "nav.how": "So funktioniert’s",
+    "nav.features": "Funktionen",
+    "nav.screens": "Screenshots",
+    "nav.download": "Download",
+    "hero.eyebrow": "Zeitaufnahme-Stoppuhr für REFA &amp; MTM",
+    "hero.title": "Jeden Zyklus messen. <em>Den Blick auf der Arbeit.</em>",
+    "hero.lead": "CycleScope macht dein Android-Smartphone zur Stoppuhr für Zeitaufnahmen. Arbeitsschritte anlegen, freihändig über die Lautstärketasten oder aus einem Video messen und die reale Taktzeit erhalten – vom einzelnen Arbeitsplatz bis zur ganzen Fertigungslinie.",
+    "cta.download": "Für Android laden",
+    "cta.github": "Auf GitHub ansehen",
+    "chip.free": "Kostenlos &amp; Open Source",
+    "chip.local": "Kein Konto, keine Cloud",
+    "chip.lang": "Deutsch &amp; Englisch",
+    "how.kicker": "So funktioniert’s",
+    "how.title": "In drei Schritten vom Arbeitsschritt zur Taktzeit",
+    "how.1.t": "Schritte anlegen",
+    "how.1.d": "Eine Zeile pro Arbeitsschritt eintippen – oder die Taste halten und einfach diktieren.",
+    "how.2.t": "Blind messen",
+    "how.2.d": "Aufnahme starten und bei jedem Schrittwechsel Lautstärke hoch drücken. Der Blick bleibt beim Werker, nicht auf dem Display.",
+    "how.3.t": "Auswerten &amp; teilen",
+    "how.3.d": "Mittelwert, Median, Streuung und die reale Taktzeit pro Schritt und Zyklus – als PDF, Excel oder CSV exportiert.",
+    "keys.kicker": "Freihändig",
+    "keys.title": "Die Lautstärketasten sind deine Stoppuhr",
+    "keys.lead": "Kein Tippen aufs Glas, während du die Linie beobachtest. Der aktuelle Schritt steht immer groß im Bild, und die Aufnahme läuft im Hintergrund, bei ausgeschaltetem Bildschirm und sogar nach einem Neustart der App weiter.",
+    "keys.up.k": "Lautstärke hoch",
+    "keys.up.t": "Nächster Schritt",
+    "keys.up.d": "Vor dem Start startet sie die Aufnahme.",
+    "keys.hold.k": "Lautstärke hoch halten",
+    "keys.hold.t": "Sonderzeit",
+    "keys.hold.d": "Für Störungen – zählt nicht zur Taktzeit.",
+    "keys.down.k": "Lautstärke runter",
+    "keys.down.t": "Start / Stopp",
+    "keys.down.d": "Pausieren und fortsetzen, ohne hinzusehen.",
+    "feat.kicker": "Funktionen",
+    "feat.title": "Alles, was eine Zeitaufnahme braucht. Nichts, was sie nicht braucht.",
+    "feat.1.t": "Vier Studienarten",
+    "feat.1.d": "Zeitstudie mit fester Schrittfolge, Video-Studie, einfache Stoppuhr mit Runden und Schritt-Timer für beliebige Reihenfolge.",
+    "feat.2.t": "Video-Studie",
+    "feat.2.d": "Video importieren, mit 0,25× bis 2× abspielen, Bild für Bild weiterschalten und Marker auf einer flüssigen Zeitleiste setzen.",
+    "feat.3.t": "Saubere Statistik",
+    "feat.3.d": "Summe, Mittelwert, Median, Min/Max und Streuung. Reale Taktzeit nach Mittelwert, Median oder IQR ohne Ausreißer – in HM, Sekunden, mm:ss.SSS oder TMU.",
+    "feat.4.t": "Nachträglich bearbeiten",
+    "feat.4.d": "Zyklen oder einzelne Zeiten löschen, Schritte umbenennen und umsortieren, Notizen ergänzen – später, am Schreibtisch.",
+    "feat.5.t": "Revisionen",
+    "feat.5.d": "Eine Studie ein Jahr später erneut messen. Frühere Runden werden archiviert und die Abweichung pro Schritt angezeigt.",
+    "feat.6.t": "Berichte &amp; Backup",
+    "feat.6.d": "CSV, Excel und PDF pro Studie, verlinkte Berichte für eine ganze Linie und ein vollständiges Backup in einer Datei.",
+    "line.kicker": "Mehr als eine Station",
+    "line.title": "Vom Arbeitsplatz zur ganzen Linie",
+    "line.lead": "Fasse Studien zu einer Fertigungslinie zusammen, und CycleScope zeigt, wo es wirklich klemmt.",
+    "line.1": "<strong>Linienanalyse:</strong> Summe der Taktzeiten, Durchlaufzeit, Engpass, Austaktungsgrad und Ausbringung pro Stunde.",
+    "line.2": "<strong>Parallele Maschinen:</strong> mehrere Maschinen teilen sich eine Station; Stationen ohne Messung erhalten eine feste mittlere Zeit.",
+    "line.3": "<strong>Sonderzyklen &amp; geplante Stopps:</strong> „alle N Teile Zusatzzeit“ oder „alle X Stunden ein Werkzeugwechsel“ fließen in die effektive Taktzeit ein.",
+    "line.4": "<strong>Puffer &amp; Simulation:</strong> eine Schicht oder 24 Stunden durchspielen, Maschinenausfälle einbauen und die verlorenen Teile mit und ohne Puffer sehen.",
+    "shots.kicker": "Screenshots",
+    "shots.title": "Ein Blick in die App",
+    "shots.prev": "Zurück",
+    "shots.next": "Weiter",
+    "priv.title": "Deine Daten bleiben auf deinem Handy.",
+    "priv.lead": "CycleScope hat keinen Internetzugriff. Studien, Zeiten und Videos liegen nur im privaten Speicher der App – Backups und Exporte entstehen nur, wenn du sie anlegst.",
+    "priv.link": "Zur Datenschutzerklärung →",
+    "priv.1": "Kein Konto",
+    "priv.2": "Keine Cloud",
+    "priv.3": "Keine Werbung",
+    "priv.4": "Kein Tracking",
+    "dl.title": "Bereit für die nächste Zeitaufnahme?",
+    "dl.lead": "CycleScope ist kostenlos und Open Source. Die neueste signierte APK gibt es in den GitHub-Releases.",
+    "dl.apk": "APK herunterladen",
+    "dl.src": "Quellcode",
+    "dl.meta": "Android 8.0 oder neuer · Deutsch &amp; Englisch",
+    "foot.privacy": "Datenschutz",
+    "foot.contact": "Kontakt",
+    "alt.analysis": "Auswertung mit der realen Taktzeit",
+    "alt.live": "Live-Aufnahme mit dem aktuellen Schritt",
+    "alt.line": "Linienanalyse mit Engpass-Diagramm",
+    "alt.sim": "Simulation einer Schicht mit Maschinenausfall",
+    "alt.icon": "CycleScope App-Symbol"
+  };
+
+  var gallery = document.getElementById("gallery");
+  SHOTS.forEach(function (s) {
+    var fig = document.createElement("figure");
+    fig.innerHTML =
+      '<div class="phone"><img class="shot" loading="lazy" width="1078" height="2398" data-shot="' + s[0] +
+      '" src="screenshots/en/' + s[0] + '.png" alt=""></div><figcaption><span></span><small></small></figcaption>';
+    gallery.appendChild(fig);
+  });
+
+  // Remember the English source text so we can switch back without a reload.
+  var EN = {};
+  document.querySelectorAll("[data-i18n]").forEach(function (el) { EN[el.dataset.i18n] = el.innerHTML; });
+  document.querySelectorAll("[data-i18n-alt]").forEach(function (el) { EN[el.dataset.i18nAlt] = el.alt; });
+  document.querySelectorAll("[data-i18n-aria]").forEach(function (el) { EN[el.dataset.i18nAria] = el.getAttribute("aria-label"); });
+  EN["meta.title"] = document.title;
+  var metaDesc = document.querySelector('meta[name="description"]');
+  EN["meta.desc"] = metaDesc.content;
+
+  function apply(lang) {
+    var dict = lang === "de" ? DE : EN;
+    var t = function (k) { return dict[k] != null ? dict[k] : EN[k]; };
+    document.documentElement.lang = lang;
+    document.title = t("meta.title");
+    metaDesc.content = t("meta.desc");
+    document.querySelectorAll("[data-i18n]").forEach(function (el) { el.innerHTML = t(el.dataset.i18n); });
+    document.querySelectorAll("[data-i18n-alt]").forEach(function (el) { el.alt = t(el.dataset.i18nAlt); });
+    document.querySelectorAll("[data-i18n-aria]").forEach(function (el) { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
+    document.querySelectorAll("img.shot").forEach(function (img) {
+      img.src = "screenshots/" + lang + "/" + img.dataset.shot + ".png";
+    });
+    gallery.querySelectorAll("figure").forEach(function (fig, i) {
+      var s = SHOTS[i], de = lang === "de";
+      fig.querySelector("figcaption span").textContent = de ? s[3] : s[1];
+      fig.querySelector("figcaption small").textContent = de ? s[4] : s[2];
+      fig.querySelector("img").alt = (de ? s[3] : s[1]) + " – " + (de ? s[4] : s[2]);
+    });
+    document.querySelectorAll(".lang button").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.lang === lang));
+    });
+    try { localStorage.setItem("lang", lang); } catch (e) {}
+  }
+
+  function initialLang() {
+    var q = new URLSearchParams(location.search).get("lang");
+    if (q === "de" || q === "en") return q;
+    try { var s = localStorage.getItem("lang"); if (s === "de" || s === "en") return s; } catch (e) {}
+    return /^de\b/i.test(navigator.language || "") ? "de" : "en";
+  }
+
+  document.querySelectorAll(".lang button").forEach(function (b) {
+    b.addEventListener("click", function () { apply(b.dataset.lang); });
+  });
+  apply(initialLang());
+
+  // Gallery arrows
+  document.querySelectorAll(".gallery-nav button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      gallery.scrollBy({ left: Number(b.dataset.dir) * 258 * 2, behavior: "smooth" });
+    });
+  });
+
+  // Header border on scroll
+  var top = document.getElementById("top");
+  var onScroll = function () { top.classList.toggle("scrolled", window.scrollY > 8); };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  // Reveal on scroll
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    document.querySelectorAll(".reveal").forEach(function (el) { io.observe(el); });
+  } else {
+    document.querySelectorAll(".reveal").forEach(function (el) { el.classList.add("in"); });
+  }
+})();
+</script>
 </body>
 </html>
