@@ -16,8 +16,15 @@ class LocalVideoFiles implements VideoFiles {
 
   @override
   Future<void> delete(String path) async {
+    final String resolved;
     try {
-      final file = File(await paths.resolve(path));
+      resolved = await paths.resolve(path);
+    } on Exception {
+      // Without a resolvable location there is no file to delete.
+      return;
+    }
+    try {
+      final file = File(resolved);
       if (await file.exists()) await file.delete();
     } on FileSystemException {
       // Still in use or already gone: the file just stays.

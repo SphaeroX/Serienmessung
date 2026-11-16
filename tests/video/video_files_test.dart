@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import '../fakes/fake_clock.dart';
 import '../fakes/fake_platform.dart';
@@ -104,6 +105,19 @@ void main() {
       );
       await store.delete('/old/container/Documents/videos/x.mp4');
       expect(file.existsSync(), isFalse);
+    },
+  );
+
+  test(
+    'the local store deletes nothing when the documents folder is unavailable',
+    () async {
+      final store = LocalVideoFiles(
+        paths: VideoPaths(
+          documentsDirectory: () async =>
+              throw MissingPlatformDirectoryException('no documents folder'),
+        ),
+      );
+      await expectLater(store.delete('videos/x.mp4'), completes);
     },
   );
 
