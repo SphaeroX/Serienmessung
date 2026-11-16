@@ -1,0 +1,2 @@
+"NSMicrophoneUsageDescription" = "CycleScope nutzt das Mikrofon nur, solange du die Diktiertaste hältst, um Arbeitsschritte per Sprache einzugeben.";
+"NSSpeechRecognitionUsageDescription" = "Deine Sprache wird in Text umgewandelt, damit du Arbeitsschritte per Sprache eingeben kannst. Dafür kann die Spracherkennung von Apple den Ton verarbeiten.";
