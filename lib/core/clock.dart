@@ -8,8 +8,10 @@ abstract class Clock {
 
 /// [Clock] backed by a [Stopwatch], shifted by [offsetMicros].
 ///
-/// On Android the offset is set to `SystemClock.elapsedRealtime()` at startup
-/// so timestamps stay comparable across app restarts (not device reboots).
+/// At startup the offset is set to the platform time that keeps counting
+/// during sleep (`SystemClock.elapsedRealtime()` on Android,
+/// `CLOCK_MONOTONIC_RAW` on iOS) so timestamps stay comparable across app
+/// restarts (not device reboots).
 class MonotonicClock implements Clock {
   MonotonicClock({this.offsetMicros = 0}) : _stopwatch = Stopwatch()..start();
 

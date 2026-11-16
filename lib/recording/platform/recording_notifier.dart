@@ -83,8 +83,10 @@ class AndroidRecordingNotifier implements RecordingNotifier {
   }
 }
 
-/// Reads `SystemClock.elapsedRealtime` (µs) so the monotonic clock survives
-/// app restarts. Returns null where unavailable.
+/// Reads the platform time that keeps counting during sleep (µs;
+/// `SystemClock.elapsedRealtime` on Android, `CLOCK_MONOTONIC_RAW` on iOS)
+/// so the monotonic clock survives app restarts. Returns null where
+/// unavailable.
 Future<int?> readElapsedRealtimeMicros() async {
   try {
     final v = await const MethodChannel('dev.cyclescope/platform')
