@@ -27,7 +27,8 @@ flutter run
 
 ## Download
 
-Signed APKs are on the [Releases page](https://github.com/SphaeroX/Serienmessung/releases). A release is built by pushing a version tag (`git tag v1.6.2 && git push origin v1.6.2`), see [release.yml](.github/workflows/release.yml).
+- **iOS (iPhone & iPad)**: [App Store](https://apps.apple.com/us/app/cyclescope-time-study/id6835546516)
+- **Android**: signed APKs are on the [Releases page](https://github.com/SphaeroX/Serienmessung/releases). A release is built by pushing a version tag (`git tag v1.6.2 && git push origin v1.6.2`), see [release.yml](.github/workflows/release.yml).
 
 ## Screenshots
 
