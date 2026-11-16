@@ -10,10 +10,12 @@ import 'package:cyclescope/study/domain/study.dart';
 import 'package:cyclescope/study/presentation/study_list_screen.dart';
 import 'package:cyclescope/video/data/video_cleanup.dart';
 import 'package:cyclescope/video/platform/video_files.dart';
+import 'package:cyclescope/video/platform/video_paths.dart';
 import 'package:cyclescope/video/presentation/video_study_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
 import '../fakes/fake_clock.dart';
 import '../fakes/fake_platform.dart';
@@ -70,6 +72,23 @@ void main() {
     expect(file.existsSync(), isFalse);
     await store.delete(file.path);
   });
+
+  test(
+    'the local store deletes a stored path in the documents folder',
+    () async {
+      final documents = await Directory.systemTemp.createTemp(
+        'cyclescope_documents',
+      );
+      addTearDown(() => documents.delete(recursive: true));
+      final file = File(p.join(documents.path, 'videos', 'x.mp4'))
+        ..createSync(recursive: true);
+      final store = LocalVideoFiles(
+        paths: VideoPaths(documentsDirectory: () async => documents),
+      );
+      await store.delete('videos/x.mp4');
+      expect(file.existsSync(), isFalse);
+    },
+  );
 
   group('study list', () {
     Widget app() => ProviderScope(

@@ -42,7 +42,9 @@ final frameSourceFactoryProvider = Provider<FrameSource Function()>(
   (ref) => ChannelFrameSource.new,
 );
 
-final videoPickerProvider = Provider<VideoPicker>((ref) => FileVideoPicker());
+final videoPickerProvider = Provider<VideoPicker>(
+  (ref) => FileVideoPicker(ref.watch(videoPathsProvider)),
+);
 
 /// Frame duration used when the video's frame rate is unknown (30 fps).
 const frameMicros = 33333;
@@ -176,8 +178,10 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
     if (path != null) await _open(path);
   }
 
-  Future<void> _open(String path) async {
+  Future<void> _open(String storedPath) async {
+    final String path;
     try {
+      path = await ref.read(videoPathsProvider).resolve(storedPath);
       await playback.open(path);
     } on Object {
       // File moved/deleted or not playable.
