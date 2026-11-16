@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'video_paths.dart';
+
 /// The copied video files of the video studies in app storage.
 abstract class VideoFiles {
   /// Deletes the file at [path]; a missing file is not an error.
@@ -8,12 +10,14 @@ abstract class VideoFiles {
 
 /// Files in the app's documents folder (see `FileVideoPicker`).
 class LocalVideoFiles implements VideoFiles {
-  const LocalVideoFiles();
+  const LocalVideoFiles({this.paths = const VideoPaths()});
+
+  final VideoPaths paths;
 
   @override
   Future<void> delete(String path) async {
     try {
-      final file = File(path);
+      final file = File(await paths.resolve(path));
       if (await file.exists()) await file.delete();
     } on FileSystemException {
       // Still in use or already gone: the file just stays.

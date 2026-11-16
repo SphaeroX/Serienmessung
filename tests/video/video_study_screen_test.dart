@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cyclescope/core/clock.dart';
 import 'package:cyclescope/core/database.dart';
 import 'package:cyclescope/core/providers.dart';
@@ -9,10 +11,12 @@ import 'package:cyclescope/video/domain/frame_cache.dart';
 import 'package:cyclescope/analysis/presentation/analysis_view.dart';
 import 'package:cyclescope/recording/presentation/cycles_view.dart';
 import 'package:cyclescope/revision/presentation/revisions_screen.dart';
+import 'package:cyclescope/video/platform/video_paths.dart';
 import 'package:cyclescope/video/presentation/video_study_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
 import '../fakes/fake_clock.dart';
 import '../fakes/fake_platform.dart';
@@ -45,7 +49,7 @@ void main() {
 
   tearDown(() => db.close());
 
-  Future<void> pump(WidgetTester tester) async {
+  Future<void> pump(WidgetTester tester, {VideoPaths? paths}) async {
     usePhoneSize(tester);
     await tester.pumpWidget(
       ProviderScope(
@@ -55,6 +59,7 @@ void main() {
           videoPlaybackFactoryProvider.overrideWithValue(() => video),
           frameSourceFactoryProvider.overrideWithValue(() => frames),
           videoPickerProvider.overrideWithValue(FakeVideoPicker()),
+          if (paths != null) videoPathsProvider.overrideWithValue(paths),
           ...fakePlatformOverrides(keys: keys),
         ],
         child: localizedApp(VideoStudyScreen(studyId: studyId)),
@@ -82,6 +87,27 @@ void main() {
       () => StudyRepository(db).getStudy(studyId),
     );
     expect(study!.videoPath, 'fake:video.mp4');
+  });
+
+  testWidgets('a stored video opens from the current documents folder', (
+    tester,
+  ) async {
+    final documents = (await tester.runAsync(
+      () => Directory.systemTemp.createTemp('cyclescope_documents'),
+    ))!;
+    addTearDown(() => documents.delete(recursive: true));
+    await tester.runAsync(
+      () => StudyRepository(db).setVideoPath(studyId, 'videos/clip.mp4'),
+    );
+    await pump(
+      tester,
+      paths: VideoPaths(documentsDirectory: () async => documents),
+    );
+    expect(video.openedPath, p.join(documents.path, 'videos', 'clip.mp4'));
+    final study = await tester.runAsync(
+      () => StudyRepository(db).getStudy(studyId),
+    );
+    expect(study!.videoPath, 'videos/clip.mp4');
   });
 
   Future<void> markAt(WidgetTester tester, int micros) async {
