@@ -31,7 +31,8 @@ abstract class RecordingNotifier {
   Stream<String> get actions;
 }
 
-/// Used when notifications are switched off in the settings.
+/// Used when notifications are switched off in the settings or the platform
+/// has no ongoing recording notification.
 class SilentRecordingNotifier implements RecordingNotifier {
   const SilentRecordingNotifier();
 

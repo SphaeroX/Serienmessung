@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../analysis/domain/statistics.dart';
 import '../../backup/presentation/backup_tiles.dart';
 import '../../analysis/presentation/analysis_view.dart' show methodLabel;
+import '../../core/platform_features.dart';
 import '../../core/time_format.dart';
 import '../../demo/presentation/demo_data_tile.dart';
 import '../../l10n/app_localizations.dart';
@@ -73,6 +74,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final s = ref.watch(settingsProvider);
+    final features = ref.watch(platformFeaturesProvider);
     final ctrl = ref.read(settingsProvider.notifier);
     final theme = Theme.of(context);
     Widget header(String text) => Padding(
@@ -168,29 +170,32 @@ class SettingsScreen extends ConsumerWidget {
             value: s.vibration,
             onChanged: (v) => ctrl.update((x) => x.copyWith(vibration: v)),
           ),
-          SwitchListTile(
-            key: const Key('hardwareKeysSwitch'),
-            secondary: const Icon(Icons.volume_up),
-            title: Text(l.hardwareKeys),
-            subtitle: Text(l.hardwareKeysHint),
-            value: s.hardwareKeys,
-            onChanged: (v) => ctrl.update((x) => x.copyWith(hardwareKeys: v)),
-          ),
-          ListTile(
-            leading: const Icon(Icons.pan_tool_alt),
-            title: Text(l.holdThreshold),
-            subtitle: Slider(
-              key: const Key('holdSlider'),
-              min: AppSettings.minHoldMs.toDouble(),
-              max: AppSettings.maxHoldMs.toDouble(),
-              divisions: (AppSettings.maxHoldMs - AppSettings.minHoldMs) ~/ 50,
-              value: s.holdThresholdMs.toDouble(),
-              label: '${s.holdThresholdMs} ms',
-              onChanged: (v) =>
-                  ctrl.update((x) => x.copyWith(holdThresholdMs: v.round())),
+          if (features.volumeKeys) ...[
+            SwitchListTile(
+              key: const Key('hardwareKeysSwitch'),
+              secondary: const Icon(Icons.volume_up),
+              title: Text(l.hardwareKeys),
+              subtitle: Text(l.hardwareKeysHint),
+              value: s.hardwareKeys,
+              onChanged: (v) => ctrl.update((x) => x.copyWith(hardwareKeys: v)),
             ),
-            trailing: Text('${s.holdThresholdMs} ms'),
-          ),
+            ListTile(
+              leading: const Icon(Icons.pan_tool_alt),
+              title: Text(l.holdThreshold),
+              subtitle: Slider(
+                key: const Key('holdSlider'),
+                min: AppSettings.minHoldMs.toDouble(),
+                max: AppSettings.maxHoldMs.toDouble(),
+                divisions:
+                    (AppSettings.maxHoldMs - AppSettings.minHoldMs) ~/ 50,
+                value: s.holdThresholdMs.toDouble(),
+                label: '${s.holdThresholdMs} ms',
+                onChanged: (v) =>
+                    ctrl.update((x) => x.copyWith(holdThresholdMs: v.round())),
+              ),
+              trailing: Text('${s.holdThresholdMs} ms'),
+            ),
+          ],
           SwitchListTile(
             key: const Key('keepScreenOnSwitch'),
             secondary: const Icon(Icons.smartphone),
@@ -199,14 +204,16 @@ class SettingsScreen extends ConsumerWidget {
             value: s.keepScreenOn,
             onChanged: (v) => ctrl.update((x) => x.copyWith(keepScreenOn: v)),
           ),
-          SwitchListTile(
-            key: const Key('notificationsSwitch'),
-            secondary: const Icon(Icons.notifications_outlined),
-            title: Text(l.notifications),
-            subtitle: Text(l.notificationsHint),
-            value: s.notifications,
-            onChanged: (v) => ctrl.update((x) => x.copyWith(notifications: v)),
-          ),
+          if (features.recordingNotification)
+            SwitchListTile(
+              key: const Key('notificationsSwitch'),
+              secondary: const Icon(Icons.notifications_outlined),
+              title: Text(l.notifications),
+              subtitle: Text(l.notificationsHint),
+              value: s.notifications,
+              onChanged: (v) =>
+                  ctrl.update((x) => x.copyWith(notifications: v)),
+            ),
           ListTile(
             key: const Key('staleDaysTile'),
             leading: const Icon(Icons.history),

@@ -16,6 +16,7 @@ import '../video/platform/video_files.dart';
 import 'clock.dart';
 import 'database.dart';
 import 'platform.dart';
+import 'platform_features.dart';
 import 'url_opener.dart';
 
 /// The opened app database. Overridden in `main()` and in tests.
@@ -94,14 +95,20 @@ final urlOpenerProvider = Provider<UrlOpener>(
   (ref) => const AndroidUrlOpener(),
 );
 
-/// Volume keys (Android platform channel).
+/// Volume keys (Android platform channel); silent where the platform cannot
+/// capture them.
 final hardwareKeysProvider = Provider<HardwareKeys>(
-  (ref) => AndroidHardwareKeys(ref.watch(clockProvider)),
+  (ref) => ref.watch(platformFeaturesProvider).volumeKeys
+      ? AndroidHardwareKeys(ref.watch(clockProvider))
+      : const SilentHardwareKeys(),
 );
 
-/// Ongoing notification while recording.
+/// Ongoing notification while recording, where the platform offers it and the
+/// settings switch it on.
 final recordingNotifierProvider = Provider<RecordingNotifier>(
-  (ref) => ref.watch(settingsProvider).notifications
+  (ref) =>
+      ref.watch(platformFeaturesProvider).recordingNotification &&
+          ref.watch(settingsProvider).notifications
       ? AndroidRecordingNotifier()
       : const SilentRecordingNotifier(),
 );
