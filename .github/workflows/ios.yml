@@ -3,9 +3,10 @@ name: iOS
 # Builds the iOS app without code signing and runs its native unit tests on pull
 # requests and pushes to main. After a green build on main, the deliver job asks
 # the Boundfox App Store pipeline (BoundfoxStudios/cyclescope-ios) to sign this
-# commit and upload it to TestFlight; it is skipped until the trigger app's
-# variable CYCLESCOPE_IOS_TRIGGER_CLIENT_ID and secret
-# CYCLESCOPE_IOS_TRIGGER_PRIVATE_KEY are set (see docs/architecture.md).
+# commit and upload it to TestFlight; it is skipped while the trigger app's
+# variable CYCLESCOPE_IOS_TRIGGER_CLIENT_ID is unset. Set the secret
+# CYCLESCOPE_IOS_TRIGGER_PRIVATE_KEY before the variable (see
+# docs/architecture.md).
 on:
   pull_request:
   push:
