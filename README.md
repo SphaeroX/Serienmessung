@@ -1,10 +1,10 @@
 # CycleScope
 
-Time and motion study stopwatch for Android (Flutter): define work steps, record cycles via volume keys or from video, and analyse step times and the real cycle time.
+Time and motion study stopwatch for Android and iOS (Flutter): define work steps, record cycles via volume keys (Android) or from video, and analyse step times and the real cycle time.
 
 ## Features
 
-- **Studies**: time study (fixed step sequence), video study, simple stopwatch with laps and step timer (free order). Operation via the volume keys, special times for unforeseen interruptions.
+- **Studies**: time study (fixed step sequence), video study, simple stopwatch with laps and step timer (free order). Operation via the volume keys (Android), special times for unforeseen interruptions.
 - **Analysis**: sum, mean, median, min/max, spread per step and cycle; real cycle time by mean, median or IQR-filtered. Units HM, seconds, mm:ss.SSS and TMU.
 - **Groups**: collect studies in a fixed order (e.g. the machines of a production line), move or copy studies between groups. Machines can work **in parallel** (one station), and machines without a measurement get a **fixed average cycle time**.
 - **Revisions**: measure a study again later (e.g. a year later); earlier rounds are archived and the deviations per step and cycle time are shown. When the last measurement is older than a set number of days (default 10), the app offers a new measurement.

@@ -24,12 +24,11 @@ Rebuild an existing Android "time study stopwatch" app as a better Flutter app f
 
 - Standard time (performance rating, allowances) – later at the earliest.
 - Cloud sync, accounts, any backend.
-- iOS build for now.
 - "Send feedback" / "Rate app".
 
 ## Constraints
 
-- Android first; code iOS-capable.
+- Android and iOS (volume keys and the recording notification on Android only).
 - Offline only, all data on device.
 - English-first UI with German translation; code and identifiers in English.
 
