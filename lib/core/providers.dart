@@ -87,6 +87,7 @@ final deviceFeedbackProvider = Provider<DeviceFeedback>((ref) {
   );
 });
 
+/// Where the copied videos are stored and found again.
 final videoPathsProvider = Provider<VideoPaths>((ref) => const VideoPaths());
 
 /// Copied video files of the video studies.
