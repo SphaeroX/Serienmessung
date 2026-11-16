@@ -9,6 +9,8 @@ Outputs:
   - android/.../drawable/ic_notification.xml          status bar icon
   - android/.../mipmap-anydpi-v26/ic_launcher.xml     adaptive icon
   - android/.../mipmap-*/ic_launcher.png              legacy raster icons
+  - ios/.../AppIcon.appiconset/app_icon_1024.png      iOS app icon
+  - ios/.../AppIcon.appiconset/Contents.json          iOS asset catalog entry
 
 Motif: a stopwatch whose rim is a cycle arrow, with three coloured work
 steps on the dial. All coordinates live on the 108 x 108 adaptive icon
@@ -18,6 +20,7 @@ Run from the repository root:  python tool/generate_app_icon.py
 Requires Pillow.
 """
 
+import json
 import math
 import os
 
@@ -26,6 +29,7 @@ from PIL import Image, ImageDraw
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "android", "app", "src", "main", "res")
 BRANDING = os.path.join(ROOT, "assets", "branding")
+IOS_ICONS = os.path.join(ROOT, "ios", "Runner", "Assets.xcassets", "AppIcon.appiconset")
 
 CANVAS = 108.0
 CX, CY = 54.0, 56.5
@@ -331,6 +335,18 @@ def render(size, viewport=CANVAS, offset=0.0, mask="square", supersample=8):
 
 LEGACY_SIZES = {"mdpi": 48, "hdpi": 72, "xhdpi": 96, "xxhdpi": 144, "xxxhdpi": 192}
 
+IOS_ICON_CONTENTS = {
+    "images": [
+        {
+            "filename": "app_icon_1024.png",
+            "idiom": "universal",
+            "platform": "ios",
+            "size": "1024x1024",
+        }
+    ],
+    "info": {"author": "xcode", "version": 1},
+}
+
 
 def main():
     drawable = os.path.join(RES, "drawable")
@@ -353,6 +369,15 @@ def main():
         img.save(os.path.join(RES, f"mipmap-{density}", "ic_launcher.png"))
     render(512, viewport=78, offset=15, mask="square").save(
         os.path.join(BRANDING, "app_icon_512.png")
+    )
+
+    write(
+        os.path.join(IOS_ICONS, "Contents.json"),
+        json.dumps(IOS_ICON_CONTENTS, indent=2) + "\n",
+    )
+    # App Store icons must not have an alpha channel.
+    render(1024, viewport=78, offset=15, mask="square").convert("RGB").save(
+        os.path.join(IOS_ICONS, "app_icon_1024.png")
     )
 
 
