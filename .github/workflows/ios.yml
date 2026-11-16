@@ -1,0 +1,64 @@
+name: iOS
+
+# Builds the iOS app without code signing and runs its native unit tests on pull
+# requests and pushes to main. After a green build on main, the deliver job asks
+# the Boundfox App Store pipeline (BoundfoxStudios/cyclescope-ios) to sign this
+# commit and upload it to TestFlight; it is skipped until the trigger app's
+# variable CYCLESCOPE_IOS_TRIGGER_CLIENT_ID and secret
+# CYCLESCOPE_IOS_TRIGGER_PRIVATE_KEY are set (see docs/architecture.md).
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.47.9
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter pub get
+      - name: Native unit tests
+        run: |
+          flutter build ios --config-only --debug --simulator
+          simulator=$(xcrun simctl list devices available --json \
+            | jq -r '[.devices[][] | select(.name | startswith("iPhone"))][0].udid')
+          xcodebuild test -quiet \
+            -workspace ios/Runner.xcworkspace -scheme Runner -configuration Debug \
+            -destination "id=$simulator"
+      - run: flutter build ios --release --no-codesign
+
+  deliver:
+    needs: build
+    if: github.event_name == 'push' && vars.CYCLESCOPE_IOS_TRIGGER_CLIENT_ID != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/create-github-app-token@v3
+        id: token
+        with:
+          client-id: ${{ vars.CYCLESCOPE_IOS_TRIGGER_CLIENT_ID }}
+          private-key: ${{ secrets.CYCLESCOPE_IOS_TRIGGER_PRIVATE_KEY }}
+          owner: BoundfoxStudios
+          repositories: cyclescope-ios
+      - name: Hand the commit to the App Store pipeline
+        run: >
+          gh workflow run ios.yml --repo BoundfoxStudios/cyclescope-ios
+          -f sha="$GITHUB_SHA" -f flutter-version="$FLUTTER_VERSION"
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
