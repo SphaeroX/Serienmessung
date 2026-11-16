@@ -74,7 +74,8 @@ final studyListProvider = FutureProvider<List<StudySummary>>(
 final wallClockProvider = Provider<DateTime Function()>((ref) => DateTime.now);
 
 /// Monotonic clock for all durations. Overridden in `main()` with the
-/// Android elapsed-realtime offset and with a fake clock in tests.
+/// elapsed-realtime offset of the platform channel (Android and iOS) and
+/// with a fake clock in tests.
 final clockProvider = Provider<Clock>((ref) => MonotonicClock());
 
 /// Haptics and wake lock.
@@ -93,7 +94,7 @@ final videoFilesProvider = Provider<VideoFiles>(
   (ref) => LocalVideoFiles(paths: ref.watch(videoPathsProvider)),
 );
 
-/// Opens web links in the browser (Android platform channel).
+/// Opens web links in the browser (platform channel on Android and iOS).
 final urlOpenerProvider = Provider<UrlOpener>(
   (ref) => const AndroidUrlOpener(),
 );
