@@ -11,7 +11,7 @@
 - Localization: Flutter `gen-l10n` with ARB files in `lib/l10n/` (`l10n.yaml`); **English is the template/fallback**, German is the translation. Generated `app_localizations*.dart` are committed; after editing ARB files run `flutter gen-l10n`.
 - `speech_to_text` – push-to-talk dictation of steps (platform recognizer, no own model).
 - `wakelock_plus` – keep the screen on while recording.
-- `video_player` – video playback (ExoPlayer) for video studies; `file_picker` – choosing videos (and backup files).
+- `video_player` – video playback (ExoPlayer on Android, AVPlayer on iOS) for video studies; `file_picker` – choosing videos (and backup files).
 - `excel` – .xlsx export; `share_plus` – system share sheet for export/backup files. `shareParamsFor` (`export/platform/file_sharer.dart`) sets the share subject to the file name with extension, because Google Drive names saved files after the subject.
 - `pdf` – PDF report (pure Dart, built-in Latin-1 fonts; shared via the share sheet instead of the `printing` plugin). Characters outside Latin-1 are mapped in `_latin1` (e.g. `Δ` → `Delta`).
 
@@ -66,7 +66,7 @@
 ## Environment
 
 - Dependencies only via `flutter pub add` / `flutter pub get`. No `.env` needed (no external services).
-- Release signing: the only secret of the project. `android/app/build.gradle.kts` signs release builds with the key from `android/key.properties` (template: `android/key.properties.example`; the real file, `*.jks` and `*.keystore` are git-ignored). Without the file, release builds use the debug key.
+- Release signing: the signing key is the only secret needed to build locally. `android/app/build.gradle.kts` signs release builds with the key from `android/key.properties` (template: `android/key.properties.example`; the real file, `*.jks` and `*.keystore` are git-ignored). Without the file, release builds use the debug key.
 - The release keystore lives outside the repository and must be backed up by the owner: without it no update of an installed app is possible. GitHub secrets used by `.github/workflows/release.yml`: `ANDROID_KEYSTORE_BASE64` (base64 of the `.jks`), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`.
 - Releases: pushing a tag `vX.Y.Z` runs the tests, builds `flutter build apk --release` (version name from the tag, version code = workflow run number) and publishes the APK as a GitHub release.
 - Google Play: application ID `dev.cyclescope.cyclescope` (fixed once published), launcher label `CycleScope`. Upload an app bundle (`flutter build appbundle --release`, signed with the release key above as upload key; Play App Signing holds the app signing key). Store graphics (Google Play and App Store) are made in two steps: `flutter test tests/screenshots/store_screenshots_test.dart --dart-define=STORE_SCREENSHOTS=true` renders the app screens with the demo line into `store/raw/<phone|tablet>/<lang>/`, then `python tool/generate_store_assets.py` puts them under captions into device frames in every store size (Play phone 1080 × 1920, tablet 2064 × 2752, feature graphic 1024 × 500, icon 512; App Store iPhone 6.9" 1320 × 2868, 6.5" 1284 × 2778, iPad 13" 2064 × 2752, icon 1024) inside the local, git-ignored `store/` folder (listing texts and console answers are kept there by hand). The App Store captions never mention the volume keys (Android only).
