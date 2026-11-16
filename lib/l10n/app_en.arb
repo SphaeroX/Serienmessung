@@ -920,5 +920,6 @@
   "demoStepMountFixture": "Mount fixture",
   "demoStepFirstPart": "First-part check",
   "sourceCodeOnGitHub": "Source code on GitHub",
-  "linkOpenFailed": "Could not open the link."
+  "linkOpenFailed": "Could not open the link.",
+  "privacyPolicy": "Privacy policy"
 }

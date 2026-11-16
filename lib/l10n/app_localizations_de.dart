@@ -1524,4 +1524,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get linkOpenFailed => 'Der Link konnte nicht geöffnet werden.';
+
+  @override
+  String get privacyPolicy => 'Datenschutzerklärung';
 }

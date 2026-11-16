@@ -427,5 +427,6 @@
   "demoStepMountFixture": "Vorrichtung aufbauen",
   "demoStepFirstPart": "Erstteilprüfung",
   "sourceCodeOnGitHub": "Quellcode auf GitHub",
-  "linkOpenFailed": "Der Link konnte nicht geöffnet werden."
+  "linkOpenFailed": "Der Link konnte nicht geöffnet werden.",
+  "privacyPolicy": "Datenschutzerklärung"
 }
