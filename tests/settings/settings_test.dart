@@ -73,11 +73,12 @@ void main() {
     Widget home, {
     AppSettings initial = const AppSettings(),
     PlatformFeatures? platformFeatures,
+    FakeUrlOpener? urlOpener,
   }) => ProviderScope(
     overrides: [
       databaseProvider.overrideWithValue(db),
       initialSettingsProvider.overrideWithValue(initial),
-      ...fakePlatformOverrides(),
+      ...fakePlatformOverrides(urlOpener: urlOpener),
       if (platformFeatures != null)
         platformFeaturesProvider.overrideWithValue(platformFeatures),
     ],
@@ -199,5 +200,56 @@ void main() {
     );
     final fb = container.read(deviceFeedbackProvider) as SystemDeviceFeedback;
     expect((fb.vibrate, fb.keepScreenOn), (false, false));
+  });
+
+  const privacyPolicyTile = Key('privacyPolicyTile');
+
+  testWidgets('tapping the privacy policy opens it', (tester) async {
+    usePhoneSize(tester);
+    final opener = FakeUrlOpener();
+    await tester.pumpWidget(app(const SettingsScreen(), urlOpener: opener));
+    await settle(tester);
+    await tapVisible(tester, find.byKey(privacyPolicyTile));
+    await settle(tester);
+    expect(opener.opened, [
+      Uri.parse('https://sphaerox.github.io/Serienmessung/privacy/'),
+    ]);
+    expect(find.text('Could not open the link.'), findsNothing);
+  });
+
+  testWidgets('tells the user when the privacy policy cannot be opened', (
+    tester,
+  ) async {
+    usePhoneSize(tester);
+    final opener = FakeUrlOpener()..result = false;
+    await tester.pumpWidget(app(const SettingsScreen(), urlOpener: opener));
+    await settle(tester);
+    await tapVisible(tester, find.byKey(privacyPolicyTile));
+    await settle(tester);
+    expect(find.text('Could not open the link.'), findsOneWidget);
+  });
+
+  testWidgets('privacy policy label is translated', (tester) async {
+    usePhoneSize(tester);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          ...fakePlatformOverrides(),
+        ],
+        child: localizedApp(const SettingsScreen(), locale: const Locale('de')),
+      ),
+    );
+    await settle(tester);
+    final tile = find.byKey(privacyPolicyTile);
+    await tester.scrollUntilVisible(
+      tile,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(
+      find.descendant(of: tile, matching: find.text('Datenschutzerklärung')),
+      findsOneWidget,
+    );
   });
 }

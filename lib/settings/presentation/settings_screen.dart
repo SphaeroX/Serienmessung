@@ -5,6 +5,7 @@ import '../../analysis/domain/statistics.dart';
 import '../../backup/presentation/backup_tiles.dart';
 import '../../analysis/presentation/analysis_view.dart' show methodLabel;
 import '../../core/platform_features.dart';
+import '../../core/providers.dart';
 import '../../core/time_format.dart';
 import '../../demo/presentation/demo_data_tile.dart';
 import '../../l10n/app_localizations.dart';
@@ -13,6 +14,10 @@ import 'settings_controller.dart';
 
 /// App version shown in the settings.
 const appVersion = '1.6.2';
+
+final privacyPolicyUrl = Uri.parse(
+  'https://sphaerox.github.io/Serienmessung/privacy/',
+);
 
 /// Global settings.
 class SettingsScreen extends ConsumerWidget {
@@ -270,6 +275,22 @@ class SettingsScreen extends ConsumerWidget {
             leading: const Icon(Icons.info_outline),
             title: Text(l.appTitle),
             subtitle: Text('${l.version} $appVersion'),
+          ),
+          ListTile(
+            key: const Key('privacyPolicyTile'),
+            leading: const Icon(Icons.privacy_tip_outlined),
+            title: Text(l.privacyPolicy),
+            onTap: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              final opened = await ref
+                  .read(urlOpenerProvider)
+                  .open(privacyPolicyUrl);
+              if (!opened) {
+                messenger.showSnackBar(
+                  SnackBar(content: Text(l.linkOpenFailed)),
+                );
+              }
+            },
           ),
         ],
       ),
