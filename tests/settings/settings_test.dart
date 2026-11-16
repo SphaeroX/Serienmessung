@@ -1,6 +1,7 @@
 import 'package:cyclescope/analysis/domain/statistics.dart';
 import 'package:cyclescope/app.dart';
 import 'package:cyclescope/core/platform.dart';
+import 'package:cyclescope/core/platform_features.dart';
 import 'package:cyclescope/recording/platform/recording_notifier.dart';
 import 'package:cyclescope/core/database.dart';
 import 'package:cyclescope/core/providers.dart';
@@ -68,15 +69,20 @@ void main() {
     expect(s.vibration, isFalse);
   });
 
-  Widget app(Widget home, {AppSettings initial = const AppSettings()}) =>
-      ProviderScope(
-        overrides: [
-          databaseProvider.overrideWithValue(db),
-          initialSettingsProvider.overrideWithValue(initial),
-          ...fakePlatformOverrides(),
-        ],
-        child: localizedApp(home),
-      );
+  Widget app(
+    Widget home, {
+    AppSettings initial = const AppSettings(),
+    PlatformFeatures? platformFeatures,
+  }) => ProviderScope(
+    overrides: [
+      databaseProvider.overrideWithValue(db),
+      initialSettingsProvider.overrideWithValue(initial),
+      ...fakePlatformOverrides(),
+      if (platformFeatures != null)
+        platformFeaturesProvider.overrideWithValue(platformFeatures),
+    ],
+    child: localizedApp(home),
+  );
 
   testWidgets('toggling a switch is saved', (tester) async {
     usePhoneSize(tester);
@@ -86,6 +92,40 @@ void main() {
     await settle(tester);
     final s = await tester.runAsync(() => SettingsRepository(db).load());
     expect(s!.vibration, isFalse);
+  });
+
+  const platformOnlySettings = [
+    'hardwareKeysSwitch',
+    'holdSlider',
+    'notificationsSwitch',
+  ];
+
+  testWidgets('android offers volume keys and the notification', (
+    tester,
+  ) async {
+    usePhoneSize(tester);
+    await tester.pumpWidget(app(const SettingsScreen()));
+    await settle(tester);
+    for (final key in platformOnlySettings) {
+      expect(find.byKey(Key(key), skipOffstage: false), findsOneWidget);
+    }
+  });
+
+  testWidgets('iOS offers neither volume keys nor the notification', (
+    tester,
+  ) async {
+    usePhoneSize(tester);
+    await tester.pumpWidget(
+      app(
+        const SettingsScreen(),
+        platformFeatures: PlatformFeatures.of(TargetPlatform.iOS),
+      ),
+    );
+    await settle(tester);
+    for (final key in platformOnlySettings) {
+      expect(find.byKey(Key(key), skipOffstage: false), findsNothing);
+    }
+    expect(find.byKey(const Key('vibrationSwitch')), findsOneWidget);
   });
 
   testWidgets('choosing a default unit is saved', (tester) async {

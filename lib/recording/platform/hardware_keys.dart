@@ -12,6 +12,17 @@ abstract class HardwareKeys {
   Future<void> setCapture(bool on);
 }
 
+/// Used where the platform has no volume key capture.
+class SilentHardwareKeys implements HardwareKeys {
+  const SilentHardwareKeys();
+
+  @override
+  Stream<KeyEventData> get events => const Stream.empty();
+
+  @override
+  Future<void> setCapture(bool on) async {}
+}
+
 /// Android implementation (see `MainActivity.kt`).
 ///
 /// Native code reports how long ago each key event happened, so the Dart side
