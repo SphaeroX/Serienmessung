@@ -2828,18 +2828,6 @@ abstract class AppLocalizations {
   /// **'Waiting for a machine or for material: left out in a loader cell'**
   String get stepWaitingTooltip;
 
-  /// No description provided for @demoCellGroupName.
-  ///
-  /// In en, this message translates to:
-  /// **'Demo: loader cell'**
-  String get demoCellGroupName;
-
-  /// No description provided for @demoCellGroupDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Sample data – three lathes served by three gantry loaders on one rail'**
-  String get demoCellGroupDescription;
-
   /// No description provided for @demoCellMachine.
   ///
   /// In en, this message translates to:

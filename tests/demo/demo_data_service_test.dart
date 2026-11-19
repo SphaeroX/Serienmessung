@@ -60,6 +60,9 @@ void main() {
                 : CycleTimeMethod.parse(s.cycleTimeMethod!),
           ),
           parallel: s.parallel,
+          cellLoader: s.isCellLoader,
+          cellParts: s.cellParts,
+          cellMachines: s.cellMachines,
           buffer: s.hasBuffer
               ? LineBuffer(
                   capacity: s.bufferCapacity,
@@ -81,18 +84,22 @@ void main() {
   test('creates the demo line as a group with its stations in order', () async {
     final groupId = await demo.load(t);
 
-    // The housing line and the loader cell (a group of its own).
     final groups = await GroupRepository(db).listGroups();
-    expect(groups, hasLength(2));
-    final housing = groups.singleWhere((g) => g.group.id == groupId);
-    expect(housing.group.name, t.groupName);
-    expect(housing.group.description, t.groupDescription);
+    expect(groups, hasLength(1));
+    expect(groups.single.group.id, groupId);
+    expect(groups.single.group.name, t.groupName);
+    expect(groups.single.group.description, t.groupDescription);
 
     final line = await members(groupId);
     expect(
       [for (final s in line) s.name],
       [
         t.saw,
+        // The loader cell: three lathes served by three loaders.
+        t.cellMachine,
+        t.cellLoader(1),
+        t.cellLoader(2),
+        t.cellMagazineLoader,
         t.millingCentre(1),
         t.millingCentre(2),
         t.washer,
@@ -105,11 +112,29 @@ void main() {
     );
     expect(
       [for (final s in line) s.parallel],
-      [false, false, true, false, false, false, true, true, false],
+      [
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        false,
+      ],
     );
     expect(
       [for (final s in line) s.mode],
       [
+        StudyMode.simple,
+        StudyMode.timeStudy,
+        StudyMode.timeStudy,
+        StudyMode.timeStudy,
         StudyMode.simple,
         StudyMode.timeStudy,
         StudyMode.simple,
@@ -122,27 +147,41 @@ void main() {
       ],
     );
     expect([
-      for (final st in await StudyRepository(db).getSteps(line[1].id)) st.name,
+      for (final st in await StudyRepository(db).getSteps(line[5].id)) st.name,
     ], t.millingSteps);
     expect([
-      for (final st in await StudyRepository(db).getSteps(line[4].id)) st.name,
+      for (final st in await StudyRepository(db).getSteps(line[8].id)) st.name,
     ], t.assemblySteps);
 
     // Buffers before the milling centres and the test benches.
-    expect(line[1].bufferCapacity, 30);
-    expect(line[1].bufferStoreMicros, 15 * _s);
-    expect(line[1].bufferRetrieveMicros, 12 * _s);
-    expect(line[5].bufferCapacity, 40);
-    expect(line[5].bufferStoreMicros, 20 * _s);
-    expect(line[5].bufferRetrieveMicros, 15 * _s);
+    expect(line[5].bufferCapacity, 30);
+    expect(line[5].bufferStoreMicros, 15 * _s);
+    expect(line[5].bufferRetrieveMicros, 12 * _s);
+    expect(line[9].bufferCapacity, 40);
+    expect(line[9].bufferStoreMicros, 20 * _s);
+    expect(line[9].bufferRetrieveMicros, 15 * _s);
     // Conveyors before the washer and the packing.
-    expect(line[3].conveyorCapacity, 8);
-    expect(line[3].conveyorTransportMicros, 60 * _s);
-    expect(line[8].conveyorCapacity, 10);
-    expect(line[8].conveyorTransportMicros, 30 * _s);
+    expect(line[7].conveyorCapacity, 8);
+    expect(line[7].conveyorTransportMicros, 60 * _s);
+    expect(line[12].conveyorCapacity, 10);
+    expect(line[12].conveyorTransportMicros, 30 * _s);
     expect(
       [for (final s in line) s.hasBuffer || s.hasConveyor],
-      [false, true, false, true, false, true, false, false, true],
+      [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        false,
+        true,
+      ],
     );
   });
 
@@ -159,7 +198,7 @@ void main() {
       expect(saw.single.interval, 8 * 3600 * _s);
       expect(saw.single.durationMicros, 600 * _s);
 
-      final milling = await rules.list(line[1].id);
+      final milling = await rules.list(line[5].id);
       expect([for (final c in milling) c.name], [t.measurePart, t.toolChange]);
       expect(
         [for (final c in milling) c.kind],
@@ -170,14 +209,14 @@ void main() {
       expect(milling[1].interval, 24 * 3600 * _s);
       expect(milling[1].durationMicros, 300 * _s);
 
-      final bench = await rules.list(line[5].id);
+      final bench = await rules.list(line[9].id);
       expect(bench.single.name, t.calibration);
       expect(bench.single.kind, SpecialCycleKind.parts);
       expect(bench.single.interval, 200);
 
       // The milling centre and the assembly were measured before.
       final revisions = RevisionRepository(db);
-      for (final i in [1, 4]) {
+      for (final i in [5, 8]) {
         expect(line[i].revision, 2);
         expect(await revisions.listRevisions(line[i].id), hasLength(1));
       }
@@ -189,15 +228,15 @@ void main() {
         for (final x in m)
           if (x.kind == MeasurementKind.special) x,
       ];
-      final millingTimes = await times.listForStudy(line[1].id);
+      final millingTimes = await times.listForStudy(line[5].id);
       expect(special(millingTimes).single.note, t.chipJam);
       expect(
-        special(await times.listForStudy(line[4].id)).single.note,
+        special(await times.listForStudy(line[8].id)).single.note,
         t.materialMissing,
       );
       // Twelve complete milling cycles; the packing has its laps.
       expect({for (final m in millingTimes) m.cycle}, hasLength(12));
-      expect(await times.listForStudy(line[8].id), hasLength(15));
+      expect(await times.listForStudy(line[12].id), hasLength(15));
 
       // Current times are recent: opening a study does not ask for a new
       // measurement.
@@ -232,27 +271,32 @@ void main() {
     final groupId = await demo.load(t);
     final line = await lineOf(groupId);
 
-    // Saw, milling centres, washer, assembly, test benches, packing.
-    expect(line.stations, hasLength(6));
+    // Saw, loader cell, milling centres, washer, assembly, test benches,
+    // packing. The cell counts as one machine.
+    expect(line.stations, hasLength(7));
+    expect(
+      [for (final st in line.stations) st.isCell],
+      [false, true, false, false, false, false, false],
+    );
     expect(
       [for (final st in line.stations) st.machines.length],
-      [1, 2, 1, 1, 3, 1],
+      [1, 1, 2, 1, 1, 3, 1],
     );
     expect(line.stations.every((st) => st.measured), isTrue);
     final bottleneck = line.stations.singleWhere((st) => st.isBottleneck);
-    expect(bottleneck.position, 1);
+    expect(bottleneck.position, 2);
     // About 1000 parts in 24 hours at the pace of the milling centres.
     expect(line.outputPerHour! * 24, closeTo(1000, 10));
     expect(
       [for (final st in line.stations) st.bufferBefore != null],
-      [false, true, false, false, true, false],
+      [false, false, true, false, false, true, false],
     );
     expect(
       [for (final st in line.stations) st.conveyorBefore != null],
-      [false, false, true, false, false, true],
+      [false, false, false, true, false, false, true],
     );
     // The special cycles make the milling centre slower than measured.
-    final milling = line.stations[1].machines.first;
+    final milling = line.stations[2].machines.first;
     expect(milling.cycleTime!, greaterThan(milling.baseCycleTime!));
 
     const shift = 8 * 3600 * _s;
@@ -269,8 +313,8 @@ void main() {
     final result = sim.run(horizonMicros: day);
     expect(result.output, 1000);
     // The milling centres work all the time, every other station waits.
-    expect(result.stations[1].utilization, greaterThan(0.98));
-    for (final i in [0, 2, 3, 4, 5]) {
+    expect(result.stations[2].utilization, greaterThan(0.98));
+    for (final i in [0, 1, 3, 4, 5, 6]) {
       expect(result.stations[i].utilization, lessThan(0.95), reason: '$i');
     }
     // Without the buffers the blade changes of the saw cost parts.
@@ -288,45 +332,50 @@ void main() {
     await demo.load(t);
 
     expect(await StudyRepository(db).getStudy(own), isNotNull);
-    // Housing line and loader cell per load.
-    expect(await GroupRepository(db).listGroups(), hasLength(4));
-    // 9 line members + 4 cell members + 1 changeover study per load.
+    expect(await GroupRepository(db).listGroups(), hasLength(2));
+    // 13 line members (4 of them the loader cell) + 1 changeover study per
+    // load.
     expect(await StudyRepository(db).listStudies(), hasLength(1 + 2 * 14));
   });
 
   group('loader cell', () {
-    Future<int> cellGroup() async {
-      await demo.load(t);
-      return (await GroupRepository(db).listGroups())
-          .singleWhere((g) => g.group.name == t.cellGroupName)
-          .group
-          .id;
-    }
+    /// The four members of the cell: station 2 of the demo line.
+    Future<List<Study>> cellMembers() async =>
+        (await members(await demo.load(t))).sublist(1, 5);
 
-    test('is a second group: one machine study and three loaders', () async {
-      final cell = await members(await cellGroup());
-      expect(
-        [for (final s in cell) s.name],
-        [t.cellMachine, t.cellLoader(1), t.cellLoader(2), t.cellMagazineLoader],
-      );
-      expect([for (final s in cell) s.isCellLoader], [false, true, true, true]);
-      expect([for (final s in cell) s.cellMachines], [3, 1, 1, 1]);
-      expect([for (final s in cell) s.cellParts], [1, 1, 1, 1]);
-      expect(
-        [for (final s in cell) s.mode],
-        [
-          StudyMode.timeStudy,
-          StudyMode.timeStudy,
-          StudyMode.timeStudy,
-          StudyMode.simple,
-        ],
-      );
-      final group = (await GroupRepository(db).getGroup(cell.first.groupId!))!;
-      expect(group.description, t.cellGroupDescription);
-    });
+    test(
+      'is station 2 of the line: a machine study and three loaders',
+      () async {
+        final cell = await cellMembers();
+        expect(
+          [for (final s in cell) s.name],
+          [
+            t.cellMachine,
+            t.cellLoader(1),
+            t.cellLoader(2),
+            t.cellMagazineLoader,
+          ],
+        );
+        expect(
+          [for (final s in cell) s.isCellLoader],
+          [false, true, true, true],
+        );
+        expect([for (final s in cell) s.cellMachines], [3, 1, 1, 1]);
+        expect([for (final s in cell) s.cellParts], [1, 1, 1, 1]);
+        expect(
+          [for (final s in cell) s.mode],
+          [
+            StudyMode.timeStudy,
+            StudyMode.timeStudy,
+            StudyMode.timeStudy,
+            StudyMode.simple,
+          ],
+        );
+      },
+    );
 
     test('waiting for supply is marked, waiting on the rail is not', () async {
-      final cell = await members(await cellGroup());
+      final cell = await cellMembers();
       final studies = StudyRepository(db);
       final machine = await studies.getSteps(cell[0].id);
       expect([for (final st in machine) st.name], t.cellMachineSteps);
@@ -353,26 +402,10 @@ void main() {
     test(
       'loader 1 paces the cell; a fourth machine would bring nothing',
       () async {
-        final studies = StudyRepository(db);
-        final times = MeasurementRepository(db);
-        final line = LineAnalysis.of([
-          for (final s in await members(await cellGroup()))
-            LineStationInput(
-              name: s.name,
-              mode: s.mode,
-              current: StudyAnalysis.compute(
-                measurements: await times.listForStudy(s.id),
-                steps: await studies.getSteps(s.id),
-                mode: s.mode,
-                method: CycleTimeMethod.median,
-              ),
-              parallel: s.parallel,
-              cellLoader: s.isCellLoader,
-              cellParts: s.cellParts,
-              cellMachines: s.cellMachines,
-            ),
-        ]);
-        final station = line.stations.single;
+        final line = await lineOf(await demo.load(t));
+        final station = line.stations[1];
+        // The cell is faster than the milling centres and waits for them.
+        expect(station.isBottleneck, isFalse);
         expect(station.isCell, isTrue);
         expect(station.measured, isTrue);
         final cell = station.cell!;
@@ -390,7 +423,7 @@ void main() {
 
     test('the times are recent', () async {
       final times = MeasurementRepository(db);
-      for (final s in await members(await cellGroup())) {
+      for (final s in await cellMembers()) {
         final all = await times.listForStudy(s.id);
         expect(all, isNotEmpty, reason: s.name);
         for (final m in all) {

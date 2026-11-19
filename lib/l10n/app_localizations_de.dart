@@ -1628,13 +1628,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Warten auf eine Maschine oder auf Material: zählt in einer Laderzelle nicht';
 
   @override
-  String get demoCellGroupName => 'Demo: Laderzelle';
-
-  @override
-  String get demoCellGroupDescription =>
-      'Beispieldaten – drei Drehmaschinen, bedient von drei Portalladern auf einer Schiene';
-
-  @override
   String get demoCellMachine => 'Drehmaschine';
 
   @override

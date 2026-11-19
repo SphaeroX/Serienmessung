@@ -1621,13 +1621,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Waiting for a machine or for material: left out in a loader cell';
 
   @override
-  String get demoCellGroupName => 'Demo: loader cell';
-
-  @override
-  String get demoCellGroupDescription =>
-      'Sample data – three lathes served by three gantry loaders on one rail';
-
-  @override
   String get demoCellMachine => 'Lathe';
 
   @override

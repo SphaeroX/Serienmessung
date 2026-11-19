@@ -20,8 +20,6 @@ class DemoTexts {
     required this.packing,
     required this.changeover,
     required this.changeoverSteps,
-    required this.cellGroupName,
-    required this.cellGroupDescription,
     required this.cellMachine,
     required this.cellMachineSteps,
     required this.cellLoader,
@@ -59,9 +57,7 @@ class DemoTexts {
   /// Four steps of the changeover.
   final List<String> changeoverSteps;
 
-  /// The loader cell, a group of its own.
-  final String cellGroupName;
-  final String cellGroupDescription;
+  /// The machine of the loader cell (station 2 of the line).
   final String cellMachine;
 
   /// Four steps of the machine; the last one is waiting for the loader.

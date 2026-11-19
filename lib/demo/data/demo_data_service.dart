@@ -19,10 +19,11 @@ const _hour = 3600 * _s;
 const _jitter = [0.0, 0.6, -0.4, 1.1, -0.8, 0.3, -0.2, 0.5, -0.6, 0.9, -0.3];
 
 /// Adds sample data that shows every feature of the app: a small housing
-/// line as a group (parallel machines, buffers, conveyors, special cycles
-/// and planned stops, revisions, special times, machines with a typed
-/// cycle time, a simple study with laps) and a step-timer study outside
-/// the group. Existing data is left alone; every load adds a new copy.
+/// line as a group (a loader cell, parallel machines, buffers, conveyors,
+/// special cycles and planned stops, revisions, special times, machines
+/// with a typed cycle time, a simple study with laps) and a step-timer
+/// study outside the group. Existing data is left alone; every load adds a
+/// new copy.
 ///
 /// The times are chosen so that the simulation of 24 hours without a
 /// failure gives exactly 1000 parts (line cycle time about 85.7 s; the
@@ -30,18 +31,17 @@ const _jitter = [0.0, 0.6, -0.4, 1.1, -0.8, 0.3, -0.2, 0.5, -0.6, 0.9, -0.3];
 ///
 /// The line (stations in order):
 /// 1. Saw – typed 57 s, blade change every 8 h (10 min).
-/// 2. Milling centre 1 (time study, ~173 s, measured before) and milling
+/// 2. Loader cell – three equal lathes (one time study, occupied ~88 s per
+///    part) served in turn by loader 1 (~32 s per part, the bottleneck of
+///    the cell), loader 2 (~20 s) and the magazine loader (typed 15 s).
+///    Waiting for the machine or the magazine is marked as waiting time
+///    and left out; waiting for loader 2 on the shared rail counts.
+/// 3. Milling centre 1 (time study, ~173 s, measured before) and milling
 ///    centre 2 (typed 167 s) in parallel – the bottleneck; buffer before.
-/// 3. Washer – typed 45 s; conveyor before.
-/// 4. Assembly (time study, ~68 s with one outlier, measured before).
-/// 5. Test benches 1–3 in parallel – typed 225 s each; buffer before.
-/// 6. Packing – simple study with 15 laps (~54 s); conveyor before.
-///
-/// A second group shows a loader cell: three equal lathes (one time study,
-/// occupied ~88 s per part) served in turn by loader 1 (~32 s per part,
-/// the bottleneck), loader 2 (~20 s) and the magazine loader (typed 15 s).
-/// Waiting for the machine or the magazine is marked as waiting time and
-/// left out; waiting for loader 2 on the shared rail counts.
+/// 4. Washer – typed 45 s; conveyor before.
+/// 5. Assembly (time study, ~68 s with one outlier, measured before).
+/// 6. Test benches 1–3 in parallel – typed 225 s each; buffer before.
+/// 7. Packing – simple study with 15 laps (~54 s); conveyor before.
 class DemoDataService {
   DemoDataService(this._db, {required this.now});
 
@@ -79,7 +79,10 @@ class DemoDataService {
       durationMicros: 600 * _s,
     );
 
-    // 2. Two milling centres in parallel, a buffer before them.
+    // 2. Loader cell: three lathes served by three loaders.
+    await _loaderCell(t, today, machines, groupId);
+
+    // 3. Two milling centres in parallel, a buffer before them.
     final milling = await _timeStudy(
       name: t.millingCentre(1),
       steps: t.millingSteps,
@@ -117,7 +120,7 @@ class DemoDataService {
       parallel: true,
     );
 
-    // 3. Washer, a conveyor before it.
+    // 4. Washer, a conveyor before it.
     final washer = await machines.createMachine(
       name: t.washer,
       groupId: groupId,
@@ -125,7 +128,7 @@ class DemoDataService {
     );
     await groups.setConveyor(washer, capacity: 8, transportMicros: 60 * _s);
 
-    // 4. Manual assembly with one disturbed cycle (IQR removes it).
+    // 5. Manual assembly with one disturbed cycle (IQR removes it).
     final assembly = await _timeStudy(
       name: t.assembly,
       steps: t.assemblySteps,
@@ -139,7 +142,7 @@ class DemoDataService {
     );
     await groups.moveToGroup(assembly, groupId);
 
-    // 5. Three test benches in parallel, a buffer before them.
+    // 6. Three test benches in parallel, a buffer before them.
     for (var i = 1; i <= 3; i++) {
       final bench = await machines.createMachine(
         name: t.testBench(i),
@@ -164,31 +167,28 @@ class DemoDataService {
       }
     }
 
-    // 6. Packing: laps of a simple study, a conveyor before it.
+    // 7. Packing: laps of a simple study, a conveyor before it.
     final packing = await _laps(t.packing, today);
     await groups.moveToGroup(packing, groupId);
     await groups.setConveyor(packing, capacity: 10, transportMicros: 30 * _s);
 
     // Outside the group: a changeover timed with the step timer.
     await _changeover(t, today);
-    await _loaderCell(t, today, machines);
     return groupId;
   }
 
-  /// The loader cell as a group of its own (the housing line keeps its
-  /// stations and its 1000 parts in 24 hours).
+  /// Station 2: the loader cell. Three equal lathes are served in turn by
+  /// loader 1 (double gripper), loader 2 (equips from a magazine) and the
+  /// magazine loader. With about 32 s per part the cell is far faster than
+  /// the milling centres, so the line keeps its pace.
   Future<void> _loaderCell(
     DemoTexts t,
     DateTime today,
     MachineService machines,
+    int groupId,
   ) async {
     final groups = GroupRepository(_db);
     final studies = StudyRepository(_db);
-    final groupId = await groups.createGroup(
-      name: t.cellGroupName,
-      description: t.cellGroupDescription,
-      now: today.subtract(const Duration(days: 40)),
-    );
 
     /// Time study in the cell; the step at [waiting] only waits for supply.
     Future<int> member(

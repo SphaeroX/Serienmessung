@@ -992,8 +992,6 @@
   },
   "stepWaiting": "Waiting time",
   "stepWaitingTooltip": "Waiting for a machine or for material: left out in a loader cell",
-  "demoCellGroupName": "Demo: loader cell",
-  "demoCellGroupDescription": "Sample data – three lathes served by three gantry loaders on one rail",
   "demoCellMachine": "Lathe",
   "demoCellLoader": "Loader {n}",
   "@demoCellLoader": {

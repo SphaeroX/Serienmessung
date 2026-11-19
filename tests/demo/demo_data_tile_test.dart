@@ -71,11 +71,9 @@ void main() {
     final groups = (await tester.runAsync(
       () => GroupRepository(db).listGroups(),
     ))!;
-    // The housing line and the loader cell.
-    expect(
-      {for (final g in groups) g.group.name: g.studyCount},
-      {'Demo: housing line': 9, 'Demo: loader cell': 4},
-    );
+    expect(groups.single.group.name, 'Demo: housing line');
+    // 13 members: the line with its loader cell (a lathe and three loaders).
+    expect(groups.single.studyCount, 13);
   });
 
   testWidgets('the demo data follows the app language', (tester) async {
@@ -97,13 +95,11 @@ void main() {
       containsAll(['Säge', 'Bearbeitungszentrum 2', 'Prüfstand 3']),
     );
     expect(
-      {
-        for (final g in (await tester.runAsync(
-          () => GroupRepository(db).listGroups(),
-        ))!)
-          g.group.name,
-      },
-      {'Demo: Gehäuselinie', 'Demo: Laderzelle'},
+      (await tester.runAsync(() => GroupRepository(db).listGroups()))!
+          .single
+          .group
+          .name,
+      'Demo: Gehäuselinie',
     );
   });
 }

@@ -41,8 +41,6 @@ DemoTexts demoTextsOf(AppLocalizations l) => DemoTexts(
     l.demoStepMountFixture,
     l.demoStepFirstPart,
   ],
-  cellGroupName: l.demoCellGroupName,
-  cellGroupDescription: l.demoCellGroupDescription,
   cellMachine: l.demoCellMachine,
   cellMachineSteps: [
     l.demoCellStepChangeByLoader,
