@@ -13,7 +13,7 @@ import '../domain/app_settings.dart';
 import 'settings_controller.dart';
 
 /// App version shown in the settings.
-const appVersion = '1.6.2';
+const appVersion = '1.7.0';
 
 final privacyPolicyUrl = Uri.parse(
   'https://sphaerox.github.io/Serienmessung/privacy/',

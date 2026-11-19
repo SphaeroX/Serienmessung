@@ -41,6 +41,33 @@ DemoTexts demoTextsOf(AppLocalizations l) => DemoTexts(
     l.demoStepMountFixture,
     l.demoStepFirstPart,
   ],
+  cellGroupName: l.demoCellGroupName,
+  cellGroupDescription: l.demoCellGroupDescription,
+  cellMachine: l.demoCellMachine,
+  cellMachineSteps: [
+    l.demoCellStepChangeByLoader,
+    l.demoCellStepEquipByLoader,
+    l.demoCellStepMachining,
+    l.demoCellStepWaitLoader,
+  ],
+  cellLoader: l.demoCellLoader,
+  cellLoader1Steps: [
+    l.demoCellStepPickBlank,
+    l.demoCellStepDriveToMachine,
+    l.demoCellStepWaitMachine,
+    l.demoCellStepChange,
+    l.demoCellStepDriveToBelt,
+    l.demoCellStepPutDown,
+    l.demoCellStepWaitLoader2,
+  ],
+  cellLoader2Steps: [
+    l.demoCellStepTakeFromMagazine,
+    l.demoCellStepDriveToMachine,
+    l.demoCellStepEquip,
+    l.demoCellStepDriveBack,
+    l.demoCellStepWaitMagazine,
+  ],
+  cellMagazineLoader: l.demoCellMagazineLoader,
 );
 
 /// Settings tile that adds the demo data after a confirmation.

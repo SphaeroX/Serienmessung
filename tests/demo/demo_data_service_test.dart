@@ -81,11 +81,12 @@ void main() {
   test('creates the demo line as a group with its stations in order', () async {
     final groupId = await demo.load(t);
 
+    // The housing line and the loader cell (a group of its own).
     final groups = await GroupRepository(db).listGroups();
-    expect(groups, hasLength(1));
-    expect(groups.single.group.id, groupId);
-    expect(groups.single.group.name, t.groupName);
-    expect(groups.single.group.description, t.groupDescription);
+    expect(groups, hasLength(2));
+    final housing = groups.singleWhere((g) => g.group.id == groupId);
+    expect(housing.group.name, t.groupName);
+    expect(housing.group.description, t.groupDescription);
 
     final line = await members(groupId);
     expect(
@@ -287,8 +288,119 @@ void main() {
     await demo.load(t);
 
     expect(await StudyRepository(db).getStudy(own), isNotNull);
-    expect(await GroupRepository(db).listGroups(), hasLength(2));
-    // 9 line members + 1 changeover study per load.
-    expect(await StudyRepository(db).listStudies(), hasLength(1 + 2 * 10));
+    // Housing line and loader cell per load.
+    expect(await GroupRepository(db).listGroups(), hasLength(4));
+    // 9 line members + 4 cell members + 1 changeover study per load.
+    expect(await StudyRepository(db).listStudies(), hasLength(1 + 2 * 14));
+  });
+
+  group('loader cell', () {
+    Future<int> cellGroup() async {
+      await demo.load(t);
+      return (await GroupRepository(db).listGroups())
+          .singleWhere((g) => g.group.name == t.cellGroupName)
+          .group
+          .id;
+    }
+
+    test('is a second group: one machine study and three loaders', () async {
+      final cell = await members(await cellGroup());
+      expect(
+        [for (final s in cell) s.name],
+        [t.cellMachine, t.cellLoader(1), t.cellLoader(2), t.cellMagazineLoader],
+      );
+      expect([for (final s in cell) s.isCellLoader], [false, true, true, true]);
+      expect([for (final s in cell) s.cellMachines], [3, 1, 1, 1]);
+      expect([for (final s in cell) s.cellParts], [1, 1, 1, 1]);
+      expect(
+        [for (final s in cell) s.mode],
+        [
+          StudyMode.timeStudy,
+          StudyMode.timeStudy,
+          StudyMode.timeStudy,
+          StudyMode.simple,
+        ],
+      );
+      final group = (await GroupRepository(db).getGroup(cell.first.groupId!))!;
+      expect(group.description, t.cellGroupDescription);
+    });
+
+    test('waiting for supply is marked, waiting on the rail is not', () async {
+      final cell = await members(await cellGroup());
+      final studies = StudyRepository(db);
+      final machine = await studies.getSteps(cell[0].id);
+      expect([for (final st in machine) st.name], t.cellMachineSteps);
+      expect(
+        [for (final st in machine) st.waiting],
+        [false, false, false, true],
+      );
+      final loader1 = await studies.getSteps(cell[1].id);
+      expect([for (final st in loader1) st.name], t.cellLoader1Steps);
+      // Waiting for the machine is left out; waiting for loader 2 on the
+      // shared rail belongs to the cycle.
+      expect(
+        [for (final st in loader1) st.waiting],
+        [false, false, true, false, false, false, false],
+      );
+      final loader2 = await studies.getSteps(cell[2].id);
+      expect([for (final st in loader2) st.name], t.cellLoader2Steps);
+      expect(
+        [for (final st in loader2) st.waiting],
+        [false, false, false, false, true],
+      );
+    });
+
+    test(
+      'loader 1 paces the cell; a fourth machine would bring nothing',
+      () async {
+        final studies = StudyRepository(db);
+        final times = MeasurementRepository(db);
+        final line = LineAnalysis.of([
+          for (final s in await members(await cellGroup()))
+            LineStationInput(
+              name: s.name,
+              mode: s.mode,
+              current: StudyAnalysis.compute(
+                measurements: await times.listForStudy(s.id),
+                steps: await studies.getSteps(s.id),
+                mode: s.mode,
+                method: CycleTimeMethod.median,
+              ),
+              parallel: s.parallel,
+              cellLoader: s.isCellLoader,
+              cellParts: s.cellParts,
+              cellMachines: s.cellMachines,
+            ),
+        ]);
+        final station = line.stations.single;
+        expect(station.isCell, isTrue);
+        expect(station.measured, isTrue);
+        final cell = station.cell!;
+        expect(cell.resources.every((r) => r.measured), isTrue);
+        // About 32 s per part at loader 1; a machine is occupied about 88 s.
+        expect(station.cycleTime! / _s, closeTo(32, 1.5));
+        expect(cell.machineTime! / _s, closeTo(88, 2));
+        expect(cell.bottleneck.single.name, t.cellLoader(1));
+        expect(cell.bestMachineCount, 3);
+        // Loader 2 about 20 s, the magazine loader 15 s per part.
+        expect(cell.resources[2].perPart! / _s, closeTo(20, 1.5));
+        expect(cell.resources[3].perPart! / _s, closeTo(15, 0.001));
+      },
+    );
+
+    test('the times are recent', () async {
+      final times = MeasurementRepository(db);
+      for (final s in await members(await cellGroup())) {
+        final all = await times.listForStudy(s.id);
+        expect(all, isNotEmpty, reason: s.name);
+        for (final m in all) {
+          expect(
+            _now.difference(m.recordedAt!).inDays,
+            lessThan(10),
+            reason: s.name,
+          );
+        }
+      }
+    });
   });
 }

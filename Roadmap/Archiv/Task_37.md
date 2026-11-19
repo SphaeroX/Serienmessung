@@ -68,7 +68,7 @@ Beispiel (muss als Test belegt werden): H_1 = 32 s, H_2 = 20 s, H_3 = 15 s, M = 
 3. [x] Linienanalyse und Simulation (TDD).
 4. [x] UI: Merker im Schritt-Editor, Zelle in der Gruppe, Zellenansicht (Widget-Tests).
 5. [x] Reports (TDD).
-6. [ ] Demo-Daten, Doku, README, Version. – Doku, README, Landingpage und Screenshot-Szenen (12, 13) sind erledigt. **Offen: Demo-Daten und Version, beides wartet auf den Nutzer** (siehe "Offene Fragen / Annahmen").
+6. [x] Demo-Daten, Doku, README, Version (1.7.0).
 
 ## Tests
 
@@ -94,7 +94,8 @@ Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder ei
 - [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
 - [x] Verhalten wie unter "Tests" beschrieben belegt.
 - [x] `docs/` und `Roadmap/README.md` aktuell.
-- [ ] Demo-Daten zeigen eine Laderzelle (wartet auf Freigabe, siehe "Offene Fragen / Annahmen").
+- [x] Demo-Daten zeigen eine Laderzelle (zweite Demo-Gruppe).
+- [x] 621 Tests grün (14 übersprungen: Screenshot-Generatoren), `flutter analyze` ohne Befunde, `dart format` sauber (2026-11-19).
 
 ## Offene Fragen / Annahmen
 
@@ -102,9 +103,9 @@ Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder ei
 - Bestätigt: Lader 3 fährt auf derselben Schiene und kann Lader 2 behindern. Das zeigt sich als (unmarkiertes) Schienen-Warten in der Studie von Lader 2 und bleibt in H_2.
 - Bestätigt: Die Maschinen einer Zelle sind „in der Regel“ gleich schnell. Ungleiche Maschinen bleiben außerhalb dieses Tasks; das Datenmodell soll eine spätere Erweiterung (eigene Maschinenstudie je Maschine) aber nicht verbauen.
 - Annahme: Das Magazin ist groß genug, dass Schwankungen von Lader 3 nicht durchschlagen; nur der Mittelwert zählt.
-- **Offen, wartet auf Freigabe – Demo-Daten:** Eine Laderzelle in den Demo-Daten ändert zwangsläufig bestehende Tests, die die Demo festschreiben: `tests/demo/demo_data_service_test.dart` (genau 1 Gruppe je Laden, 9 Mitglieder, 10 Studien je Laden, 1000 Teile in 24 h) und `tests/demo/demo_data_tile_test.dart` (genau eine Gruppe mit 9 Studien). Vorschlag: zweite Demo-Gruppe "Demo: Laderzelle" neben der Gehäuselinie (die Linie und ihre 1000 Teile bleiben unverändert); dann müssen nur die Zähler (Gruppen/Studien je Laden) in drei bestehenden Tests angepasst werden. Bestehende Tests dürfen laut Root-`AGENTS.md` nur mit Freigabe geändert werden.
-- **Offen, wartet auf den Nutzer – Version:** `pubspec.yaml` steht unverändert auf 1.6.2; Versionssprung (Vorschlag 1.7.0), Merge nach `main` und Play-/TestFlight-Lauf macht der Nutzer bzw. gibt er frei. Entwickelt wurde auf dem Branch `ccr-e4e8e596-qd8qyd`.
-- Offen: genaue Bezeichnung in der UI („Laderzelle“ / „Loader cell“) und wo der Merker im Schritt-Editor sitzt – mit dem Nutzer abstimmen, falls unklar.
+- Entschieden (Nutzer, 2026-11-19, "Anpassen und Tasks beenden"): Die Demo-Daten bekommen eine zweite Gruppe "Demo: Laderzelle" neben der Gehäuselinie. Dafür wurden – mit Freigabe – die Zähler in drei bestehenden Tests angepasst (`tests/demo/demo_data_service_test.dart`: 2 statt 1 Gruppe je Laden, 14 statt 10 Studien je Laden; `tests/demo/demo_data_tile_test.dart`: beide Gruppennamen statt genau einer Gruppe). Die Gehäuselinie und ihre 1000 Teile in 24 h sind unverändert.
+- Entschieden: Version 1.7.0 (`pubspec.yaml`, `appVersion`, README). Merge nach `main`, Tag und Play-/TestFlight-Lauf macht der Nutzer; entwickelt wurde auf dem Branch `ccr-e4e8e596-qd8qyd`.
+- Umgesetzt ohne weitere Rückfrage: Bezeichnung „Laderzelle“ / „Loader cell“; der Merker ist ein Sanduhr-Schalter an jedem Schritt im Schritt-Editor.
 
 ## Notizen zu diesem Task
 
@@ -124,11 +125,18 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst (keine Folge-Tasks vorhanden)
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-_Wird beim Abschluss ausgefüllt._
+- **Wo was liegt:** Rechenkern `lib/group/domain/loader_cell.dart` (`LoaderCell.of`), Einbindung in `LineAnalysis.of` (`LineStation.cell`), Karte `lib/group/presentation/loader_cell_card.dart`, Report-Texte `CellReportLabels`. Tests: `tests/group/domain/loader_cell_test.dart`, `loader_cell_line_test.dart`, `tests/group/data/loader_cell_data_test.dart`, `tests/group/presentation/loader_cell_screen_test.dart`, `tests/export/group_report_cell_test.dart`, `group_cell_export_test.dart`, `tests/analysis/domain/work_cycle_time_test.dart`.
+- **Lader sind parallele Mitglieder mit Zusatz-Flag.** `Study.parallel` ist bei einem Lader wahr. Wer `parallel` auswertet, um Maschinen zu zählen oder Kapazitäten zu addieren, muss `isCellLoader` bzw. `LineStation.isCell` beachten. Wer `parallel` zurücksetzt, muss auch `cell_loader` zurücksetzen (siehe `GroupRepository.setParallel`, `reorder`, `StudyRepository.handOverStation`).
+- **Eine Zelle ist für alles Nachgelagerte eine Maschine.** `LineStation.machines` hat bei einer Zelle genau einen Eintrag; die Mitglieder stehen in `cell.resources`. Zugriffe `station.machines[j]` über den Mitgliedsindex einer Gruppe brechen bei Zellen (im Excel-Linienblatt abgefangen). Die Sonderzyklen der Zellenmitglieder stecken in den Arbeitszeiten und erscheinen deshalb nicht in der Sonderzyklen-Tabelle der Reports.
+- **`workCycleTime` gilt nur für Zellen.** Die Einzelauswertung, Exporte der Einzelstudie und Revisionen rechnen weiter mit `realCycleTime` (Warteschritte inklusive). Archivierte Revisionen speichern den Merker nicht; für den Vorher-Vergleich zählen die Merker der aktuellen Schritte.
+- **Grenzen des Modells (bewusst):** keine ereignisgenaue Simulation der Schienenverriegelung (ein schnellerer Lader ändert die gemessenen Wartezeiten der anderen – das muss neu gemessen werden), kein Ausfall einzelner Maschinen einer Zelle, Excel-Stationszeile der Zelle als Wert statt Formel. Sinnvolle Folge-Tasks: Zellen-Simulation mit gemeinsam genutzter Schiene; je Maschine eine eigene Studie mit Tabelle 1…6 auch für ungleiche Maschinen (der Rechenkern addiert ungleiche Maschinen bereits).
+- **Demo-Daten:** Jede neue Demo-Studie oder -Gruppe ändert die Zähler in `tests/demo/` (Gruppen und Studien je Laden) – das braucht die Freigabe des Nutzers.
+- **TDD-Hinweis:** Die RenderFlex-/Layout-Prüfung der Zellenkarte lief zusätzlich über die Screenshot-Szenen 12 und 13 (`flutter test tests/screenshots --dart-define=SCREENSHOTS=true --plain-name "loader cell"`); gerenderte Bilder nicht committen.
+- **Nicht geprüft:** kein Lauf auf einem echten Gerät; iOS-Build und XCTests laufen erst im macOS-Workflow.

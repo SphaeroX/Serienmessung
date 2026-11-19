@@ -2827,6 +2827,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waiting for a machine or for material: left out in a loader cell'**
   String get stepWaitingTooltip;
+
+  /// No description provided for @demoCellGroupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo: loader cell'**
+  String get demoCellGroupName;
+
+  /// No description provided for @demoCellGroupDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample data – three lathes served by three gantry loaders on one rail'**
+  String get demoCellGroupDescription;
+
+  /// No description provided for @demoCellMachine.
+  ///
+  /// In en, this message translates to:
+  /// **'Lathe'**
+  String get demoCellMachine;
+
+  /// No description provided for @demoCellLoader.
+  ///
+  /// In en, this message translates to:
+  /// **'Loader {n}'**
+  String demoCellLoader(int n);
+
+  /// No description provided for @demoCellMagazineLoader.
+  ///
+  /// In en, this message translates to:
+  /// **'Loader 3 (magazine)'**
+  String get demoCellMagazineLoader;
+
+  /// No description provided for @demoCellStepChangeByLoader.
+  ///
+  /// In en, this message translates to:
+  /// **'Part change (loader 1)'**
+  String get demoCellStepChangeByLoader;
+
+  /// No description provided for @demoCellStepEquipByLoader.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipping (loader 2)'**
+  String get demoCellStepEquipByLoader;
+
+  /// No description provided for @demoCellStepMachining.
+  ///
+  /// In en, this message translates to:
+  /// **'Machining'**
+  String get demoCellStepMachining;
+
+  /// No description provided for @demoCellStepWaitLoader.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for the loader'**
+  String get demoCellStepWaitLoader;
+
+  /// No description provided for @demoCellStepPickBlank.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick blank from the belt'**
+  String get demoCellStepPickBlank;
+
+  /// No description provided for @demoCellStepDriveToMachine.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive to the machine'**
+  String get demoCellStepDriveToMachine;
+
+  /// No description provided for @demoCellStepWaitMachine.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for the machine'**
+  String get demoCellStepWaitMachine;
+
+  /// No description provided for @demoCellStepChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change part (double gripper)'**
+  String get demoCellStepChange;
+
+  /// No description provided for @demoCellStepDriveToBelt.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive to the exit belt'**
+  String get demoCellStepDriveToBelt;
+
+  /// No description provided for @demoCellStepPutDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Put down the finished part'**
+  String get demoCellStepPutDown;
+
+  /// No description provided for @demoCellStepWaitLoader2.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for loader 2'**
+  String get demoCellStepWaitLoader2;
+
+  /// No description provided for @demoCellStepTakeFromMagazine.
+  ///
+  /// In en, this message translates to:
+  /// **'Take parts from the magazine'**
+  String get demoCellStepTakeFromMagazine;
+
+  /// No description provided for @demoCellStepEquip.
+  ///
+  /// In en, this message translates to:
+  /// **'Equip the machine'**
+  String get demoCellStepEquip;
+
+  /// No description provided for @demoCellStepDriveBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive back to the magazine'**
+  String get demoCellStepDriveBack;
+
+  /// No description provided for @demoCellStepWaitMagazine.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for the magazine'**
+  String get demoCellStepWaitMagazine;
 }
 
 class _AppLocalizationsDelegate

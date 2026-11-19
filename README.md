@@ -14,7 +14,7 @@ Time and motion study stopwatch for Android and iOS (Flutter): define work steps
 - **Conveyors, buffers and simulation**: conveyors between stations (measured transport time, parts that can jam on them) and buffers (places, store and retrieve time) store parts only on a jam and empty themselves again. A simulation plays the line through for a shift, 24 hours or a free period – optionally with a machine failure – and shows the parts made and lost with and without buffers, buffer fill and station utilization.
 - **Exports**: CSV, Excel and PDF per study; group reports as a PDF with cover, clickable contents, line analysis, buffers and failure risk (with simulated losses for an assumed failure), and as a linked Excel workbook (contents with links, line formulas on the study sheets). All reports name the revision and the time of the last measurement.
 - **Data**: local only (SQLite), backup and restore via a JSON file (includes groups and revisions).
-- **Demo data**: Settings → "Load demo data" adds a sample housing line (parallel machines, buffers, conveyors, special cycles, revisions, special times) and a changeover study to try out every feature; your own data stays untouched.
+- **Demo data**: Settings → "Load demo data" adds a sample housing line (parallel machines, buffers, conveyors, special cycles, revisions, special times), a loader cell (three machines served by three loaders) and a changeover study to try out every feature; your own data stays untouched.
 
 - Agent / developer rules: [AGENTS.md](AGENTS.md)
 - Project brief: [docs/project-brief.md](docs/project-brief.md)
@@ -29,7 +29,7 @@ flutter run
 ## Download
 
 - **iOS (iPhone & iPad)**: [App Store](https://apps.apple.com/us/app/cyclescope-time-study/id6835546516)
-- **Android**: signed APKs are on the [Releases page](https://github.com/SphaeroX/Serienmessung/releases). A release is built by pushing a version tag (`git tag v1.6.2 && git push origin v1.6.2`), see [release.yml](.github/workflows/release.yml).
+- **Android**: signed APKs are on the [Releases page](https://github.com/SphaeroX/Serienmessung/releases). A release is built by pushing a version tag (`git tag v1.7.0 && git push origin v1.7.0`), see [release.yml](.github/workflows/release.yml).
 
 ## Screenshots
 

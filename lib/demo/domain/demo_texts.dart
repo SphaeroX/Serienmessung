@@ -20,6 +20,14 @@ class DemoTexts {
     required this.packing,
     required this.changeover,
     required this.changeoverSteps,
+    required this.cellGroupName,
+    required this.cellGroupDescription,
+    required this.cellMachine,
+    required this.cellMachineSteps,
+    required this.cellLoader,
+    required this.cellLoader1Steps,
+    required this.cellLoader2Steps,
+    required this.cellMagazineLoader,
   });
 
   final String groupName;
@@ -50,4 +58,24 @@ class DemoTexts {
 
   /// Four steps of the changeover.
   final List<String> changeoverSteps;
+
+  /// The loader cell, a group of its own.
+  final String cellGroupName;
+  final String cellGroupDescription;
+  final String cellMachine;
+
+  /// Four steps of the machine; the last one is waiting for the loader.
+  final List<String> cellMachineSteps;
+
+  /// Name of loader n (1-based).
+  final String Function(int n) cellLoader;
+
+  /// Seven steps of loader 1; the third one is waiting for the machine.
+  final List<String> cellLoader1Steps;
+
+  /// Five steps of loader 2; the last one is waiting for the magazine.
+  final List<String> cellLoader2Steps;
+
+  /// The loader that fills the magazine.
+  final String cellMagazineLoader;
 }

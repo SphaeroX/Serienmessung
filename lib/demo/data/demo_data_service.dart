@@ -36,6 +36,12 @@ const _jitter = [0.0, 0.6, -0.4, 1.1, -0.8, 0.3, -0.2, 0.5, -0.6, 0.9, -0.3];
 /// 4. Assembly (time study, ~68 s with one outlier, measured before).
 /// 5. Test benches 1–3 in parallel – typed 225 s each; buffer before.
 /// 6. Packing – simple study with 15 laps (~54 s); conveyor before.
+///
+/// A second group shows a loader cell: three equal lathes (one time study,
+/// occupied ~88 s per part) served in turn by loader 1 (~32 s per part,
+/// the bottleneck), loader 2 (~20 s) and the magazine loader (typed 15 s).
+/// Waiting for the machine or the magazine is marked as waiting time and
+/// left out; waiting for loader 2 on the shared rail counts.
 class DemoDataService {
   DemoDataService(this._db, {required this.now});
 
@@ -165,7 +171,89 @@ class DemoDataService {
 
     // Outside the group: a changeover timed with the step timer.
     await _changeover(t, today);
+    await _loaderCell(t, today, machines);
     return groupId;
+  }
+
+  /// The loader cell as a group of its own (the housing line keeps its
+  /// stations and its 1000 parts in 24 hours).
+  Future<void> _loaderCell(
+    DemoTexts t,
+    DateTime today,
+    MachineService machines,
+  ) async {
+    final groups = GroupRepository(_db);
+    final studies = StudyRepository(_db);
+    final groupId = await groups.createGroup(
+      name: t.cellGroupName,
+      description: t.cellGroupDescription,
+      now: today.subtract(const Duration(days: 40)),
+    );
+
+    /// Time study in the cell; the step at [waiting] only waits for supply.
+    Future<int> member(
+      String name,
+      List<String> steps,
+      List<num> base, {
+      required int waiting,
+    }) async {
+      final id = await _timeStudy(
+        name: name,
+        steps: steps,
+        base: base,
+        cycles: 10,
+        today: today,
+      );
+      await studies.setStepWaiting(
+        (await studies.getSteps(id))[waiting].id,
+        true,
+      );
+      await groups.moveToGroup(id, groupId);
+      return id;
+    }
+
+    // Three equal lathes: change, equipping, machining – then they wait.
+    final machine = await member(t.cellMachine, t.cellMachineSteps, const [
+      8,
+      10,
+      70,
+      8,
+    ], waiting: 3);
+    await groups.setCellMachines(machine, 3);
+    // Loader 1 (double gripper) touches every part: 32 s without waiting
+    // for the machine.
+    await groups.setCellLoader(
+      await member(t.cellLoader(1), t.cellLoader1Steps, const [
+        4,
+        5,
+        6,
+        8,
+        5,
+        4,
+        6,
+      ], waiting: 2),
+      true,
+    );
+    // Loader 2 equips the machine from the magazine: 20 s.
+    await groups.setCellLoader(
+      await member(t.cellLoader(2), t.cellLoader2Steps, const [
+        4,
+        4,
+        9,
+        3,
+        5,
+      ], waiting: 4),
+      true,
+    );
+    // The magazine loader only has to keep up on average.
+    await groups.setCellLoader(
+      await machines.createMachine(
+        name: t.cellMagazineLoader,
+        groupId: groupId,
+        cycleMicros: 15 * _s,
+      ),
+      true,
+    );
   }
 
   /// Time study with [cycles] measured cycles of about [base] seconds per

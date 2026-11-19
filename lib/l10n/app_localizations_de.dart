@@ -1626,4 +1626,67 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get stepWaitingTooltip =>
       'Warten auf eine Maschine oder auf Material: zählt in einer Laderzelle nicht';
+
+  @override
+  String get demoCellGroupName => 'Demo: Laderzelle';
+
+  @override
+  String get demoCellGroupDescription =>
+      'Beispieldaten – drei Drehmaschinen, bedient von drei Portalladern auf einer Schiene';
+
+  @override
+  String get demoCellMachine => 'Drehmaschine';
+
+  @override
+  String demoCellLoader(int n) {
+    return 'Lader $n';
+  }
+
+  @override
+  String get demoCellMagazineLoader => 'Lader 3 (Magazin)';
+
+  @override
+  String get demoCellStepChangeByLoader => 'Teilewechsel (Lader 1)';
+
+  @override
+  String get demoCellStepEquipByLoader => 'Bestücken (Lader 2)';
+
+  @override
+  String get demoCellStepMachining => 'Bearbeitung';
+
+  @override
+  String get demoCellStepWaitLoader => 'Warten auf Lader';
+
+  @override
+  String get demoCellStepPickBlank => 'Rohteil vom Band nehmen';
+
+  @override
+  String get demoCellStepDriveToMachine => 'Fahrt zur Maschine';
+
+  @override
+  String get demoCellStepWaitMachine => 'Warten auf Maschine';
+
+  @override
+  String get demoCellStepChange => 'Teilewechsel (Doppelgreifer)';
+
+  @override
+  String get demoCellStepDriveToBelt => 'Fahrt zum Ausgangsband';
+
+  @override
+  String get demoCellStepPutDown => 'Fertigteil ablegen';
+
+  @override
+  String get demoCellStepWaitLoader2 => 'Warten auf Lader 2';
+
+  @override
+  String get demoCellStepTakeFromMagazine => 'Teile aus dem Magazin nehmen';
+
+  @override
+  String get demoCellStepEquip => 'Maschine bestücken';
+
+  @override
+  String get demoCellStepDriveBack => 'Fahrt zurück zum Magazin';
+
+  @override
+  String get demoCellStepWaitMagazine => 'Warten auf Magazin';
 }

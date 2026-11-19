@@ -991,5 +991,32 @@
     }
   },
   "stepWaiting": "Waiting time",
-  "stepWaitingTooltip": "Waiting for a machine or for material: left out in a loader cell"
+  "stepWaitingTooltip": "Waiting for a machine or for material: left out in a loader cell",
+  "demoCellGroupName": "Demo: loader cell",
+  "demoCellGroupDescription": "Sample data – three lathes served by three gantry loaders on one rail",
+  "demoCellMachine": "Lathe",
+  "demoCellLoader": "Loader {n}",
+  "@demoCellLoader": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "demoCellMagazineLoader": "Loader 3 (magazine)",
+  "demoCellStepChangeByLoader": "Part change (loader 1)",
+  "demoCellStepEquipByLoader": "Equipping (loader 2)",
+  "demoCellStepMachining": "Machining",
+  "demoCellStepWaitLoader": "Wait for the loader",
+  "demoCellStepPickBlank": "Pick blank from the belt",
+  "demoCellStepDriveToMachine": "Drive to the machine",
+  "demoCellStepWaitMachine": "Wait for the machine",
+  "demoCellStepChange": "Change part (double gripper)",
+  "demoCellStepDriveToBelt": "Drive to the exit belt",
+  "demoCellStepPutDown": "Put down the finished part",
+  "demoCellStepWaitLoader2": "Wait for loader 2",
+  "demoCellStepTakeFromMagazine": "Take parts from the magazine",
+  "demoCellStepEquip": "Equip the machine",
+  "demoCellStepDriveBack": "Drive back to the magazine",
+  "demoCellStepWaitMagazine": "Wait for the magazine"
 }

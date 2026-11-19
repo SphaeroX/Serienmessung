@@ -1619,4 +1619,67 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get stepWaitingTooltip =>
       'Waiting for a machine or for material: left out in a loader cell';
+
+  @override
+  String get demoCellGroupName => 'Demo: loader cell';
+
+  @override
+  String get demoCellGroupDescription =>
+      'Sample data – three lathes served by three gantry loaders on one rail';
+
+  @override
+  String get demoCellMachine => 'Lathe';
+
+  @override
+  String demoCellLoader(int n) {
+    return 'Loader $n';
+  }
+
+  @override
+  String get demoCellMagazineLoader => 'Loader 3 (magazine)';
+
+  @override
+  String get demoCellStepChangeByLoader => 'Part change (loader 1)';
+
+  @override
+  String get demoCellStepEquipByLoader => 'Equipping (loader 2)';
+
+  @override
+  String get demoCellStepMachining => 'Machining';
+
+  @override
+  String get demoCellStepWaitLoader => 'Wait for the loader';
+
+  @override
+  String get demoCellStepPickBlank => 'Pick blank from the belt';
+
+  @override
+  String get demoCellStepDriveToMachine => 'Drive to the machine';
+
+  @override
+  String get demoCellStepWaitMachine => 'Wait for the machine';
+
+  @override
+  String get demoCellStepChange => 'Change part (double gripper)';
+
+  @override
+  String get demoCellStepDriveToBelt => 'Drive to the exit belt';
+
+  @override
+  String get demoCellStepPutDown => 'Put down the finished part';
+
+  @override
+  String get demoCellStepWaitLoader2 => 'Wait for loader 2';
+
+  @override
+  String get demoCellStepTakeFromMagazine => 'Take parts from the magazine';
+
+  @override
+  String get demoCellStepEquip => 'Equip the machine';
+
+  @override
+  String get demoCellStepDriveBack => 'Drive back to the magazine';
+
+  @override
+  String get demoCellStepWaitMagazine => 'Wait for the magazine';
 }
