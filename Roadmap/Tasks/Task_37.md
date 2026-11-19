@@ -97,8 +97,9 @@ Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder ei
 
 ## Offene Fragen / Annahmen
 
-- Annahme: Lader 2 bedient alle Maschinen reihum wie Lader 1 (nicht ausdrücklich bestätigt). Bedient ein Lader nur einen Teil der Maschinen, deckt das der Faktor „Teile pro Zyklus“ nicht ab, dann nachfragen.
-- Annahme: Lader 3 fährt ebenfalls auf der Schiene. Behindert er Lader 2, zeigt sich das als (unmarkiertes) Schienen-Warten in der Studie von Lader 2.
+- Bestätigt (Nutzer, 2026-11-19): Lader 2 bestückt die Maschinen reihum, jeweils nachdem Lader 1 dort das neue Rohteil eingelegt hat.
+- Bestätigt: Lader 3 fährt auf derselben Schiene und kann Lader 2 behindern. Das zeigt sich als (unmarkiertes) Schienen-Warten in der Studie von Lader 2 und bleibt in H_2.
+- Bestätigt: Die Maschinen einer Zelle sind „in der Regel“ gleich schnell. Ungleiche Maschinen bleiben außerhalb dieses Tasks; das Datenmodell soll eine spätere Erweiterung (eigene Maschinenstudie je Maschine) aber nicht verbauen.
 - Annahme: Das Magazin ist groß genug, dass Schwankungen von Lader 3 nicht durchschlagen; nur der Mittelwert zählt.
 - Offen: genaue Bezeichnung in der UI („Laderzelle“ / „Loader cell“) und wo der Merker im Schritt-Editor sitzt – mit dem Nutzer abstimmen, falls unklar.
 
