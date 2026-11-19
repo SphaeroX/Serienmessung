@@ -143,7 +143,13 @@ class LoaderCellCard extends StatelessWidget {
                   TableRow(
                     children: [
                       cell_(Text(l.cellMachines, style: head), right: false),
-                      cell_(Text(l.cellCycleTime, style: head)),
+                      cell_(
+                        Text(
+                          l.cellCycleTime,
+                          style: head,
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
                       cell_(Text(l.lineBottleneckLabel, style: head)),
                     ],
                   ),

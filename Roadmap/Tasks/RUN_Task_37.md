@@ -63,12 +63,12 @@ Beispiel (muss als Test belegt werden): H_1 = 32 s, H_2 = 20 s, H_3 = 15 s, M = 
 
 ## Umsetzungsschritte
 
-1. [ ] Domain-Funktion der Zelle mit dem Beispiel oben (TDD).
-2. [ ] Datenmodell, Migration, Kopie, Backup (TDD).
-3. [ ] Linienanalyse und Simulation (TDD).
-4. [ ] UI: Merker im Schritt-Editor, Zelle in der Gruppe, Zellenansicht (Widget-Tests).
-5. [ ] Reports (TDD).
-6. [ ] Demo-Daten, Doku, README, Version.
+1. [x] Domain-Funktion der Zelle mit dem Beispiel oben (TDD).
+2. [x] Datenmodell, Migration, Kopie, Backup (TDD).
+3. [x] Linienanalyse und Simulation (TDD).
+4. [x] UI: Merker im Schritt-Editor, Zelle in der Gruppe, Zellenansicht (Widget-Tests).
+5. [x] Reports (TDD).
+6. [ ] Demo-Daten, Doku, README, Version. – Doku, README, Landingpage und Screenshot-Szenen (12, 13) sind erledigt. **Offen: Demo-Daten und Version, beides wartet auf den Nutzer** (siehe "Offene Fragen / Annahmen").
 
 ## Tests
 
@@ -91,9 +91,10 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
-- [ ] `docs/` und `Roadmap/README.md` aktuell.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] `docs/` und `Roadmap/README.md` aktuell.
+- [ ] Demo-Daten zeigen eine Laderzelle (wartet auf Freigabe, siehe "Offene Fragen / Annahmen").
 
 ## Offene Fragen / Annahmen
 
@@ -101,12 +102,22 @@ Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder ei
 - Bestätigt: Lader 3 fährt auf derselben Schiene und kann Lader 2 behindern. Das zeigt sich als (unmarkiertes) Schienen-Warten in der Studie von Lader 2 und bleibt in H_2.
 - Bestätigt: Die Maschinen einer Zelle sind „in der Regel“ gleich schnell. Ungleiche Maschinen bleiben außerhalb dieses Tasks; das Datenmodell soll eine spätere Erweiterung (eigene Maschinenstudie je Maschine) aber nicht verbauen.
 - Annahme: Das Magazin ist groß genug, dass Schwankungen von Lader 3 nicht durchschlagen; nur der Mittelwert zählt.
+- **Offen, wartet auf Freigabe – Demo-Daten:** Eine Laderzelle in den Demo-Daten ändert zwangsläufig bestehende Tests, die die Demo festschreiben: `tests/demo/demo_data_service_test.dart` (genau 1 Gruppe je Laden, 9 Mitglieder, 10 Studien je Laden, 1000 Teile in 24 h) und `tests/demo/demo_data_tile_test.dart` (genau eine Gruppe mit 9 Studien). Vorschlag: zweite Demo-Gruppe "Demo: Laderzelle" neben der Gehäuselinie (die Linie und ihre 1000 Teile bleiben unverändert); dann müssen nur die Zähler (Gruppen/Studien je Laden) in drei bestehenden Tests angepasst werden. Bestehende Tests dürfen laut Root-`AGENTS.md` nur mit Freigabe geändert werden.
+- **Offen, wartet auf den Nutzer – Version:** `pubspec.yaml` steht unverändert auf 1.6.2; Versionssprung (Vorschlag 1.7.0), Merge nach `main` und Play-/TestFlight-Lauf macht der Nutzer bzw. gibt er frei. Entwickelt wurde auf dem Branch `ccr-e4e8e596-qd8qyd`.
 - Offen: genaue Bezeichnung in der UI („Laderzelle“ / „Loader cell“) und wo der Merker im Schritt-Editor sitzt – mit dem Nutzer abstimmen, falls unklar.
 
 ## Notizen zu diesem Task
 
 Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergreifendes gehört in `Roadmap/README.md`.
 
+- Umsetzung (2026-11-19), Entwurfsentscheidungen:
+  - Lader hängen über das vorhandene `parallel`-Flag an der Station der Maschine; `cell_loader` macht aus dem parallelen Mitglied einen Lader. So halten `stationGroups`, `parallelAfterMove` und `handOverStation` die Zelle ohne zweite Gruppierungslogik zusammen.
+  - Ein paralleles Mitglied ohne Lader-Rolle in einer Zelle zählt als weitere Maschinenart (Kapazitäten addieren sich). Damit gibt es keinen ungültigen Zustand, und ungleiche Maschinen sind im Rechenkern schon möglich; nur die Tabelle 1…6 und n* gibt es dann nicht.
+  - Die Zelle steht in `LineStation.machines` als **eine** Maschine mit der Zellen-Taktzeit. Ausfallrisiko, Simulation und Reports brauchten dadurch keine Sonderfälle; Sonderzyklen der Mitglieder stecken schon in den Arbeitszeiten.
+  - Der Merker "Wartezeit" wird in archivierten Revisionen nicht gespeichert; für den Vergleich mit der Vorrevision gelten die Merker der aktuellen Schritte (Zuordnung über die Schritt-ID).
+  - Excel: Die Stationszeile einer Zelle ist ein Wert, keine Formel (die Arbeitszeiten ohne Warteschritte stehen nicht auf den Studienblättern).
+- Flutter 3.47.9 war in der Cloud-Umgebung nicht installiert und wurde für diese Sitzung nach `/opt/flutter-sdk` geladen (nicht dauerhaft).
+- Screenshots: Szenen 12 (Gruppe) und 13 (Linienansicht) im Generator ergänzt und lokal gerendert geprüft; die Bilder selbst erzeugt die CI.
 - Entstanden aus einer Nutzerfrage (2026-11-19). Verworfene Zwischenideen: (a) Lader als parallele Maschinen anlegen – falsch, weil „parallel“ Lastteilung bedeutet; (b) „gekoppelte Station = Maximum der Mitglieder“ – reicht allein nicht, weil die n Maschinen sich die Teile teilen (daher M ÷ n).
 
 ## Abschluss-Checkliste

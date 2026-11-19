@@ -160,7 +160,10 @@ class AnalysisView extends StatelessWidget {
           for (final s in a.steps)
             Card(
               child: ListTile(
-                title: Text('${s.step.position + 1}. ${s.step.name}'),
+                title: Text(
+                  '${s.step.position + 1}. ${s.step.name}'
+                  '${s.step.waiting ? ' · ${l.stepWaiting}' : ''}',
+                ),
                 subtitle: Text(
                   s.stats.n == 0
                       ? l.noTimesShort

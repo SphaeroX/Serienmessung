@@ -488,6 +488,103 @@ void main() {
       await shot(tester, lang, '09_revisions');
     });
 
+    screenshotTest('$lang: loader cell', (tester) async {
+      final de = lang == 'de';
+      late int groupId;
+      await tester.runAsync(() async {
+        final groups = GroupRepository(db);
+        final studies = StudyRepository(db);
+        groupId = await groups.createGroup(
+          name: de ? 'Laderzelle Halle 2' : 'Loader cell hall 2',
+          now: DateTime(2026, 11, 1),
+        );
+        final machines = MachineService(db, now: () => DateTime(2026, 11, 9));
+        Future<int> typed(String name, int seconds) => machines.createMachine(
+          name: name,
+          groupId: groupId,
+          cycleMicros: seconds * _s,
+        );
+        await typed(de ? 'Säge' : 'Saw', 24);
+        await groups.setCellMachines(
+          await typed(de ? 'Bearbeitungszentrum' : 'Machining centre', 88),
+          3,
+        );
+        // Loader 1 as a time study: waiting for the machine is marked and
+        // left out, waiting for loader 2 on the shared rail counts.
+        final loader = await studies.createStudy(
+          name: de ? 'Lader 1' : 'Loader 1',
+          mode: StudyMode.timeStudy,
+          steps: de
+              ? [
+                  'Rohteil vom Band nehmen',
+                  'Fahrt zur Maschine',
+                  'Warten auf Maschine',
+                  'Wechsel (Doppelgreifer)',
+                  'Fahrt zum Ausgangsband',
+                  'Fertigteil ablegen',
+                  'Warten auf Lader 2',
+                ]
+              : [
+                  'Pick blank from the belt',
+                  'Drive to the machine',
+                  'Wait for the machine',
+                  'Change (double gripper)',
+                  'Drive to the exit belt',
+                  'Put down the finished part',
+                  'Wait for loader 2',
+                ],
+          now: DateTime(2026, 11, 9),
+        );
+        final steps = await studies.getSteps(loader);
+        await studies.setStepWaiting(steps[2].id, true);
+        final times = MeasurementRepository(
+          db,
+          now: () => DateTime(2026, 11, 10, 8),
+        );
+        const seconds = [4, 5, 6, 8, 5, 4, 6];
+        var at = 0;
+        for (var c = 1; c <= 5; c++) {
+          for (var i = 0; i < steps.length; i++) {
+            final d = seconds[i] * _s;
+            await times.insert(
+              loader,
+              MeasurementDraft(
+                cycle: c,
+                stepId: steps[i].id,
+                kind: MeasurementKind.normal,
+                startMicros: at,
+                endMicros: at + d,
+                durationMicros: d,
+              ),
+            );
+            at += d;
+          }
+        }
+        await groups.moveToGroup(loader, groupId);
+        await groups.setCellLoader(loader, true);
+        await groups.setCellLoader(
+          await typed(de ? 'Lader 2' : 'Loader 2', 20),
+          true,
+        );
+        await groups.setCellLoader(
+          await typed(de ? 'Lader 3 (Magazin)' : 'Loader 3 (magazine)', 15),
+          true,
+        );
+        await typed(de ? 'Verpackung' : 'Packing', 20);
+      });
+      await show(tester, lang, GroupScreen(groupId: groupId));
+      await shot(tester, lang, '12_cell_group');
+
+      await show(tester, lang, LineScreen(groupId: groupId));
+      await settle(tester);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('cellBest_1')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await shot(tester, lang, '13_cell_line');
+    });
+
     screenshotTest('$lang: settings', (tester) async {
       await show(tester, lang, const SettingsScreen());
       await shot(tester, lang, '07_settings');
