@@ -1,5 +1,6 @@
 import '../../analysis/domain/analysis.dart';
 import '../../study/domain/study.dart';
+import 'loader_cell.dart';
 import 'special_cycle.dart';
 import 'stations.dart';
 
@@ -14,10 +15,23 @@ class LineStationInput {
     this.buffer,
     this.conveyor,
     this.specialCycles = const [],
+    this.cellLoader = false,
+    this.cellParts = 1,
+    this.cellMachines = 1,
   });
 
   /// Special cycles and planned stops of this machine.
   final List<SpecialCycle> specialCycles;
+
+  /// Loader of the station it belongs to (needs [parallel]): the station
+  /// is a loader cell, see [LoaderCell].
+  final bool cellLoader;
+
+  /// Parts a loader handles per own cycle.
+  final int cellParts;
+
+  /// Number of equal machines this input stands for (loader cells only).
+  final int cellMachines;
 
   /// Conveyor before this member's station (first member only).
   final LineConveyor? conveyor;
@@ -93,8 +107,8 @@ class LineMachine {
   bool get measured => cycleTime != null;
 }
 
-/// A station of the line: one machine, or several machines working in
-/// parallel whose capacities add up.
+/// A station of the line: one machine, several machines working in
+/// parallel whose capacities add up, or a loader cell ([cell]).
 class LineStation {
   const LineStation({
     required this.name,
@@ -110,7 +124,15 @@ class LineStation {
     required this.isBottleneck,
     this.bufferBefore,
     this.conveyorBefore,
+    this.cell,
   });
+
+  /// The loader cell this station is: machines served by loaders. The cell
+  /// then counts as one machine ([machines] has one entry with the cell
+  /// cycle time), so failure risk, simulation and reports treat it as one.
+  final LoaderCell? cell;
+
+  bool get isCell => cell != null;
 
   /// Conveyor between the previous station and this one.
   final LineConveyor? conveyorBefore;
@@ -198,26 +220,92 @@ class LineAnalysis {
         base == null || cycles.isEmpty
         ? base
         : effectiveCycleTime(base, cycles);
+    // The time a resource of a loader cell needs per own cycle: waiting
+    // steps left out, special cycles included.
+    double? work(StudyAnalysis? a, LineStationInput i) => effective(
+      a == null ||
+              i.mode == StudyMode.stepTimer ||
+              a.cycleStats.n == 0 ||
+              a.workCycleTime < 1
+          ? null
+          : a.workCycleTime,
+      i.specialCycles,
+    );
     final groups = stationGroups([for (final i in inputs) i.parallel]);
-    final machines = [
-      for (final group in groups)
-        [
-          for (final k in group)
-            LineMachine(
+    bool isLoader(List<int> group, int k) =>
+        k != group.first && inputs[k].cellLoader;
+    LoaderCell cellOf(
+      List<int> group,
+      StudyAnalysis? Function(LineStationInput) pick,
+    ) => LoaderCell.of(
+      machines: [
+        for (final k in group)
+          if (!isLoader(group, k))
+            CellMachine(
               name: inputs[k].name,
-              mode: inputs[k].mode,
-              cycleTime: effective(
-                cycle(inputs[k].current, inputs[k].mode),
-                inputs[k].specialCycles,
-              ),
-              previousCycleTime: effective(
-                cycle(inputs[k].previous, inputs[k].mode),
-                inputs[k].specialCycles,
-              ),
-              baseCycleTime: cycle(inputs[k].current, inputs[k].mode),
-              specialCycles: inputs[k].specialCycles,
+              workMicros: work(pick(inputs[k]), inputs[k]),
+              count: inputs[k].cellMachines,
             ),
-        ],
+      ],
+      loaders: [
+        for (final k in group)
+          if (isLoader(group, k))
+            CellLoader(
+              name: inputs[k].name,
+              workMicros: work(pick(inputs[k]), inputs[k]),
+              partsPerCycle: inputs[k].cellParts,
+            ),
+      ],
+    );
+    final cells = [
+      for (final group in groups)
+        group.any((k) => isLoader(group, k))
+            ? cellOf(group, (i) => i.current)
+            : null,
+    ];
+    // Cell time of the previous revisions; only when every resource
+    // measured now has one.
+    double? previousCell(List<int> group) =>
+        group.any(
+          (k) =>
+              work(inputs[k].current, inputs[k]) != null &&
+              work(inputs[k].previous, inputs[k]) == null,
+        )
+        ? null
+        : cellOf(group, (i) => i.previous).cycleTime;
+    final machines = [
+      for (var g = 0; g < groups.length; g++)
+        if (cells[g] != null)
+          [
+            LineMachine(
+              name: [
+                for (final k in groups[g])
+                  if (!isLoader(groups[g], k)) inputs[k].name,
+              ].join(' / '),
+              mode: inputs[groups[g].first].mode,
+              cycleTime: cells[g]!.cycleTime,
+              previousCycleTime: previousCell(groups[g]),
+              baseCycleTime: cells[g]!.cycleTime,
+            ),
+          ]
+        else
+          [
+            for (final k in groups[g])
+              LineMachine(
+                name: inputs[k].name,
+                mode: inputs[k].mode,
+                cycleTime: effective(
+                  cycle(inputs[k].current, inputs[k].mode),
+                  inputs[k].specialCycles,
+                ),
+                previousCycleTime: effective(
+                  cycle(inputs[k].previous, inputs[k].mode),
+                  inputs[k].specialCycles,
+                ),
+                baseCycleTime: cycle(inputs[k].current, inputs[k].mode),
+                specialCycles: inputs[k].specialCycles,
+              ),
+          ],
     ];
     final times = [
       for (final ms in machines)
@@ -261,11 +349,19 @@ class LineAnalysis {
           mode: machines[k].first.mode,
           machines: machines[k],
           cycleTime: times[k],
-          leadTime: lead(machines[k]),
+          leadTime: cells[k] == null
+              ? lead(machines[k])
+              : (times[k] == null ? null : cells[k]!.machineTime),
+          cell: cells[k],
           previousCycleTime: previous[k],
           share: times[k] == null || total == 0 ? 0 : times[k]! / total,
           idle: times[k] == null ? null : max! - times[k]!,
-          segments: machines[k].length == 1
+          segments: cells[k] != null
+              ? [
+                  if (times[k] != null)
+                    LineSegment(machines[k].single.name, times[k]!),
+                ]
+              : machines[k].length == 1
               ? _segments(inputs[groups[k].single], times[k])
               : times[k] == null
               ? const []

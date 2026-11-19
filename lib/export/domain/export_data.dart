@@ -206,6 +206,11 @@ class ExportInput {
           steps: study.mode.usesSteps ? previous!.steps : const [],
           mode: study.mode,
           method: method,
+          // Archived steps carry no waiting mark; the current steps decide.
+          waitingStepIds: {
+            for (final st in steps)
+              if (st.waiting) st.id,
+          },
         );
 
   /// Deviation of the current times from [previous]; null without one.

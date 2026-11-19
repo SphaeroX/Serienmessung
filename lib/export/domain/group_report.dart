@@ -308,6 +308,9 @@ class GroupReportInput {
         current: x.analysis,
         previous: x.previousAnalysis,
         parallel: x.study.parallel,
+        cellLoader: x.study.isCellLoader,
+        cellParts: x.study.cellParts,
+        cellMachines: x.study.cellMachines,
         buffer: x.study.hasBuffer
             ? LineBuffer(
                 capacity: x.study.bufferCapacity,
