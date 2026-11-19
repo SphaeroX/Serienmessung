@@ -2947,6 +2947,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Wait for the magazine'**
   String get demoCellStepWaitMagazine;
+
+  /// No description provided for @deleteGroupStudiesOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Also delete the {count, plural, =1{1 study} other{{count} studies}} of this group'**
+  String deleteGroupStudiesOption(int count);
+
+  /// No description provided for @deleteGroupWithStudiesConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the group \"{name}\" and its {count, plural, =1{study} other{{count} studies}} including all measurements? This cannot be undone.'**
+  String deleteGroupWithStudiesConfirm(String name, int count);
 }
 
 class _AppLocalizationsDelegate

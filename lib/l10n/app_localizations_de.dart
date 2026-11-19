@@ -1689,4 +1689,26 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get demoCellStepWaitMagazine => 'Warten auf Magazin';
+
+  @override
+  String deleteGroupStudiesOption(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'die $count Studien',
+      one: 'die Studie',
+    );
+    return 'Auch $_temp0 dieser Gruppe löschen';
+  }
+
+  @override
+  String deleteGroupWithStudiesConfirm(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ihre $count Studien',
+      one: 'ihre Studie',
+    );
+    return 'Gruppe \"$name\" und $_temp0 inklusive aller Messungen löschen? Das lässt sich nicht rückgängig machen.';
+  }
 }

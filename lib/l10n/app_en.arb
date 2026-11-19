@@ -1018,5 +1018,24 @@
   "demoCellStepTakeFromMagazine": "Take parts from the magazine",
   "demoCellStepEquip": "Equip the machine",
   "demoCellStepDriveBack": "Drive back to the magazine",
-  "demoCellStepWaitMagazine": "Wait for the magazine"
+  "demoCellStepWaitMagazine": "Wait for the magazine",
+  "deleteGroupStudiesOption": "Also delete the {count, plural, =1{1 study} other{{count} studies}} of this group",
+  "@deleteGroupStudiesOption": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteGroupWithStudiesConfirm": "Delete the group \"{name}\" and its {count, plural, =1{study} other{{count} studies}} including all measurements? This cannot be undone.",
+  "@deleteGroupWithStudiesConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

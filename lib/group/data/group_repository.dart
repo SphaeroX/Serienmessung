@@ -34,9 +34,17 @@ class GroupRepository {
     whereArgs: [id],
   );
 
-  /// Deletes the group; its studies stay, without a group.
-  Future<void> deleteGroup(int id) =>
-      _db.db.delete('study_group', where: 'id = ?', whereArgs: [id]);
+  /// Deletes the group; its studies stay, without a group. With
+  /// [withStudies] the studies of the group are deleted too, with their
+  /// steps, times, revisions and special cycles (video files are left to
+  /// the caller, see `deleteUnusedVideo`).
+  Future<void> deleteGroup(int id, {bool withStudies = false}) =>
+      _db.db.transaction((txn) async {
+        if (withStudies) {
+          await txn.delete('study', where: 'group_id = ?', whereArgs: [id]);
+        }
+        await txn.delete('study_group', where: 'id = ?', whereArgs: [id]);
+      });
 
   Future<StudyGroup?> getGroup(int id) async {
     final rows = await _db.db.query(

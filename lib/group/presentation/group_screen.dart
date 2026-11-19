@@ -8,6 +8,7 @@ import '../../study/domain/study.dart';
 import '../../study/presentation/create_study_screen.dart';
 import '../../study/presentation/mode_texts.dart';
 import '../../study/presentation/study_list_screen.dart' show OpenStudy;
+import '../../video/data/video_cleanup.dart';
 import '../domain/study_group.dart';
 import '../../settings/presentation/settings_controller.dart';
 import '../../core/time_format.dart';
@@ -210,26 +211,70 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
             );
         await _changed();
       case _GroupAction.delete:
-        final ok = await showDialog<bool>(
+        final members = [for (final m in _members) m.study];
+        // null = cancelled, otherwise whether the studies go too.
+        final withStudies = await showDialog<bool>(
           context: context,
-          builder: (ctx) => AlertDialog(
-            title: Text(l.deleteGroup),
-            content: Text(l.deleteGroupConfirm(group.name)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(l.cancel),
+          builder: (ctx) {
+            var studiesToo = false;
+            return StatefulBuilder(
+              builder: (ctx, setState) => AlertDialog(
+                title: Text(l.deleteGroup),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      studiesToo
+                          ? l.deleteGroupWithStudiesConfirm(
+                              group.name,
+                              members.length,
+                            )
+                          : l.deleteGroupConfirm(group.name),
+                    ),
+                    if (members.isNotEmpty)
+                      CheckboxListTile(
+                        key: const Key('deleteGroupStudies'),
+                        contentPadding: EdgeInsets.zero,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        value: studiesToo,
+                        title: Text(l.deleteGroupStudiesOption(members.length)),
+                        onChanged: (v) =>
+                            setState(() => studiesToo = v ?? false),
+                      ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(l.cancel),
+                  ),
+                  TextButton(
+                    key: const Key('confirmDeleteGroup'),
+                    onPressed: () => Navigator.pop(ctx, studiesToo),
+                    child: Text(l.delete),
+                  ),
+                ],
               ),
-              TextButton(
-                key: const Key('confirmDeleteGroup'),
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(l.delete),
-              ),
-            ],
-          ),
+            );
+          },
         );
-        if (ok != true) return;
-        await ref.read(groupRepositoryProvider).deleteGroup(group.id);
+        if (withStudies == null) return;
+        await ref
+            .read(groupRepositoryProvider)
+            .deleteGroup(group.id, withStudies: withStudies);
+        if (withStudies) {
+          // Videos no study plays any more go with their studies.
+          final studies = ref.read(studyRepositoryProvider);
+          final files = ref.read(videoFilesProvider);
+          for (final path in {for (final m in members) ?m.videoPath}) {
+            await deleteUnusedVideo(studies, files, path);
+          }
+          // A recording of a deleted study cannot go on.
+          if (_members.any((m) => m.isRecording)) {
+            await ref.read(recordingNotifierProvider).hide();
+          }
+        }
         ref
           ..invalidate(groupListProvider)
           ..invalidate(studyListProvider);

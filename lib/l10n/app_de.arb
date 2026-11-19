@@ -474,5 +474,7 @@
   "demoCellStepTakeFromMagazine": "Teile aus dem Magazin nehmen",
   "demoCellStepEquip": "Maschine bestücken",
   "demoCellStepDriveBack": "Fahrt zurück zum Magazin",
-  "demoCellStepWaitMagazine": "Warten auf Magazin"
+  "demoCellStepWaitMagazine": "Warten auf Magazin",
+  "deleteGroupStudiesOption": "Auch {count, plural, =1{die Studie} other{die {count} Studien}} dieser Gruppe löschen",
+  "deleteGroupWithStudiesConfirm": "Gruppe \"{name}\" und {count, plural, =1{ihre Studie} other{ihre {count} Studien}} inklusive aller Messungen löschen? Das lässt sich nicht rückgängig machen."
 }
