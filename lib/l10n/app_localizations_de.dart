@@ -1107,7 +1107,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get failureRiskHint =>
-      'Ausbringung der Linie, während eine Maschine ausfällt. Parallele Maschinen übernehmen einen Teil der Arbeit; eine Station mit nur einer Maschine legt die ganze Linie still.';
+      'Ausbringung der Linie, während eine Maschine ausfällt. Parallele Maschinen übernehmen einen Teil der Arbeit; eine Station mit nur einer Maschine legt die ganze Linie still, ebenso jede Maschine einer Station, die auf ihre langsamste Maschine wartet.';
 
   @override
   String singlePointsOfFailure(int count) {
@@ -1187,7 +1187,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get simulationHint =>
-      'Spielt die Linie mit den realen Taktzeiten durch: parallele Maschinen teilen sich die Arbeit, ein Teil wartet, wenn die nächste Station belegt ist, Puffer lagern bei Stau ein und leeren sich wieder.';
+      'Spielt die Linie mit den realen Taktzeiten durch: parallele Maschinen teilen sich die Arbeit oder warten auf die langsamste, ein Teil wartet, wenn die nächste Station belegt ist, Puffer lagern bei Stau ein und leeren sich wieder.';
 
   @override
   String get simulationPeriod => 'Zeitraum';
@@ -1704,4 +1704,105 @@ class AppLocalizationsDe extends AppLocalizations {
     );
     return 'Gruppe \"$name\" und $_temp0 inklusive aller Messungen löschen? Das lässt sich nicht rückgängig machen.';
   }
+
+  @override
+  String get waitForSlowest => 'Auf langsamste Maschine warten';
+
+  @override
+  String get stationWaitsForSlowest =>
+      'Station wartet auf ihre langsamste Maschine';
+
+  @override
+  String lineWaitingMachines(int count) {
+    return '$count Maschinen parallel, warten auf die langsamste';
+  }
+
+  @override
+  String get reportWaitsForSlowest => 'wartet auf die langsamste';
+
+  @override
+  String get demoCoverPress => 'Deckelpresse';
+
+  @override
+  String get demoSealCutter => 'Dichtungsstanze';
+
+  @override
+  String selectedCount(int count) {
+    return '$count ausgewählt';
+  }
+
+  @override
+  String get selectAll => 'Alle auswählen';
+
+  @override
+  String get share => 'Teilen';
+
+  @override
+  String get importShared => 'Studien oder Gruppen importieren';
+
+  @override
+  String importResult(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Studien importiert.',
+      one: '1 Studie importiert.',
+      zero: 'Nichts Neues importiert.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String importSkipped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count waren bereits vorhanden.',
+      one: '1 war bereits vorhanden.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get importInvalid =>
+      'Diese Datei lässt sich nicht importieren. Es wurde nichts geändert.';
+
+  @override
+  String get importTooNew =>
+      'Diese Datei stammt aus einer neueren App-Version. Bitte aktualisiere die App.';
+
+  @override
+  String deleteStudiesConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Studien inklusive aller Messungen löschen?',
+      one: '1 Studie inklusive aller Messungen löschen?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteGroups => 'Gruppen löschen';
+
+  @override
+  String deleteGroupsConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count Gruppen löschen. Ihre Studien ohne Gruppe behalten oder mitlöschen?',
+      one: '1 Gruppe löschen. Ihre Studien ohne Gruppe behalten oder mitlöschen?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteGroupsKeepStudies => 'Studien behalten';
+
+  @override
+  String get deleteGroupsWithStudies => 'Studien mitlöschen';
+
+  @override
+  String get shareGroup => 'Gruppe teilen';
 }

@@ -254,7 +254,9 @@ class _LineBody extends StatelessWidget {
                         ),
                         if (st.isCell) l.loaderCell,
                         if (st.isParallel) ...[
-                          l.lineParallelMachines(st.machines.length),
+                          st.waitsForSlowest
+                              ? l.lineWaitingMachines(st.machines.length)
+                              : l.lineParallelMachines(st.machines.length),
                           for (final m in st.machines)
                             '  ${m.name}: ${m.cycleTime == null ? l.lineNotMeasured : t(m.cycleTime!)}',
                         ],
@@ -423,8 +425,14 @@ class YamazumiPainter extends CustomPainter {
         base += seg.micros;
       }
       if (st.isParallel && st.cycleTime != null) {
-        // Number of parallel machines inside the bar.
-        final count = text('×${st.machines.length}', color: Colors.white);
+        // Number of parallel machines inside the bar; "3→1" when they
+        // make parts of one unit and the station waits for the slowest.
+        final count = text(
+          st.waitsForSlowest
+              ? '${st.machines.length}→1'
+              : '×${st.machines.length}',
+          color: Colors.white,
+        );
         final barTop = y(st.cycleTime!);
         if (y(0) - barTop > count.height + 4) {
           count.paint(canvas, Offset(cx - count.width / 2, barTop + 4));

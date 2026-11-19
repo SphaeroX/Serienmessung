@@ -38,12 +38,19 @@ class SimStation {
   const SimStation({
     required this.name,
     required this.machines,
+    this.waitForSlowest = false,
     this.bufferBefore,
     this.conveyorBefore,
   });
 
   final String name;
   final List<SimMachine> machines;
+
+  /// The machines each make a part of one unit instead of sharing the
+  /// work: the station takes one part, all machines start together, and
+  /// the part moves on when the slowest machine is done. While one of them
+  /// is stopped the station takes no new part.
+  final bool waitForSlowest;
   final SimBuffer? bufferBefore;
 
   /// Conveyor from the station before; a buffer at the same place stores
@@ -201,6 +208,12 @@ class _Machine {
 
   bool isDown(int t) => t >= downFrom && t < downUntil;
 
+  /// End of the stop that keeps the machine from taking work.
+  int get stoppedUntil => downUntil;
+
+  /// The machines that do the work: the machine itself.
+  late final List<_Machine> workers = [this];
+
   /// Stops the machine at [t] for [duration] and returns the stopped time
   /// it adds: a stop during another one counts only where it lasts longer.
   int stop(int t, int duration) {
@@ -232,6 +245,34 @@ class _Machine {
   /// Time between [from] and [to] the machine was not stopped.
   int runningIn(int from, int to) =>
       to > from ? to - from - stoppedIn(from, to) : 0;
+}
+
+/// The machines of a station that waits for its slowest machine, handled
+/// as one machine: it takes a part when all of them are free and running,
+/// and is done when the last of them is done. Work, blocked and stopped
+/// time are still counted per machine.
+class _Joint extends _Machine {
+  _Joint(this.members)
+    : super(
+        members.map((m) => m.cycle).reduce((a, b) => a > b ? a : b),
+        const [],
+      );
+
+  final List<_Machine> members;
+
+  @override
+  bool isDown(int t) => members.any((m) => m.isDown(t));
+
+  @override
+  int get stoppedUntil =>
+      members.map((m) => m.downUntil).reduce((a, b) => a > b ? a : b);
+
+  @override
+  List<_Machine> get workers => members;
+
+  /// When the last machine is done with the part in work.
+  int get doneAt =>
+      members.map((m) => m.busyUntil).reduce((a, b) => a > b ? a : b);
 }
 
 class _Conveyor {
@@ -283,6 +324,10 @@ class _Buffer {
 /// station takes it), the line starts empty. Of several free machines of a
 /// station the fastest takes the next part.
 ///
+/// A station that waits for its slowest machine ([SimStation.waitForSlowest])
+/// works like one machine: it takes one part, and the part moves on when
+/// all of its machines are done.
+///
 /// A buffer before a station is a machine of its own with one place in
 /// front of the station. It stores a waiting part only on a real jam – when
 /// the station cannot take the part before the buffer could have stored and
@@ -305,6 +350,7 @@ class LineSimulation {
       if (st.measured)
         SimStation(
           name: st.name,
+          waitForSlowest: st.waitsForSlowest,
           machines: [
             for (final m in st.measuredMachines)
               SimMachine(
@@ -339,6 +385,7 @@ class LineSimulation {
       SimStation(
         name: s.name,
         machines: s.machines,
+        waitForSlowest: s.waitForSlowest,
         conveyorBefore: s.conveyorBefore,
       ),
   ]);
@@ -403,6 +450,18 @@ class LineSimulation {
       for (final s in stations)
         [for (final m in s.machines) _Machine(m.cycleMicros, m.specialCycles)],
     ];
+    // What takes and passes on parts: the machines, or all machines of a
+    // station that waits for its slowest machine as one.
+    final joints = [
+      for (var si = 0; si < stations.length; si++)
+        stations[si].waitForSlowest && machines[si].length > 1
+            ? _Joint(machines[si])
+            : null,
+    ];
+    final units = [
+      for (var si = 0; si < stations.length; si++)
+        joints[si] == null ? machines[si] : <_Machine>[joints[si]!],
+    ];
     // Stops of all machines (planned stops and failures), by start time:
     // (start, duration, station, machine).
     final stops = <(int, int, int, int)>[
@@ -437,25 +496,52 @@ class LineSimulation {
     var output = 0;
     final last = stations.length - 1;
 
-    void start(_Machine m, int t) {
-      final from = m.isDown(t) ? m.downUntil : t;
-      m.parts += 1;
-      var time = m.cycle;
-      for (final c in m.specialCycles) {
-        if (c.kind == SpecialCycleKind.parts &&
-            c.interval > 0 &&
-            m.parts % c.interval == 0) {
-          time += c.durationMicros;
+    void start(_Machine u, int t) {
+      for (final m in u.workers) {
+        final from = m.isDown(t) ? m.downUntil : t;
+        m.parts += 1;
+        var time = m.cycle;
+        for (final c in m.specialCycles) {
+          if (c.kind == SpecialCycleKind.parts &&
+              c.interval > 0 &&
+              m.parts % c.interval == 0) {
+            time += c.durationMicros;
+          }
         }
+        m.phase = _Phase.busy;
+        m.workFrom = from;
+        m.busyUntil = from + time;
       }
-      m.phase = _Phase.busy;
-      m.workFrom = from;
-      m.busyUntil = from + time;
+      if (u is _Joint) {
+        u
+          ..phase = _Phase.busy
+          ..workFrom = t
+          ..busyUntil = u.doneAt;
+      }
     }
 
-    void release(_Machine m, int t) {
-      m.blocked += m.runningIn(m.holdSince, t);
-      m.phase = _Phase.idle;
+    // Counts the work on the current part up to [until]; a machine of a
+    // waiting station that is done earlier only waits from then on.
+    void worked(_Machine u, int until) {
+      for (final m in u.workers) {
+        m.busy += m.runningIn(
+          m.workFrom,
+          m.busyUntil < until ? m.busyUntil : until,
+        );
+        if (!identical(m, u)) m.phase = _Phase.idle;
+      }
+    }
+
+    // Counts the time the finished part has waited up to [until].
+    void held(_Machine u, int until) {
+      for (final m in u.workers) {
+        m.blocked += m.runningIn(u.holdSince, until);
+      }
+    }
+
+    void release(_Machine u, int t) {
+      held(u, t);
+      u.phase = _Phase.idle;
     }
 
     bool available(_Machine m, int t) => m.phase == _Phase.idle && !m.isDown(t);
@@ -476,7 +562,7 @@ class LineSimulation {
     // later. A machine waiting with a finished part is free when the
     // station behind it takes that part.
     List<int> takeTimes(int si, int count, int t) {
-      final own = machines[si];
+      final own = units[si];
       final holders = waiting(own);
       var leave = const <int>[];
       if (holders.isNotEmpty) {
@@ -495,7 +581,7 @@ class LineSimulation {
       final free = [
         for (final m in own)
           switch (m.phase) {
-            _Phase.idle => m.isDown(t) ? m.downUntil - t : 0,
+            _Phase.idle => m.isDown(t) ? m.stoppedUntil - t : 0,
             _Phase.busy => m.busyUntil - t,
             _Phase.holding => leave[holders.indexOf(m)],
           },
@@ -523,7 +609,7 @@ class LineSimulation {
       while (changed) {
         changed = false;
         for (var si = last; si >= 0; si--) {
-          final own = machines[si];
+          final own = units[si];
           if (si == 0) {
             for (final m in own) {
               if (available(m, t)) {
@@ -538,7 +624,7 @@ class LineSimulation {
             for (final m in own)
               if (available(m, t)) m,
           ]..sort((a, b) => a.cycle.compareTo(b.cycle));
-          final holders = waiting(machines[si - 1]);
+          final holders = waiting(units[si - 1]);
           final b = buffers[si];
           final c = conveyors[si];
           // A retrieved part waiting in front of the station is older than
@@ -627,12 +713,12 @@ class LineSimulation {
         if (next == null || v < next!) next = v;
       }
 
-      for (final row in machines) {
+      for (final row in units) {
         for (final m in row) {
           if (m.phase == _Phase.busy) consider(m.busyUntil);
           // An idle machine may take work again after its repair.
-          if (m.phase == _Phase.idle && m.downUntil > now) {
-            consider(m.downUntil);
+          if (m.phase == _Phase.idle && m.stoppedUntil > now) {
+            consider(m.stoppedUntil);
           }
         }
       }
@@ -660,11 +746,16 @@ class LineSimulation {
         if (m.phase == _Phase.busy && m.busyUntil > t) {
           m.busyUntil += extra;
         }
+        // A waiting station is done when its last machine is done.
+        final joint = joints[si];
+        if (joint != null && joint.phase == _Phase.busy) {
+          joint.busyUntil = joint.doneAt;
+        }
       }
       for (var si = 0; si <= last; si++) {
-        for (final m in machines[si]) {
+        for (final m in units[si]) {
           if (m.phase == _Phase.busy && m.busyUntil == t) {
-            m.busy += m.runningIn(m.workFrom, t);
+            worked(m, t);
             if (si == last) {
               output++;
               m.phase = _Phase.idle;
@@ -694,12 +785,12 @@ class LineSimulation {
     }
 
     // Close the open intervals at the horizon.
-    for (final row in machines) {
+    for (final row in units) {
       for (final m in row) {
         if (m.phase == _Phase.holding) {
-          m.blocked += m.runningIn(m.holdSince, h);
+          held(m, h);
         } else if (m.phase == _Phase.busy) {
-          m.busy += m.runningIn(m.workFrom, h);
+          worked(m, h);
         }
       }
     }

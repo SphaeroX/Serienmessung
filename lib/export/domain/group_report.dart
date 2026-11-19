@@ -53,6 +53,7 @@ class LineReportLabels {
     this.buffers,
     this.specials,
     this.cells,
+    this.waitsForSlowest,
   });
 
   LineReportLabels _with({
@@ -60,6 +61,7 @@ class LineReportLabels {
     BufferReportLabels? buffers,
     SpecialReportLabels? specials,
     CellReportLabels? cells,
+    String? waitsForSlowest,
   }) => LineReportLabels(
     contents: contents,
     lineAnalysis: lineAnalysis,
@@ -78,12 +80,21 @@ class LineReportLabels {
     buffers: buffers ?? this.buffers,
     specials: specials ?? this.specials,
     cells: cells ?? this.cells,
+    waitsForSlowest: waitsForSlowest ?? this.waitsForSlowest,
   );
 
   /// Texts of the loader cell sections; without them they are left out.
   final CellReportLabels? cells;
 
   LineReportLabels withCells(CellReportLabels cells) => _with(cells: cells);
+
+  /// Marks a station of parallel machines that waits for its slowest
+  /// machine ("waits for the slowest"); without it such a station is only
+  /// marked in the Excel report ("3→1").
+  final String? waitsForSlowest;
+
+  LineReportLabels withWaitsForSlowest(String waitsForSlowest) =>
+      _with(waitsForSlowest: waitsForSlowest);
 
   /// Texts of the special cycles table; without them it is left out.
   final SpecialReportLabels? specials;
@@ -343,6 +354,7 @@ class GroupReportInput {
         cellLoader: x.study.isCellLoader,
         cellParts: x.study.cellParts,
         cellMachines: x.study.cellMachines,
+        waitForSlowest: x.study.waitForSlowest,
         buffer: x.study.hasBuffer
             ? LineBuffer(
                 capacity: x.study.bufferCapacity,

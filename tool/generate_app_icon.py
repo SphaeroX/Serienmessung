@@ -3,6 +3,7 @@
 Outputs:
   - assets/branding/app_icon.svg            master artwork (full bleed square)
   - assets/branding/app_icon_512.png        store / README icon
+  - assets/branding/app_icon_1024.png       App Store icon (RGB, no alpha)
   - android/.../drawable/ic_launcher_background.xml   adaptive background
   - android/.../drawable/ic_launcher_foreground.xml   adaptive foreground
   - android/.../drawable/ic_launcher_monochrome.xml   themed icon (Android 13+)
@@ -369,6 +370,10 @@ def main():
         img.save(os.path.join(RES, f"mipmap-{density}", "ic_launcher.png"))
     render(512, viewport=78, offset=15, mask="square").save(
         os.path.join(BRANDING, "app_icon_512.png")
+    )
+    # The App Store rejects icons with an alpha channel.
+    render(1024, viewport=78, offset=15, mask="square").convert("RGB").save(
+        os.path.join(BRANDING, "app_icon_1024.png")
     )
 
     write(

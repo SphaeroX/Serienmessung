@@ -1,3 +1,5 @@
+import 'package:sqflite/sqflite.dart';
+
 import '../../core/database.dart';
 import '../../study/data/study_repository.dart';
 import '../domain/stations.dart';
@@ -71,7 +73,7 @@ class GroupRepository {
   /// from its group.
   Future<void> moveToGroup(int studyId, int? groupId) =>
       _db.db.transaction((txn) async {
-        await StudyRepository.handOverStation(txn, studyId);
+        final left = await StudyRepository.handOverStation(txn, studyId);
         final position = groupId == null
             ? 0
             : await StudyRepository.nextGroupPosition(txn, groupId);
@@ -82,47 +84,112 @@ class GroupRepository {
             'group_position': position,
             'parallel': 0,
             ..._noCell,
+            StudyRepository.waitColumn: 0,
             ..._noBuffer,
           },
           where: 'id = ?',
           whereArgs: [studyId],
         );
+        if (left != null) await StudyRepository.tidyStations(txn, left);
       });
 
   /// Marks study [studyId] as working in parallel with the group member
   /// before it.
   ///
   /// A member working in parallel is no station of its own, so it loses
-  /// its buffer.
+  /// its buffer; its station follows the option of the station it joins. A
+  /// member switched back to serial keeps the option of the station it
+  /// leaves for itself and the machines behind it.
   ///
   /// Either way the member is no loader of a cell (any more), see
   /// [setCellLoader].
-  Future<void> setParallel(int studyId, bool parallel) => _db.db.update(
-    'study',
-    {
-      'parallel': parallel ? 1 : 0,
-      'cell_loader': 0,
-      if (parallel) ..._noBuffer,
-    },
-    where: 'id = ?',
-    whereArgs: [studyId],
-  );
+  Future<void> setParallel(int studyId, bool parallel) =>
+      _db.db.transaction((txn) async {
+        final station = await _stationOf(txn, studyId);
+        await txn.update(
+          'study',
+          {
+            'parallel': parallel ? 1 : 0,
+            'cell_loader': 0,
+            if (parallel) ..._noBuffer,
+            if (!parallel && station != null)
+              StudyRepository.waitColumn: station.waits ? 1 : 0,
+          },
+          where: 'id = ?',
+          whereArgs: [studyId],
+        );
+        if (station != null) {
+          await StudyRepository.tidyStations(txn, station.groupId);
+        }
+      });
+
+  /// Sets whether the station of study [studyId] (any of its machines)
+  /// waits for its slowest machine: the parallel machines each make a part
+  /// of one unit instead of sharing the work. Nothing happens for a
+  /// station with a single machine and for a loader cell.
+  Future<void> setWaitForSlowest(int studyId, bool wait) =>
+      _db.db.transaction((txn) async {
+        final station = await _stationOf(txn, studyId);
+        if (station == null || station.ids.length < 2 || station.isCell) {
+          return;
+        }
+        await txn.update(
+          'study',
+          {StudyRepository.waitColumn: wait ? 1 : 0},
+          where: 'id = ?',
+          whereArgs: [station.ids.first],
+        );
+      });
+
+  /// The station of group member [studyId]: its machines in order,
+  /// whether it waits for its slowest machine and whether it is a loader
+  /// cell. Null without a group.
+  static Future<({int groupId, List<int> ids, bool waits, bool isCell})?>
+  _stationOf(DatabaseExecutor db, int studyId) async {
+    final groupId = await StudyRepository.groupOf(db, studyId);
+    if (groupId == null) return null;
+    final members = await db.query(
+      'study',
+      columns: ['id', 'parallel', 'cell_loader', StudyRepository.waitColumn],
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+      orderBy: 'group_position, id',
+    );
+    final station = stationGroups([for (final m in members) m['parallel'] == 1])
+        .firstWhere((s) => s.any((k) => members[k]['id'] == studyId));
+    return (
+      groupId: groupId,
+      ids: [for (final k in station) members[k]['id'] as int],
+      waits: members[station.first][StudyRepository.waitColumn] == 1,
+      isCell: station.skip(1).any((k) => members[k]['cell_loader'] == 1),
+    );
+  }
 
   /// Makes study [studyId] a loader of the station of the group member
   /// before it, which turns that station into a loader cell: the loader
   /// serves the station's machines instead of being a machine itself. Like
   /// a parallel machine it is no station of its own (no buffer, no
   /// conveyor). Switching the role off makes it a station of its own.
-  Future<void> setCellLoader(int studyId, bool loader) => _db.db.update(
-    'study',
-    {
-      'parallel': loader ? 1 : 0,
-      'cell_loader': loader ? 1 : 0,
-      if (loader) ..._noBuffer,
-    },
-    where: 'id = ?',
-    whereArgs: [studyId],
-  );
+  ///
+  /// A loader cell never waits for its slowest machine, see
+  /// [StudyRepository.tidyStations].
+  Future<void> setCellLoader(int studyId, bool loader) =>
+      _db.db.transaction((txn) async {
+        await txn.update(
+          'study',
+          {
+            'parallel': loader ? 1 : 0,
+            'cell_loader': loader ? 1 : 0,
+            if (loader) ..._noBuffer,
+          },
+          where: 'id = ?',
+          whereArgs: [studyId],
+        );
+        final groupId = await StudyRepository.groupOf(txn, studyId);
+        if (groupId != null) {
+          await StudyRepository.tidyStations(txn, groupId);
+        }
+      });
 
   /// Parts the loader [studyId] handles per own cycle (at least 1).
   Future<void> setCellParts(int studyId, int parts) =>
@@ -202,9 +269,10 @@ class GroupRepository {
   ///
   /// With [moved] (the one member that changed its place) the stations are
   /// kept together, see [parallelAfterMove]: a first machine that moves
-  /// away hands its station (with buffer and conveyor) to the next machine,
-  /// a member dropped inside a station joins it (and loses its own buffer
-  /// and conveyor), anywhere else it becomes a station of its own.
+  /// away hands its station (with buffer, conveyor and the option to wait
+  /// for the slowest machine) to the next machine, a member dropped inside
+  /// a station joins it (and loses its own buffer and conveyor), anywhere
+  /// else it becomes a station of its own.
   Future<void> reorder(
     int groupId,
     List<int> studyIdsInOrder, {
@@ -212,7 +280,12 @@ class GroupRepository {
   }) => _db.db.transaction((txn) async {
     final members = await txn.query(
       'study',
-      columns: ['id', 'parallel', ...StudyRepository.stationLinkColumns],
+      columns: [
+        'id',
+        'parallel',
+        StudyRepository.waitColumn,
+        ...StudyRepository.stationLinkColumns,
+      ],
       where: 'group_id = ?',
       whereArgs: [groupId],
       orderBy: 'group_position, id',
@@ -247,12 +320,15 @@ class GroupRepository {
     }
     if (move == null) return;
     final newHead = move.newHead;
-    if (newHead != null && from > 0) {
+    if (newHead != null) {
       await txn.update(
         'study',
         {
-          for (final c in StudyRepository.stationLinkColumns)
-            c: members[from][c],
+          StudyRepository.waitColumn: members[from][StudyRepository.waitColumn],
+          // Nothing stands before the first station of a line.
+          if (from > 0)
+            for (final c in StudyRepository.stationLinkColumns)
+              c: members[from][c],
         },
         where: 'id = ?',
         whereArgs: [studyIdsInOrder[newHead]],
@@ -261,8 +337,14 @@ class GroupRepository {
     // The buffer stays with the station the member left; a member that
     // joins a station is no station of its own.
     if (newHead != null || move.parallel[to]) {
-      await txn.update('study', _noBuffer, where: 'id = ?', whereArgs: [moved]);
+      await txn.update(
+        'study',
+        {..._noBuffer, StudyRepository.waitColumn: 0},
+        where: 'id = ?',
+        whereArgs: [moved],
+      );
     }
+    await StudyRepository.tidyStations(txn, groupId);
   });
 
   static bool _equal(List<int> a, List<int> b) {

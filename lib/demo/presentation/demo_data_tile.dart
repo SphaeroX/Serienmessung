@@ -23,6 +23,8 @@ DemoTexts demoTextsOf(AppLocalizations l) => DemoTexts(
   measurePart: l.demoMeasurePart,
   toolChange: l.demoToolChange,
   washer: l.demoWasher,
+  coverPress: l.demoCoverPress,
+  sealCutter: l.demoSealCutter,
   assembly: l.demoAssembly,
   assemblySteps: [
     l.demoStepPickHousing,

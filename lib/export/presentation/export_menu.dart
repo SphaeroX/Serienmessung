@@ -103,6 +103,7 @@ LineReportLabels lineReportLabels(AppLocalizations l) => LineReportLabels(
   sheet: l.reportSheet,
   backToContents: l.reportBackToContents,
   studies: l.reportStudies,
+  waitsForSlowest: l.reportWaitsForSlowest,
   specials: SpecialReportLabels(
     title: l.specialCycles,
     machine: l.reportMachine,

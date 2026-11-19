@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/database.dart';
+import '../../group/domain/stations.dart';
 import '../domain/step_text_sync.dart';
 import '../domain/study.dart';
 
@@ -98,9 +99,58 @@ class StudyRepository {
   }
 
   Future<void> deleteStudy(int id) => _db.db.transaction((txn) async {
-    await handOverStation(txn, id);
+    final groupId = await handOverStation(txn, id);
     await txn.delete('study', where: 'id = ?', whereArgs: [id]);
+    if (groupId != null) await tidyStations(txn, groupId);
   });
+
+  /// Group of study [studyId], null without one.
+  static Future<int?> groupOf(DatabaseExecutor db, int studyId) async {
+    final rows = await db.query(
+      'study',
+      columns: ['group_id'],
+      where: 'id = ?',
+      whereArgs: [studyId],
+    );
+    return rows.isEmpty ? null : rows.first['group_id'] as int?;
+  }
+
+  /// Station option "wait for the slowest machine", stored on the first
+  /// member of a station with several machines.
+  static const waitColumn = 'wait_for_slowest';
+
+  /// Call after the stations of group [groupId] changed (a member left,
+  /// moved or switched between parallel and serial): drops the option
+  /// [waitColumn] wherever it has no meaning – on machines that are not
+  /// the first of their station, on stations with a single machine and on
+  /// loader cells (a station with a loader). So a station never starts
+  /// waiting again because of a forgotten flag.
+  static Future<void> tidyStations(DatabaseExecutor db, int groupId) async {
+    final members = await db.query(
+      'study',
+      columns: ['id', 'parallel', 'cell_loader', waitColumn],
+      where: 'group_id = ?',
+      whereArgs: [groupId],
+      orderBy: 'group_position, id',
+    );
+    final stations = stationGroups([
+      for (final m in members) m['parallel'] == 1,
+    ]);
+    for (final station in stations) {
+      final isCell = station.skip(1).any((k) => members[k]['cell_loader'] == 1);
+      for (final k in station) {
+        final keep = k == station.first && station.length > 1 && !isCell;
+        if (!keep && members[k][waitColumn] == 1) {
+          await db.update(
+            'study',
+            {waitColumn: 0},
+            where: 'id = ?',
+            whereArgs: [members[k]['id']],
+          );
+        }
+      }
+    }
+  }
 
   /// Columns of what stands before a station (stored on its first member).
   static const stationLinkColumns = [
@@ -114,34 +164,33 @@ class StudyRepository {
   /// Call before study [studyId] leaves its group (removed, moved to
   /// another group or deleted): if it is the first machine of a station
   /// with parallel machines, the next machine becomes the first one and
-  /// takes over the buffer and the conveyor before the station. Otherwise
-  /// that machine would silently work in parallel with the station before.
-  static Future<void> handOverStation(DatabaseExecutor db, int studyId) async {
-    final rows = await db.query(
-      'study',
-      columns: ['group_id'],
-      where: 'id = ?',
-      whereArgs: [studyId],
-    );
-    final groupId = rows.isEmpty ? null : rows.first['group_id'] as int?;
-    if (groupId == null) return;
+  /// takes over the buffer and the conveyor before the station and the
+  /// station option [waitColumn]. Otherwise that machine would silently
+  /// work in parallel with the station before.
+  ///
+  /// Returns the group the study is in (null without one); call
+  /// [tidyStations] for it once the study has left.
+  static Future<int?> handOverStation(DatabaseExecutor db, int studyId) async {
+    final groupId = await groupOf(db, studyId);
+    if (groupId == null) return null;
     final members = await db.query(
       'study',
-      columns: ['id', 'parallel', ...stationLinkColumns],
+      columns: ['id', 'parallel', waitColumn, ...stationLinkColumns],
       where: 'group_id = ?',
       whereArgs: [groupId],
       orderBy: 'group_position, id',
     );
     final i = members.indexWhere((m) => m['id'] == studyId);
     final isHead = i == 0 || members[i]['parallel'] != 1;
-    if (!isHead || i + 1 >= members.length) return;
+    if (!isHead || i + 1 >= members.length) return groupId;
     final next = members[i + 1];
-    if (next['parallel'] != 1) return;
+    if (next['parallel'] != 1) return groupId;
     await db.update(
       'study',
       {
         'parallel': 0,
         'cell_loader': 0,
+        waitColumn: members[i][waitColumn],
         // Nothing stands before the first station of a line.
         if (i > 0)
           for (final c in stationLinkColumns) c: members[i][c],
@@ -149,6 +198,7 @@ class StudyRepository {
       where: 'id = ?',
       whereArgs: [next['id']],
     );
+    return groupId;
   }
 
   Future<void> updateStudy(
@@ -333,6 +383,7 @@ class StudyRepository {
       ..['cell_loader'] = 0
       ..['cell_parts'] = 1
       ..['cell_machines'] = 1
+      ..[waitColumn] = 0
       ..['buffer_capacity'] = 0
       ..['buffer_store_us'] = 0
       ..['buffer_retrieve_us'] = 0
@@ -507,6 +558,7 @@ class StudyRepository {
     groupPosition: r['group_position'] as int? ?? 0,
     revision: r['revision'] as int? ?? 1,
     parallel: (r['parallel'] as int? ?? 0) == 1,
+    waitForSlowest: (r[waitColumn] as int? ?? 0) == 1,
     bufferCapacity: r['buffer_capacity'] as int? ?? 0,
     bufferStoreMicros: r['buffer_store_us'] as int? ?? 0,
     bufferRetrieveMicros: r['buffer_retrieve_us'] as int? ?? 0,

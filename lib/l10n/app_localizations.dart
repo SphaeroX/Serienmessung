@@ -1967,7 +1967,7 @@ abstract class AppLocalizations {
   /// No description provided for @failureRiskHint.
   ///
   /// In en, this message translates to:
-  /// **'Output of the line while one machine is down. Parallel machines take over part of the work; a station with a single machine stops the whole line.'**
+  /// **'Output of the line while one machine is down. Parallel machines take over part of the work; a station with a single machine stops the whole line, and so does every machine of a station that waits for its slowest machine.'**
   String get failureRiskHint;
 
   /// No description provided for @singlePointsOfFailure.
@@ -2093,7 +2093,7 @@ abstract class AppLocalizations {
   /// No description provided for @simulationHint.
   ///
   /// In en, this message translates to:
-  /// **'Plays the line through with the real cycle times: parallel machines share the work, a part waits when the next station is busy, buffers store parts on a jam and empty themselves again.'**
+  /// **'Plays the line through with the real cycle times: parallel machines share the work or wait for the slowest one, a part waits when the next station is busy, buffers store parts on a jam and empty themselves again.'**
   String get simulationHint;
 
   /// No description provided for @simulationPeriod.
@@ -2947,6 +2947,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete the group \"{name}\" and its {count, plural, =1{study} other{{count} studies}} including all measurements? This cannot be undone.'**
   String deleteGroupWithStudiesConfirm(String name, int count);
+
+  /// No description provided for @waitForSlowest.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait for the slowest machine'**
+  String get waitForSlowest;
+
+  /// No description provided for @stationWaitsForSlowest.
+  ///
+  /// In en, this message translates to:
+  /// **'Station waits for its slowest machine'**
+  String get stationWaitsForSlowest;
+
+  /// No description provided for @lineWaitingMachines.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} machines in parallel, waiting for the slowest'**
+  String lineWaitingMachines(int count);
+
+  /// No description provided for @reportWaitsForSlowest.
+  ///
+  /// In en, this message translates to:
+  /// **'waits for the slowest'**
+  String get reportWaitsForSlowest;
+
+  /// No description provided for @demoCoverPress.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover press'**
+  String get demoCoverPress;
+
+  /// No description provided for @demoSealCutter.
+  ///
+  /// In en, this message translates to:
+  /// **'Seal cutter'**
+  String get demoSealCutter;
+
+  /// No description provided for @selectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectedCount(int count);
+
+  /// No description provided for @selectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get selectAll;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @importShared.
+  ///
+  /// In en, this message translates to:
+  /// **'Import studies or groups'**
+  String get importShared;
+
+  /// No description provided for @importResult.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing new imported.} =1{1 study imported.} other{{count} studies imported.}}'**
+  String importResult(int count);
+
+  /// No description provided for @importSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 was already present.} other{{count} were already present.}}'**
+  String importSkipped(int count);
+
+  /// No description provided for @importInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This file cannot be imported. Nothing was changed.'**
+  String get importInvalid;
+
+  /// No description provided for @importTooNew.
+  ///
+  /// In en, this message translates to:
+  /// **'This file was created by a newer app version. Please update the app.'**
+  String get importTooNew;
+
+  /// No description provided for @deleteStudiesConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Delete 1 study including all measurements?} other{Delete {count} studies including all measurements?}}'**
+  String deleteStudiesConfirm(int count);
+
+  /// No description provided for @deleteGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete groups'**
+  String get deleteGroups;
+
+  /// No description provided for @deleteGroupsConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Delete 1 group. Keep its studies without a group, or delete them too?} other{Delete {count} groups. Keep their studies without a group, or delete them too?}}'**
+  String deleteGroupsConfirm(int count);
+
+  /// No description provided for @deleteGroupsKeepStudies.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep studies'**
+  String get deleteGroupsKeepStudies;
+
+  /// No description provided for @deleteGroupsWithStudies.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete studies too'**
+  String get deleteGroupsWithStudies;
+
+  /// No description provided for @shareGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Share group'**
+  String get shareGroup;
 }
 
 class _AppLocalizationsDelegate

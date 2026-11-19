@@ -34,6 +34,7 @@ class Study {
     this.groupPosition = 0,
     this.revision = 1,
     this.parallel = false,
+    this.waitForSlowest = false,
     this.bufferCapacity = 0,
     this.bufferStoreMicros = 0,
     this.bufferRetrieveMicros = 0,
@@ -77,6 +78,12 @@ class Study {
   /// Works in parallel with the group member before it (same station of
   /// the line, e.g. one of several identical machines).
   final bool parallel;
+
+  /// The station this study is the first machine of waits for its slowest
+  /// machine: its parallel machines each make a part of one unit (e.g.
+  /// parts that are joined afterwards) instead of sharing the work. Only
+  /// set on the first machine of a station with several machines.
+  final bool waitForSlowest;
 
   /// Places of the buffer before this station of the group (0 = none). The
   /// buffer stores parts only when this station is busy (jam), its own time

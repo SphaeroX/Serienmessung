@@ -25,7 +25,9 @@ class MachineFailure {
 /// Failure scenarios of a line: for every measured machine the output of
 /// the line while that machine is down. The line runs at the pace of its
 /// slowest station; a station keeps the capacity of its remaining parallel
-/// machines, and a station without a remaining machine stops the line.
+/// machines, and a station without a remaining machine stops the line. A
+/// station that waits for its slowest machine needs all of them: each of
+/// its machines stops the line.
 class FailureRisk {
   const FailureRisk({required this.baseOutput, required this.failures});
 
@@ -40,19 +42,23 @@ class FailureRisk {
       for (final s in line.stations)
         if (s.measured) s,
     ];
+    // Capacity of an intact station.
+    double intact(LineStation st) => st.waitsForSlowest
+        ? hour / st.cycleTime!
+        : capacity([for (final m in st.measuredMachines) m.cycleTime!]);
     final failures = <MachineFailure>[];
     for (final s in stations) {
       final machines = s.measuredMachines;
       for (var k = 0; k < machines.length; k++) {
         var output = double.infinity;
         for (final other in stations) {
-          final left = identical(other, s)
-              ? capacity([
+          final left = !identical(other, s)
+              ? intact(other)
+              : s.waitsForSlowest
+              ? 0.0
+              : capacity([
                   for (var j = 0; j < machines.length; j++)
                     if (j != k) machines[j].cycleTime!,
-                ])
-              : capacity([
-                  for (final m in other.measuredMachines) m.cycleTime!,
                 ]);
           if (left < output) output = left;
         }
@@ -86,9 +92,19 @@ class FailureRisk {
   /// Scenarios sorted by loss (largest first).
   final List<MachineFailure> failures;
 
-  /// Stations whose only machine stops the whole line when it fails.
-  List<LineStation> get singlePoints => [
-    for (final f in failures)
-      if (f.standstill && f.station.measuredMachines.length == 1) f.station,
-  ];
+  /// Stations without a spare machine, in the order of [failures]: their
+  /// only machine – or, if the station waits for its slowest machine, each
+  /// of its machines – stops the whole line when it fails.
+  List<LineStation> get singlePoints {
+    final stations = <LineStation>[];
+    for (final f in failures) {
+      final st = f.station;
+      if (f.standstill &&
+          (st.waitsForSlowest || st.measuredMachines.length == 1) &&
+          !stations.any((x) => identical(x, st))) {
+        stations.add(st);
+      }
+    }
+    return stations;
+  }
 }

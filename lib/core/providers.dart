@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../backup/platform/incoming_files.dart';
 import '../group/data/group_repository.dart';
 import '../group/data/machine_service.dart';
 import '../group/data/special_cycle_repository.dart';
@@ -98,6 +99,11 @@ final videoFilesProvider = Provider<VideoFiles>(
 /// Opens web links in the browser (platform channel on Android and iOS).
 final urlOpenerProvider = Provider<UrlOpener>(
   (ref) => const AndroidUrlOpener(),
+);
+
+/// Files opened with the app or shared to it (Android and iOS).
+final incomingFilesProvider = Provider<IncomingFiles>(
+  (ref) => PlatformIncomingFiles(),
 );
 
 /// Volume keys (Android platform channel); silent where the platform cannot

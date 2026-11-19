@@ -346,9 +346,12 @@ void _writeLine(
     final measured =
         (refs.isNotEmpty || station.isCell) && station.cycleTime != null;
     final prev = station.previousCycleTime;
-    // Parallel machines add their capacities: 1 / (1/t1 + 1/t2 + ...).
+    // Parallel machines add their capacities: 1 / (1/t1 + 1/t2 + ...);
+    // a station that waits for its slowest machine takes the maximum.
     final cycleFormula = refs.length == 1
         ? refs.single
+        : station.waitsForSlowest
+        ? 'MAX(${refs.join(',')})'
         : '1/(${[for (final r in refs) '1/${r.contains('/') ? '($r)' : r}'].join('+')})';
     sh.row([
       IntCellValue(k + 1),
@@ -357,7 +360,13 @@ void _writeLine(
               names[groups[k].single],
               g.entries[groups[k].single].study.name,
             )
-          : t(_stationName(station, _machineCount(station, groups[k].length))),
+          : t(
+              _stationName(
+                station,
+                _machineCount(station, groups[k].length),
+                ll,
+              ),
+            ),
       !measured
           ? null
           : station.isCell
@@ -410,7 +419,7 @@ void _writeLine(
       final c = st.conveyorBefore;
       sh.row([
         IntCellValue(st.position + 1),
-        t(_stationName(st, _machineCount(st, groups[st.position].length))),
+        t(_stationName(st, _machineCount(st, groups[st.position].length), ll)),
         b == null ? null : IntCellValue(b.capacity),
         b == null ? null : time(b.storeMicros),
         b == null ? null : time(b.retrieveMicros),
@@ -499,9 +508,17 @@ void _writeLine(
 }
 
 /// Name of a station of [machines] machines: parallel machines get their
-/// number (`A / B (×2)`).
-String _stationName(LineStation station, int machines) =>
-    machines == 1 ? station.name : '${station.name} (×$machines)';
+/// number (`A / B (×2)`); a station that waits for its slowest machine is
+/// marked with the text for it (`A / B (2, waits for the slowest)`) or,
+/// without one, as `A / B (2→1)`.
+String _stationName(LineStation station, int machines, LineReportLabels ll) {
+  if (machines == 1) return station.name;
+  if (!station.waitsForSlowest) return '${station.name} (×$machines)';
+  final text = ll.waitsForSlowest;
+  return text == null
+      ? '${station.name} ($machines→1)'
+      : '${station.name} ($machines, $text)';
+}
 
 /// Machines of a station with [members] group members: all of them, or for
 /// a loader cell the machines its loaders serve.

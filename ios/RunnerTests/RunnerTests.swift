@@ -78,3 +78,53 @@ private final class RecordingUrlOpener {
     completion(succeeds)
   }
 }
+
+final class IncomingFilesTests: XCTestCase {
+  private let url = URL(fileURLWithPath: "/tmp/line.json")
+
+  func testTake_ReceivedFiles_ReturnsTheirContentOnce() {
+    let files = IncomingFiles(read: { _ in "{\"format\":\"cyclescope-backup\"}" })
+    files.receive(url)
+
+    XCTAssertEqual(take(files) as? [String], ["{\"format\":\"cyclescope-backup\"}"])
+    XCTAssertEqual(take(files) as? [String], [])
+  }
+
+  func testReceive_ReadableFile_TellsDartFilesWait() {
+    let files = IncomingFiles(read: { _ in "x" })
+    var told = 0
+    files.onFilesWaiting = { told += 1 }
+
+    files.receive(url)
+
+    XCTAssertEqual(told, 1)
+  }
+
+  func testReceive_UnreadableFile_KeepsNothingAndStaysQuiet() {
+    let files = IncomingFiles(read: { _ in nil })
+    var told = 0
+    files.onFilesWaiting = { told += 1 }
+
+    files.receive(url)
+
+    XCTAssertEqual(told, 0)
+    XCTAssertEqual(take(files) as? [String], [])
+  }
+
+  func testHandle_UnknownMethod_ReturnsNotImplemented() throws {
+    var received: Any?
+    IncomingFiles(read: { _ in nil }).handle(
+      FlutterMethodCall(methodName: "unknownMethod", arguments: nil)
+    ) { received = $0 }
+
+    XCTAssertTrue((try XCTUnwrap(received) as AnyObject) === FlutterMethodNotImplemented)
+  }
+
+  private func take(_ files: IncomingFiles) -> Any? {
+    var received: Any?
+    files.handle(FlutterMethodCall(methodName: "takeIncomingFiles", arguments: nil)) {
+      received = $0
+    }
+    return received
+  }
+}

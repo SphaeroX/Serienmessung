@@ -504,7 +504,12 @@ List<pw.Widget> _lineSection(
         for (final st in line.stations)
           [
             '${st.position + 1}',
-            st.isBottleneck ? '${st.name} (${ll.bottleneck})' : st.name,
+            [
+              st.name,
+              if (st.waitsForSlowest && ll.waitsForSlowest != null)
+                '(${ll.waitsForSlowest})',
+              if (st.isBottleneck) '(${ll.bottleneck})',
+            ].join(' '),
             opt(st.cycleTime),
             st.cycleTime == null
                 ? ''

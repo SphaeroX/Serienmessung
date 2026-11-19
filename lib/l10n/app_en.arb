@@ -615,7 +615,7 @@
     }
   },
   "failureRisk": "Failure risk",
-  "failureRiskHint": "Output of the line while one machine is down. Parallel machines take over part of the work; a station with a single machine stops the whole line.",
+  "failureRiskHint": "Output of the line while one machine is down. Parallel machines take over part of the work; a station with a single machine stops the whole line, and so does every machine of a station that waits for its slowest machine.",
   "singlePointsOfFailure": "{count, plural, =1{1 station without a spare machine: its failure stops the line} other{{count} stations without a spare machine: each failure stops the line}}",
   "@singlePointsOfFailure": {
     "placeholders": {
@@ -667,7 +667,7 @@
   "shiftLength": "Shift length",
   "failureDuration": "Assumed failure duration",
   "simulation": "Simulation",
-  "simulationHint": "Plays the line through with the real cycle times: parallel machines share the work, a part waits when the next station is busy, buffers store parts on a jam and empty themselves again.",
+  "simulationHint": "Plays the line through with the real cycle times: parallel machines share the work or wait for the slowest one, a part waits when the next station is busy, buffers store parts on a jam and empty themselves again.",
   "simulationPeriod": "Period",
   "shift": "Shift",
   "custom": "Custom",
@@ -1035,5 +1035,67 @@
         "type": "int"
       }
     }
-  }
+  },
+  "waitForSlowest": "Wait for the slowest machine",
+  "stationWaitsForSlowest": "Station waits for its slowest machine",
+  "lineWaitingMachines": "{count} machines in parallel, waiting for the slowest",
+  "@lineWaitingMachines": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reportWaitsForSlowest": "waits for the slowest",
+  "demoCoverPress": "Cover press",
+  "demoSealCutter": "Seal cutter",
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectAll": "Select all",
+  "share": "Share",
+  "importShared": "Import studies or groups",
+  "importResult": "{count, plural, =0{Nothing new imported.} =1{1 study imported.} other{{count} studies imported.}}",
+  "@importResult": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importSkipped": "{count, plural, =1{1 was already present.} other{{count} were already present.}}",
+  "@importSkipped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "importInvalid": "This file cannot be imported. Nothing was changed.",
+  "importTooNew": "This file was created by a newer app version. Please update the app.",
+  "deleteStudiesConfirm": "{count, plural, =1{Delete 1 study including all measurements?} other{Delete {count} studies including all measurements?}}",
+  "@deleteStudiesConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteGroups": "Delete groups",
+  "deleteGroupsConfirm": "{count, plural, =1{Delete 1 group. Keep its studies without a group, or delete them too?} other{Delete {count} groups. Keep their studies without a group, or delete them too?}}",
+  "@deleteGroupsConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteGroupsKeepStudies": "Keep studies",
+  "deleteGroupsWithStudies": "Delete studies too",
+  "shareGroup": "Share group"
 }

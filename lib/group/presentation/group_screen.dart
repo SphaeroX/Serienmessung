@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../backup/data/backup_service.dart';
+import '../../backup/presentation/share_actions.dart';
 import '../../core/providers.dart';
 import '../../export/presentation/export_menu.dart';
 import '../../l10n/app_localizations.dart';
@@ -37,6 +39,7 @@ enum _StudyAction {
   cellLoader,
   cellMachines,
   cellParts,
+  waitForSlowest,
   cycleTime,
   buffer,
   conveyor,
@@ -46,7 +49,7 @@ enum _StudyAction {
   remove,
 }
 
-enum _GroupAction { edit, delete }
+enum _GroupAction { edit, share, delete }
 
 /// What a group member is within a loader cell.
 enum _CellRole { none, machine, loader }
@@ -157,6 +160,11 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         if (n == null) return;
         await ref.read(groupRepositoryProvider).setCellParts(study.id, n);
         await _changed();
+      case _StudyAction.waitForSlowest:
+        await ref
+            .read(groupRepositoryProvider)
+            .setWaitForSlowest(study.id, !_stationWaits(index));
+        await _changed();
       case _StudyAction.cycleTime:
         final micros = await showCycleTimeDialog(
           context,
@@ -210,6 +218,13 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
               description: fields.description,
             );
         await _changed();
+      case _GroupAction.share:
+        await shareSelection(
+          context,
+          ref,
+          ExportSelection(groupIds: {group.id}),
+          label: group.name,
+        );
       case _GroupAction.delete:
         final members = [for (final m in _members) m.study];
         // null = cancelled, otherwise whether the studies go too.
@@ -460,6 +475,11 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                 child: Text(l.editGroup),
               ),
               PopupMenuItem(
+                key: const Key('shareGroup'),
+                value: _GroupAction.share,
+                child: Text(l.shareGroup),
+              ),
+              PopupMenuItem(
                 key: const Key('deleteGroup'),
                 value: _GroupAction.delete,
                 child: Text(l.deleteGroup),
@@ -501,6 +521,16 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     );
   }
 
+  /// Index of the first machine of the station of member [index].
+  int _stationHead(int index) =>
+      stationGroups([for (final m in _members) m.study.parallel])
+          .firstWhere((station) => station.contains(index))
+          .first;
+
+  /// Whether the station of member [index] waits for its slowest machine.
+  bool _stationWaits(int index) =>
+      _members[_stationHead(index)].study.waitForSlowest;
+
   Widget _list() {
     final parallel = [for (final m in _members) m.study.parallel];
     final labels = stationLabels(parallel);
@@ -528,6 +558,8 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         cellRole: roles[i],
         // Parallel machines carry a letter ("2a").
         inStation: RegExp('[a-z]').hasMatch(labels[i]),
+        stationWaits: _stationWaits(i),
+        stationHead: _stationHead(i) == i,
         summary: _members[i],
         onTap: () => _open(_members[i].study.id),
         onAction: (a) => _studyAction(a, i),
@@ -547,6 +579,8 @@ class _MemberTile extends StatelessWidget {
     required this.count,
     required this.label,
     required this.inStation,
+    required this.stationWaits,
+    required this.stationHead,
     required this.summary,
     required this.onTap,
     required this.onAction,
@@ -574,6 +608,12 @@ class _MemberTile extends StatelessWidget {
 
   /// Part of a station with several parallel machines.
   final bool inStation;
+
+  /// The station waits for its slowest machine (only with [inStation]).
+  final bool stationWaits;
+
+  /// First machine of its station.
+  final bool stationHead;
   final StudySummary summary;
   final VoidCallback onTap;
   final ValueChanged<_StudyAction> onAction;
@@ -643,6 +683,23 @@ class _MemberTile extends StatelessWidget {
     Study study,
     ThemeData theme,
   ) {
+    final figures = Text(
+      '${study.mode.title(l)} · ${summary.cycleCount} '
+      '${study.mode == StudyMode.simple
+          ? l.lapsLabel
+          : study.mode == StudyMode.stepTimer
+          ? l.measurementsLabel
+          : l.cyclesLabel}'
+      '${specialCount > 0 ? ' · ${l.specialCycleCount(specialCount)}' : ''}'
+      '${switch (cellRole) {
+        _CellRole.none => '',
+        _CellRole.machine => '\n${l.cellRoleMachines(study.cellMachines)}',
+        _CellRole.loader => '\n${l.cellRoleLoaderParts(study.cellParts)}',
+      }}',
+    );
+    // A loader cell is no station of parallel machines: it cannot wait for
+    // its slowest machine.
+    final canWait = inStation && cellRole == _CellRole.none;
     return Card(
       margin: EdgeInsets.only(
         top: 4,
@@ -668,20 +725,21 @@ class _MemberTile extends StatelessWidget {
           '$label. ${study.name}',
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: Text(
-          '${study.mode.title(l)} · ${summary.cycleCount} '
-          '${study.mode == StudyMode.simple
-              ? l.lapsLabel
-              : study.mode == StudyMode.stepTimer
-              ? l.measurementsLabel
-              : l.cyclesLabel}'
-          '${specialCount > 0 ? ' · ${l.specialCycleCount(specialCount)}' : ''}'
-          '${switch (cellRole) {
-            _CellRole.none => '',
-            _CellRole.machine => '\n${l.cellRoleMachines(study.cellMachines)}',
-            _CellRole.loader => '\n${l.cellRoleLoaderParts(study.cellParts)}',
-          }}',
-        ),
+        subtitle: canWait && stationWaits && stationHead
+            // Said once per station, on its first machine.
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  figures,
+                  Text(
+                    l.stationWaitsForSlowest,
+                    key: Key('stationWaits_${study.id}'),
+                    style: TextStyle(color: theme.colorScheme.tertiary),
+                  ),
+                ],
+              )
+            : figures,
         trailing: PopupMenuButton<_StudyAction>(
           key: Key('groupStudyMenu_${study.id}'),
           onSelected: onAction,
@@ -723,6 +781,13 @@ class _MemberTile extends StatelessWidget {
                 key: const Key('setCellParts'),
                 value: _StudyAction.cellParts,
                 child: Text(l.cellPartsMenu),
+              ),
+            if (canWait)
+              CheckedPopupMenuItem(
+                key: const Key('toggleWaitForSlowest'),
+                value: _StudyAction.waitForSlowest,
+                checked: stationWaits,
+                child: Text(l.waitForSlowest),
               ),
             if (index > 0 && !study.parallel && !study.hasConveyor)
               PopupMenuItem(

@@ -12,6 +12,8 @@ class DemoTexts {
     required this.measurePart,
     required this.toolChange,
     required this.washer,
+    required this.coverPress,
+    required this.sealCutter,
     required this.assembly,
     required this.assemblySteps,
     required this.materialMissing,
@@ -42,6 +44,10 @@ class DemoTexts {
   final String measurePart;
   final String toolChange;
   final String washer;
+
+  /// The two machines that make the parts joined in the assembly.
+  final String coverPress;
+  final String sealCutter;
   final String assembly;
 
   /// Four steps of the assembly.

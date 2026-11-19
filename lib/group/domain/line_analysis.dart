@@ -12,6 +12,7 @@ class LineStationInput {
     required this.current,
     this.previous,
     this.parallel = false,
+    this.waitForSlowest = false,
     this.buffer,
     this.conveyor,
     this.specialCycles = const [],
@@ -49,6 +50,11 @@ class LineStationInput {
 
   /// Works in parallel with the input before it (same station).
   final bool parallel;
+
+  /// The station of this member waits for its slowest machine: its
+  /// machines each make a part of one unit (only used on a station's first
+  /// member).
+  final bool waitForSlowest;
 }
 
 /// A buffer (intermediate storage) before a station.
@@ -108,7 +114,9 @@ class LineMachine {
 }
 
 /// A station of the line: one machine, several machines working in
-/// parallel whose capacities add up, or a loader cell ([cell]).
+/// parallel, or a loader cell ([cell]). The capacities of parallel machines
+/// add up (each machine makes whole parts), unless the station
+/// [waitsForSlowest].
 class LineStation {
   const LineStation({
     required this.name,
@@ -122,6 +130,7 @@ class LineStation {
     required this.idle,
     required this.segments,
     required this.isBottleneck,
+    this.waitsForSlowest = false,
     this.bufferBefore,
     this.conveyorBefore,
     this.cell,
@@ -133,6 +142,12 @@ class LineStation {
   final LoaderCell? cell;
 
   bool get isCell => cell != null;
+
+  /// The parallel machines each make a part of one unit (e.g. parts that
+  /// are joined afterwards): the station is done when its slowest machine
+  /// is done, and it stops when one of them stops. Never set for a station
+  /// with one machine.
+  final bool waitsForSlowest;
 
   /// Conveyor between the previous station and this one.
   final LineConveyor? conveyorBefore;
@@ -151,10 +166,12 @@ class LineStation {
   final List<LineMachine> machines;
 
   /// Effective cycle time (µs): 1 / Σ(1 / machine cycle time) over the
-  /// measured machines; null if none is measured.
+  /// measured machines, or the slowest of them if the station
+  /// [waitsForSlowest]; null if none is measured.
   final double? cycleTime;
 
-  /// Time one part spends in the station (mean machine cycle time, µs).
+  /// Time one part spends in the station (µs): the mean machine cycle time,
+  /// or the slowest machine if the station [waitsForSlowest].
   final double? leadTime;
 
   /// Effective cycle time of the previous revisions; null unless every
@@ -187,6 +204,10 @@ double? parallelCycleTime(Iterable<double> times) {
   final rate = times.fold<double>(0, (a, t) => a + 1 / t);
   return rate == 0 ? null : 1 / rate;
 }
+
+/// Cycle time of a station that waits for its slowest machine (µs).
+double? slowestCycleTime(Iterable<double> times) =>
+    times.isEmpty ? null : times.reduce((a, b) => a > b ? a : b);
 
 /// The studies of a group looked at as one line (stations in group order).
 ///
@@ -307,16 +328,26 @@ class LineAnalysis {
               ),
           ],
     ];
+    // Only a station with several machines can wait for the slowest one; a
+    // loader cell counts as one machine.
+    final waits = [
+      for (var g = 0; g < groups.length; g++)
+        cells[g] == null &&
+            groups[g].length > 1 &&
+            inputs[groups[g].first].waitForSlowest,
+    ];
+    double? stationTime(int k, Iterable<double> times) =>
+        waits[k] ? slowestCycleTime(times) : parallelCycleTime(times);
     final times = [
-      for (final ms in machines)
-        parallelCycleTime([for (final m in ms) ?m.cycleTime]),
+      for (var k = 0; k < groups.length; k++)
+        stationTime(k, [for (final m in machines[k]) ?m.cycleTime]),
     ];
     final previous = [
-      for (final ms in machines)
-        ms.any((m) => m.measured && m.previousCycleTime == null)
+      for (var k = 0; k < groups.length; k++)
+        machines[k].any((m) => m.measured && m.previousCycleTime == null)
             ? null
-            : parallelCycleTime([
-                for (final m in ms)
+            : stationTime(k, [
+                for (final m in machines[k])
                   if (m.measured) m.previousCycleTime!,
               ]),
     ];
@@ -349,9 +380,11 @@ class LineAnalysis {
           mode: machines[k].first.mode,
           machines: machines[k],
           cycleTime: times[k],
-          leadTime: cells[k] == null
-              ? lead(machines[k])
-              : (times[k] == null ? null : cells[k]!.machineTime),
+          leadTime: cells[k] != null
+              ? (times[k] == null ? null : cells[k]!.machineTime)
+              : waits[k]
+              ? times[k]
+              : lead(machines[k]),
           cell: cells[k],
           previousCycleTime: previous[k],
           share: times[k] == null || total == 0 ? 0 : times[k]! / total,
@@ -367,6 +400,7 @@ class LineAnalysis {
               ? const []
               : [LineSegment(machines[k].first.name, times[k]!)],
           isBottleneck: k == bottleneck,
+          waitsForSlowest: waits[k],
           bufferBefore: k == 0 ? null : inputs[groups[k].first].buffer,
           conveyorBefore: k == 0 ? null : inputs[groups[k].first].conveyor,
         ),

@@ -131,7 +131,15 @@ void main() {
     );
 
     Future<void> delete(WidgetTester tester, String name) async {
-      await tester.longPress(find.text(name));
+      // Long press selects studies; a single study is deleted via its menu.
+      await tester.tap(
+        find.descendant(
+          of: find.ancestor(of: find.text(name), matching: find.byType(Card)),
+          matching: find.byType(PopupMenuButton<StudyCardAction>),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('deleteStudyItem')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Delete'));
       await settle(tester);

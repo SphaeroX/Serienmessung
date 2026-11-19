@@ -37,6 +37,23 @@
 	<string>CycleScope uses the microphone only while you hold the dictation button to enter work steps by voice.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Your speech is turned into text so you can enter work steps by voice. Apple's speech recognition may process the audio for this.</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>CycleScope data</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Alternate</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>public.json</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<false/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

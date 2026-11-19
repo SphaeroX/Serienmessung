@@ -72,8 +72,9 @@ void main() {
       () => GroupRepository(db).listGroups(),
     ))!;
     expect(groups.single.group.name, 'Demo: housing line');
-    // 13 members: the line with its loader cell (a lathe and three loaders).
-    expect(groups.single.studyCount, 13);
+    // 15 members: the line with its loader cell (a lathe and three loaders)
+    // and the cover press and seal cutter.
+    expect(groups.single.studyCount, 15);
   });
 
   testWidgets('the demo data follows the app language', (tester) async {

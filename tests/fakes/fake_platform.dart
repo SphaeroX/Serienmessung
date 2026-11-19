@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cyclescope/backup/platform/incoming_files.dart';
 import 'package:cyclescope/core/platform.dart';
 import 'package:cyclescope/core/providers.dart';
 import 'package:cyclescope/core/url_opener.dart';
@@ -80,12 +81,23 @@ class FakeUrlOpener implements UrlOpener {
   }
 }
 
+/// Files "opened with the app", driven by the test.
+class FakeIncomingFiles implements IncomingFiles {
+  final _controller = StreamController<String>.broadcast(sync: true);
+
+  @override
+  Stream<String> get files => _controller.stream;
+
+  void receive(String content) => _controller.add(content);
+}
+
 List<Override> fakePlatformOverrides({
   FakeDeviceFeedback? feedback,
   FakeHardwareKeys? keys,
   FakeRecordingNotifier? notifier,
   FakeVideoFiles? videoFiles,
   FakeUrlOpener? urlOpener,
+  FakeIncomingFiles? incomingFiles,
 }) => [
   recordingNotifierProvider.overrideWithValue(
     notifier ?? FakeRecordingNotifier(),
@@ -95,4 +107,5 @@ List<Override> fakePlatformOverrides({
   // Tests never delete real files.
   videoFilesProvider.overrideWithValue(videoFiles ?? FakeVideoFiles()),
   urlOpenerProvider.overrideWithValue(urlOpener ?? FakeUrlOpener()),
+  incomingFilesProvider.overrideWithValue(incomingFiles ?? FakeIncomingFiles()),
 ];

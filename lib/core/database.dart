@@ -199,6 +199,14 @@ final List<Migration> migrations = [
       );
     }
   },
+  // v16: a station of parallel machines can wait for its slowest machine
+  // (stored on the station's first member).
+  (db) async {
+    await db.execute(
+      'ALTER TABLE study ADD COLUMN wait_for_slowest INTEGER NOT NULL '
+      'DEFAULT 0',
+    );
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.

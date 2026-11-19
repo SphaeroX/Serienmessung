@@ -19,7 +19,8 @@ const _hour = 3600 * _s;
 const _jitter = [0.0, 0.6, -0.4, 1.1, -0.8, 0.3, -0.2, 0.5, -0.6, 0.9, -0.3];
 
 /// Adds sample data that shows every feature of the app: a small housing
-/// line as a group (a loader cell, parallel machines, buffers, conveyors,
+/// line as a group (a loader cell, parallel machines that share the work,
+/// a station that waits for its slowest machine, buffers, conveyors,
 /// special cycles and planned stops, revisions, special times, machines
 /// with a typed cycle time, a simple study with laps) and a step-timer
 /// study outside the group. Existing data is left alone; every load adds a
@@ -39,9 +40,12 @@ const _jitter = [0.0, 0.6, -0.4, 1.1, -0.8, 0.3, -0.2, 0.5, -0.6, 0.9, -0.3];
 /// 3. Milling centre 1 (time study, ~173 s, measured before) and milling
 ///    centre 2 (typed 167 s) in parallel – the bottleneck; buffer before.
 /// 4. Washer – typed 45 s; conveyor before.
-/// 5. Assembly (time study, ~68 s with one outlier, measured before).
-/// 6. Test benches 1–3 in parallel – typed 225 s each; buffer before.
-/// 7. Packing – simple study with 15 laps (~54 s); conveyor before.
+/// 5. Cover press (typed 52 s) and seal cutter (typed 38 s) in parallel –
+///    each makes a part for the assembly, so the station waits for its
+///    slowest machine (52 s).
+/// 6. Assembly (time study, ~68 s with one outlier, measured before).
+/// 7. Test benches 1–3 in parallel – typed 225 s each; buffer before.
+/// 8. Packing – simple study with 15 laps (~54 s); conveyor before.
 class DemoDataService {
   DemoDataService(this._db, {required this.now});
 
@@ -86,7 +90,7 @@ class DemoDataService {
     final milling = await _timeStudy(
       name: t.millingCentre(1),
       steps: t.millingSteps,
-      base: const [18, 87.7, 46, 21],
+      base: const [18, 87.5, 46, 21],
       cycles: 12,
       previousScale: 1.08,
       special: (cycle: 5, step: 1, seconds: 25, note: t.chipJam),
@@ -128,7 +132,22 @@ class DemoDataService {
     );
     await groups.setConveyor(washer, capacity: 8, transportMicros: 60 * _s);
 
-    // 5. Manual assembly with one disturbed cycle (IQR removes it).
+    // 5. Cover and seal are made in parallel and joined in the assembly:
+    // the station waits for its slowest machine.
+    final coverPress = await machines.createMachine(
+      name: t.coverPress,
+      groupId: groupId,
+      cycleMicros: 52 * _s,
+    );
+    await machines.createMachine(
+      name: t.sealCutter,
+      groupId: groupId,
+      cycleMicros: 38 * _s,
+      parallel: true,
+    );
+    await groups.setWaitForSlowest(coverPress, true);
+
+    // 6. Manual assembly with one disturbed cycle (IQR removes it).
     final assembly = await _timeStudy(
       name: t.assembly,
       steps: t.assemblySteps,
@@ -142,7 +161,7 @@ class DemoDataService {
     );
     await groups.moveToGroup(assembly, groupId);
 
-    // 6. Three test benches in parallel, a buffer before them.
+    // 7. Three test benches in parallel, a buffer before them.
     for (var i = 1; i <= 3; i++) {
       final bench = await machines.createMachine(
         name: t.testBench(i),
@@ -167,7 +186,7 @@ class DemoDataService {
       }
     }
 
-    // 7. Packing: laps of a simple study, a conveyor before it.
+    // 8. Packing: laps of a simple study, a conveyor before it.
     final packing = await _laps(t.packing, today);
     await groups.moveToGroup(packing, groupId);
     await groups.setConveyor(packing, capacity: 10, transportMicros: 30 * _s);

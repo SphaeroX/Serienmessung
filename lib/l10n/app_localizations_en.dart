@@ -1100,7 +1100,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get failureRiskHint =>
-      'Output of the line while one machine is down. Parallel machines take over part of the work; a station with a single machine stops the whole line.';
+      'Output of the line while one machine is down. Parallel machines take over part of the work; a station with a single machine stops the whole line, and so does every machine of a station that waits for its slowest machine.';
 
   @override
   String singlePointsOfFailure(int count) {
@@ -1180,7 +1180,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get simulationHint =>
-      'Plays the line through with the real cycle times: parallel machines share the work, a part waits when the next station is busy, buffers store parts on a jam and empty themselves again.';
+      'Plays the line through with the real cycle times: parallel machines share the work or wait for the slowest one, a part waits when the next station is busy, buffers store parts on a jam and empty themselves again.';
 
   @override
   String get simulationPeriod => 'Period';
@@ -1697,4 +1697,104 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return 'Delete the group \"$name\" and its $_temp0 including all measurements? This cannot be undone.';
   }
+
+  @override
+  String get waitForSlowest => 'Wait for the slowest machine';
+
+  @override
+  String get stationWaitsForSlowest => 'Station waits for its slowest machine';
+
+  @override
+  String lineWaitingMachines(int count) {
+    return '$count machines in parallel, waiting for the slowest';
+  }
+
+  @override
+  String get reportWaitsForSlowest => 'waits for the slowest';
+
+  @override
+  String get demoCoverPress => 'Cover press';
+
+  @override
+  String get demoSealCutter => 'Seal cutter';
+
+  @override
+  String selectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get selectAll => 'Select all';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get importShared => 'Import studies or groups';
+
+  @override
+  String importResult(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count studies imported.',
+      one: '1 study imported.',
+      zero: 'Nothing new imported.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String importSkipped(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count were already present.',
+      one: '1 was already present.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get importInvalid =>
+      'This file cannot be imported. Nothing was changed.';
+
+  @override
+  String get importTooNew =>
+      'This file was created by a newer app version. Please update the app.';
+
+  @override
+  String deleteStudiesConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Delete $count studies including all measurements?',
+      one: 'Delete 1 study including all measurements?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteGroups => 'Delete groups';
+
+  @override
+  String deleteGroupsConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          'Delete $count groups. Keep their studies without a group, or delete them too?',
+      one: 'Delete 1 group. Keep its studies without a group, or delete them too?',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteGroupsKeepStudies => 'Keep studies';
+
+  @override
+  String get deleteGroupsWithStudies => 'Delete studies too';
+
+  @override
+  String get shareGroup => 'Share group';
 }

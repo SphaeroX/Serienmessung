@@ -49,6 +49,19 @@ class ImportResult {
   final int videoStudies;
 }
 
+/// Part of the data to export instead of everything: the studies
+/// [studyIds] and the groups [groupIds] with all their studies.
+///
+/// A selected study whose group is not selected leaves without its group.
+class ExportSelection {
+  const ExportSelection({this.studyIds = const {}, this.groupIds = const {}});
+
+  final Set<int> studyIds;
+  final Set<int> groupIds;
+
+  bool get isEmpty => studyIds.isEmpty && groupIds.isEmpty;
+}
+
 /// Exports all studies with steps, measurements, groups and archived
 /// revisions to JSON and restores them.
 ///
@@ -59,10 +72,31 @@ class BackupService {
 
   final AppDatabase _db;
 
-  Future<String> exportJson({required DateTime now}) async {
+  /// Exports everything, or only [selection] (for sharing studies and
+  /// groups with others; the file is imported like a backup).
+  Future<String> exportJson({
+    required DateTime now,
+    ExportSelection? selection,
+  }) async {
+    if (selection != null && selection.isEmpty) {
+      throw ArgumentError.value(selection, 'selection', 'is empty');
+    }
     final db = _db.db;
-    final groups = await db.query('study_group', orderBy: 'id');
-    final studies = await db.query('study', orderBy: 'id');
+    var groups = await db.query('study_group', orderBy: 'id');
+    var studies = await db.query('study', orderBy: 'id');
+    if (selection != null) {
+      groups = [
+        for (final g in groups)
+          if (selection.groupIds.contains(g['id'])) g,
+      ];
+      studies = [
+        for (final s in studies)
+          if (selection.studyIds.contains(s['id']) ||
+              selection.groupIds.contains(s['group_id']))
+            s,
+      ];
+    }
+    final exportedGroups = {for (final g in groups) g['id']};
     final out = <Map<String, Object?>>[];
     for (final s in studies) {
       final id = s['id'] as int;
@@ -88,9 +122,12 @@ class BackupService {
         'videoPath': s['video_path'],
         'stepsOpen': s['steps_open'] == 1,
         'notes': s['notes'],
-        'groupRef': s['group_id'],
+        'groupRef': exportedGroups.contains(s['group_id'])
+            ? s['group_id']
+            : null,
         'groupPosition': s['group_position'],
         'parallel': s['parallel'] == 1,
+        'waitForSlowest': s['wait_for_slowest'] == 1,
         'bufferCapacity': s['buffer_capacity'],
         'bufferStore': s['buffer_store_us'],
         'bufferRetrieve': s['buffer_retrieve_us'],
@@ -289,6 +326,7 @@ class BackupService {
                 : 0,
             'cell_parts': s['cellParts'] as int? ?? 1,
             'cell_machines': s['cellMachines'] as int? ?? 1,
+            'wait_for_slowest': s['waitForSlowest'] == true ? 1 : 0,
             'buffer_capacity': s['bufferCapacity'] as int? ?? 0,
             'buffer_store_us': s['bufferStore'] as int? ?? 0,
             'buffer_retrieve_us': s['bufferRetrieve'] as int? ?? 0,

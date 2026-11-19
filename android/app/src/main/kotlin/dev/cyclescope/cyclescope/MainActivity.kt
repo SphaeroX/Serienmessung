@@ -27,6 +27,10 @@ class MainActivity : FlutterActivity() {
     private var actionSink: EventChannel.EventSink? = null
     private var frameDecoder: FrameDecoder? = null
 
+    /** Contents of files opened with or shared to the app, until Dart takes them. */
+    private val incomingFiles = mutableListOf<String>()
+    private var incomingChannel: MethodChannel? = null
+
     private val actionReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
@@ -48,6 +52,45 @@ class MainActivity : FlutterActivity() {
             @Suppress("UnspecifiedRegisterReceiverFlag")
             registerReceiver(actionReceiver, filter)
         }
+        // After a configuration change the same intent comes again.
+        if (savedInstanceState == null) receiveFile(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        receiveFile(intent)
+    }
+
+    /**
+     * Reads a file opened with the app ("Open with" = ACTION_VIEW) or shared
+     * to it (ACTION_SEND) on a worker thread and tells Dart it waits.
+     */
+    private fun receiveFile(intent: Intent?) {
+        val uri: Uri = when (intent?.action) {
+            Intent.ACTION_VIEW -> intent.data
+            Intent.ACTION_SEND -> if (Build.VERSION.SDK_INT >= 33) {
+                intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent.getParcelableExtra(Intent.EXTRA_STREAM)
+            }
+            else -> null
+        } ?: return
+        Thread {
+            val text = try {
+                contentResolver.openInputStream(uri)?.use { input ->
+                    val bytes = input.readBytes()
+                    if (bytes.size > MAX_INCOMING_BYTES) null else String(bytes, Charsets.UTF_8)
+                }
+            } catch (e: Exception) {
+                null
+            } ?: return@Thread
+            runOnUiThread {
+                incomingFiles.add(text)
+                incomingChannel?.invokeMethod("filesWaiting", null)
+            }
+        }.start()
     }
 
     override fun onDestroy() {
@@ -79,6 +122,18 @@ class MainActivity : FlutterActivity() {
                 }
                 "openUrl" -> result.success(openUrl(call.arguments as? String))
                 else -> result.notImplemented()
+            }
+        }
+
+        incomingChannel = MethodChannel(messenger, "dev.cyclescope/incoming_files").apply {
+            setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "takeIncomingFiles" -> {
+                        result.success(ArrayList(incomingFiles))
+                        incomingFiles.clear()
+                    }
+                    else -> result.notImplemented()
+                }
             }
         }
 
@@ -213,5 +268,6 @@ class MainActivity : FlutterActivity() {
         private const val NOTIFICATION_ID = 1001
         private const val ACTION_NEXT = "dev.cyclescope.action.NEXT"
         private const val ACTION_TOGGLE = "dev.cyclescope.action.TOGGLE"
+        private const val MAX_INCOMING_BYTES = 32 * 1024 * 1024
     }
 }

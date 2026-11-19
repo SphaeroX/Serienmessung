@@ -60,6 +60,7 @@ void main() {
                 : CycleTimeMethod.parse(s.cycleTimeMethod!),
           ),
           parallel: s.parallel,
+          waitForSlowest: s.waitForSlowest,
           cellLoader: s.isCellLoader,
           cellParts: s.cellParts,
           cellMachines: s.cellMachines,
@@ -103,6 +104,9 @@ void main() {
         t.millingCentre(1),
         t.millingCentre(2),
         t.washer,
+        // Cover and seal are made in parallel and joined in the assembly.
+        t.coverPress,
+        t.sealCutter,
         t.assembly,
         t.testBench(1),
         t.testBench(2),
@@ -122,11 +126,22 @@ void main() {
         true,
         false,
         false,
+        true,
+        false,
         false,
         true,
         true,
         false,
       ],
+    );
+    // Only the cover and seal station waits for its slowest machine; the
+    // option is stored on its first machine.
+    expect(
+      [
+        for (var i = 0; i < line.length; i++)
+          if (line[i].waitForSlowest) i,
+      ],
+      [8],
     );
     expect(
       [for (final s in line) s.mode],
@@ -137,6 +152,8 @@ void main() {
         StudyMode.timeStudy,
         StudyMode.simple,
         StudyMode.timeStudy,
+        StudyMode.simple,
+        StudyMode.simple,
         StudyMode.simple,
         StudyMode.simple,
         StudyMode.timeStudy,
@@ -150,21 +167,21 @@ void main() {
       for (final st in await StudyRepository(db).getSteps(line[5].id)) st.name,
     ], t.millingSteps);
     expect([
-      for (final st in await StudyRepository(db).getSteps(line[8].id)) st.name,
+      for (final st in await StudyRepository(db).getSteps(line[10].id)) st.name,
     ], t.assemblySteps);
 
     // Buffers before the milling centres and the test benches.
     expect(line[5].bufferCapacity, 30);
     expect(line[5].bufferStoreMicros, 15 * _s);
     expect(line[5].bufferRetrieveMicros, 12 * _s);
-    expect(line[9].bufferCapacity, 40);
-    expect(line[9].bufferStoreMicros, 20 * _s);
-    expect(line[9].bufferRetrieveMicros, 15 * _s);
+    expect(line[11].bufferCapacity, 40);
+    expect(line[11].bufferStoreMicros, 20 * _s);
+    expect(line[11].bufferRetrieveMicros, 15 * _s);
     // Conveyors before the washer and the packing.
     expect(line[7].conveyorCapacity, 8);
     expect(line[7].conveyorTransportMicros, 60 * _s);
-    expect(line[12].conveyorCapacity, 10);
-    expect(line[12].conveyorTransportMicros, 30 * _s);
+    expect(line[14].conveyorCapacity, 10);
+    expect(line[14].conveyorTransportMicros, 30 * _s);
     expect(
       [for (final s in line) s.hasBuffer || s.hasConveyor],
       [
@@ -176,6 +193,8 @@ void main() {
         true,
         false,
         true,
+        false,
+        false,
         false,
         true,
         false,
@@ -209,14 +228,14 @@ void main() {
       expect(milling[1].interval, 24 * 3600 * _s);
       expect(milling[1].durationMicros, 300 * _s);
 
-      final bench = await rules.list(line[9].id);
+      final bench = await rules.list(line[11].id);
       expect(bench.single.name, t.calibration);
       expect(bench.single.kind, SpecialCycleKind.parts);
       expect(bench.single.interval, 200);
 
       // The milling centre and the assembly were measured before.
       final revisions = RevisionRepository(db);
-      for (final i in [5, 8]) {
+      for (final i in [5, 10]) {
         expect(line[i].revision, 2);
         expect(await revisions.listRevisions(line[i].id), hasLength(1));
       }
@@ -231,12 +250,12 @@ void main() {
       final millingTimes = await times.listForStudy(line[5].id);
       expect(special(millingTimes).single.note, t.chipJam);
       expect(
-        special(await times.listForStudy(line[8].id)).single.note,
+        special(await times.listForStudy(line[10].id)).single.note,
         t.materialMissing,
       );
       // Twelve complete milling cycles; the packing has its laps.
       expect({for (final m in millingTimes) m.cycle}, hasLength(12));
-      expect(await times.listForStudy(line[12].id), hasLength(15));
+      expect(await times.listForStudy(line[14].id), hasLength(15));
 
       // Current times are recent: opening a study does not ask for a new
       // measurement.
@@ -271,17 +290,24 @@ void main() {
     final groupId = await demo.load(t);
     final line = await lineOf(groupId);
 
-    // Saw, loader cell, milling centres, washer, assembly, test benches,
-    // packing. The cell counts as one machine.
-    expect(line.stations, hasLength(7));
+    // Saw, loader cell, milling centres, washer, cover and seal, assembly,
+    // test benches, packing. The cell counts as one machine.
+    expect(line.stations, hasLength(8));
     expect(
       [for (final st in line.stations) st.isCell],
-      [false, true, false, false, false, false, false],
+      [false, true, false, false, false, false, false, false],
     );
     expect(
       [for (final st in line.stations) st.machines.length],
-      [1, 1, 2, 1, 1, 3, 1],
+      [1, 1, 2, 1, 2, 1, 3, 1],
     );
+    // The cover and seal station waits for its slowest machine, the cover
+    // press; the other parallel stations share the work.
+    expect(
+      [for (final st in line.stations) st.waitsForSlowest],
+      [false, false, false, false, true, false, false, false],
+    );
+    expect(line.stations[4].cycleTime, 52 * _s);
     expect(line.stations.every((st) => st.measured), isTrue);
     final bottleneck = line.stations.singleWhere((st) => st.isBottleneck);
     expect(bottleneck.position, 2);
@@ -289,11 +315,11 @@ void main() {
     expect(line.outputPerHour! * 24, closeTo(1000, 10));
     expect(
       [for (final st in line.stations) st.bufferBefore != null],
-      [false, false, true, false, false, true, false],
+      [false, false, true, false, false, false, true, false],
     );
     expect(
       [for (final st in line.stations) st.conveyorBefore != null],
-      [false, false, false, true, false, false, true],
+      [false, false, false, true, false, false, false, true],
     );
     // The special cycles make the milling centre slower than measured.
     final milling = line.stations[2].machines.first;
@@ -314,7 +340,7 @@ void main() {
     expect(result.output, 1000);
     // The milling centres work all the time, every other station waits.
     expect(result.stations[2].utilization, greaterThan(0.98));
-    for (final i in [0, 1, 3, 4, 5, 6]) {
+    for (final i in [0, 1, 3, 4, 5, 6, 7]) {
       expect(result.stations[i].utilization, lessThan(0.95), reason: '$i');
     }
     // Without the buffers the blade changes of the saw cost parts.
@@ -333,9 +359,9 @@ void main() {
 
     expect(await StudyRepository(db).getStudy(own), isNotNull);
     expect(await GroupRepository(db).listGroups(), hasLength(2));
-    // 13 line members (4 of them the loader cell) + 1 changeover study per
+    // 15 line members (4 of them the loader cell) + 1 changeover study per
     // load.
-    expect(await StudyRepository(db).listStudies(), hasLength(1 + 2 * 14));
+    expect(await StudyRepository(db).listStudies(), hasLength(1 + 2 * 16));
   });
 
   group('loader cell', () {

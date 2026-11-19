@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../backup/data/backup_service.dart';
+import '../../backup/presentation/share_actions.dart';
 import '../../core/providers.dart';
 import '../../group/presentation/group_dialogs.dart';
 import '../../l10n/app_localizations.dart';
@@ -15,6 +19,8 @@ import 'mode_texts.dart';
 typedef OpenStudy = Future<void> Function(BuildContext context, int studyId);
 
 /// Home screen: list of all studies.
+///
+/// A long press selects studies to share or delete several at once.
 ///
 /// On first show it offers to continue a recording that was still running
 /// when the app was closed or killed.
@@ -39,9 +45,71 @@ class StudyListScreen extends ConsumerStatefulWidget {
 }
 
 class _StudyListScreenState extends ConsumerState<StudyListScreen> {
+  /// Selected study ids; selecting while not empty.
+  final _selected = <int>{};
+
+  /// Files opened with the app or shared to it; imported right away.
+  StreamSubscription<String>? _incoming;
+
+  @override
+  void dispose() {
+    _incoming?.cancel();
+    super.dispose();
+  }
+
+  void _toggle(int id) => setState(() {
+    if (!_selected.remove(id)) _selected.add(id);
+  });
+
+  Future<void> _shareSelected(BuildContext context) async {
+    final ids = {..._selected};
+    final studies = ref.read(studyListProvider).value ?? const [];
+    final chosen = [
+      for (final s in studies)
+        if (ids.contains(s.study.id)) s.study,
+    ];
+    await shareSelection(
+      context,
+      ref,
+      ExportSelection(studyIds: ids),
+      label: chosen.length == 1 ? chosen.single.name : 'studies',
+    );
+  }
+
+  Future<void> _deleteSelected(BuildContext context) async {
+    final l = AppLocalizations.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.deleteStudy),
+        content: Text(l.deleteStudiesConfirm(_selected.length)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            key: const Key('confirmDeleteSelected'),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l.delete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await deleteStudies(ref, {..._selected});
+    if (mounted) setState(_selected.clear);
+    ref
+      ..invalidate(studyListProvider)
+      ..invalidate(groupListProvider);
+  }
+
   @override
   void initState() {
     super.initState();
+    _incoming = ref.read(incomingFilesProvider).files.listen((json) {
+      if (mounted) importSharedJson(context, ref, json);
+    });
     if (widget.checkActiveRuns) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _offerResume());
     }
@@ -140,6 +208,13 @@ class _StudyListScreenState extends ConsumerState<StudyListScreen> {
         await moveStudyToGroup(context, ref, study);
       case StudyCardAction.copy:
         await copyStudyToGroup(context, ref, study);
+      case StudyCardAction.share:
+        await shareSelection(
+          context,
+          ref,
+          ExportSelection(studyIds: {study.id}),
+          label: study.name,
+        );
       case StudyCardAction.delete:
         await _confirmDelete(context, study);
     }
@@ -150,79 +225,114 @@ class _StudyListScreenState extends ConsumerState<StudyListScreen> {
     final l = AppLocalizations.of(context);
     final studies = ref.watch(studyListProvider);
     final onOpenStudy = widget.onOpenStudy;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l.appTitle),
-        actions: [
-          IconButton(
-            key: const Key('githubButton'),
-            tooltip: l.sourceCodeOnGitHub,
-            icon: const GitHubLogo(),
-            onPressed: () => _openRepository(context),
-          ),
-          if (widget.onOpenGroups != null)
-            IconButton(
-              key: const Key('groupsButton'),
-              tooltip: l.groups,
-              icon: const Icon(Icons.folder_outlined),
-              onPressed: () async {
-                await widget.onOpenGroups!(context);
-                ref.invalidate(studyListProvider);
-              },
-            ),
-          if (widget.onOpenSettings != null)
-            IconButton(
-              key: const Key('settingsButton'),
-              icon: const Icon(Icons.settings),
-              onPressed: () => widget.onOpenSettings!(context),
-            ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('newStudyFab'),
-        onPressed: () => _create(context),
-        icon: const Icon(Icons.add),
-        label: Text(l.createStudy),
-      ),
-      body: studies.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
-        data: (list) => list.isEmpty
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Text(l.emptyStudies, textAlign: TextAlign.center),
+    final selecting = _selected.isNotEmpty;
+    return PopScope(
+      canPop: !selecting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(_selected.clear);
+      },
+      child: Scaffold(
+        appBar: selecting
+            ? SelectionAppBar(
+                count: _selected.length,
+                onClear: () => setState(_selected.clear),
+                onSelectAll: () => setState(
+                  () => _selected.addAll([
+                    for (final s in studies.value ?? const <StudySummary>[])
+                      s.study.id,
+                  ]),
                 ),
+                onShare: () => _shareSelected(context),
+                onDelete: () => _deleteSelected(context),
               )
-            : ListView.builder(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
-                itemCount: list.length,
-                itemBuilder: (context, i) => _StudyCard(
-                  summary: list[i],
-                  onTap: onOpenStudy == null
-                      ? null
-                      : () => onOpenStudy(context, list[i].study.id),
-                  onLongPress: () => _confirmDelete(context, list[i].study),
-                  onAction: (a) => _cardAction(context, a, list[i].study),
-                ),
+            : AppBar(
+                title: Text(l.appTitle),
+                actions: [
+                  const ImportSharedButton(),
+                  IconButton(
+                    key: const Key('githubButton'),
+                    tooltip: l.sourceCodeOnGitHub,
+                    icon: const GitHubLogo(),
+                    onPressed: () => _openRepository(context),
+                  ),
+                  if (widget.onOpenGroups != null)
+                    IconButton(
+                      key: const Key('groupsButton'),
+                      tooltip: l.groups,
+                      icon: const Icon(Icons.folder_outlined),
+                      onPressed: () async {
+                        await widget.onOpenGroups!(context);
+                        ref.invalidate(studyListProvider);
+                      },
+                    ),
+                  if (widget.onOpenSettings != null)
+                    IconButton(
+                      key: const Key('settingsButton'),
+                      icon: const Icon(Icons.settings),
+                      onPressed: () => widget.onOpenSettings!(context),
+                    ),
+                ],
               ),
+        floatingActionButton: selecting
+            ? null
+            : FloatingActionButton.extended(
+                key: const Key('newStudyFab'),
+                onPressed: () => _create(context),
+                icon: const Icon(Icons.add),
+                label: Text(l.createStudy),
+              ),
+        body: studies.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('$e')),
+          data: (list) => list.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Text(l.emptyStudies, textAlign: TextAlign.center),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
+                  itemCount: list.length,
+                  itemBuilder: (context, i) {
+                    final id = list[i].study.id;
+                    return _StudyCard(
+                      summary: list[i],
+                      selected: _selected.contains(id),
+                      onTap: selecting
+                          ? () => _toggle(id)
+                          : onOpenStudy == null
+                          ? null
+                          : () => onOpenStudy(context, id),
+                      onLongPress: () => _toggle(id),
+                      onAction: selecting
+                          ? null
+                          : (a) => _cardAction(context, a, list[i].study),
+                    );
+                  },
+                ),
+        ),
       ),
     );
   }
 }
 
 /// Actions of the menu on a study card.
-enum StudyCardAction { move, copy, delete }
+enum StudyCardAction { move, copy, share, delete }
 
 class _StudyCard extends StatelessWidget {
   const _StudyCard({
     required this.summary,
+    this.selected = false,
     this.onTap,
     this.onLongPress,
     this.onAction,
   });
 
   final StudySummary summary;
+
+  /// Selected for sharing or deleting several studies.
+  final bool selected;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final ValueChanged<StudyCardAction>? onAction;
@@ -241,6 +351,7 @@ class _StudyCard extends StatelessWidget {
     };
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
+      color: selected ? theme.colorScheme.secondaryContainer : null,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
@@ -253,11 +364,16 @@ class _StudyCard extends StatelessWidget {
               Row(
                 children: [
                   CircleAvatar(
+                    key: selected ? Key('selected_${study.id}') : null,
                     radius: 26,
-                    backgroundColor: theme.colorScheme.primaryContainer,
+                    backgroundColor: selected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.primaryContainer,
                     child: Icon(
-                      study.mode.icon,
-                      color: theme.colorScheme.onPrimaryContainer,
+                      selected ? Icons.check : study.mode.icon,
+                      color: selected
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onPrimaryContainer,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -367,6 +483,11 @@ class _StudyCard extends StatelessWidget {
                           key: const Key('copyStudy'),
                           value: StudyCardAction.copy,
                           child: Text(l.copyToGroup),
+                        ),
+                        PopupMenuItem(
+                          key: const Key('shareStudyItem'),
+                          value: StudyCardAction.share,
+                          child: Text(l.share),
                         ),
                         PopupMenuItem(
                           key: const Key('deleteStudyItem'),
