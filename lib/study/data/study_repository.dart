@@ -141,6 +141,7 @@ class StudyRepository {
       'study',
       {
         'parallel': 0,
+        'cell_loader': 0,
         // Nothing stands before the first station of a line.
         if (i > 0)
           for (final c in stationLinkColumns) c: members[i][c],
@@ -164,6 +165,14 @@ class StudyRepository {
   Future<void> renameStep(int stepId, String name) => _db.db.update(
     'step_definition',
     {'name': name},
+    where: 'id = ?',
+    whereArgs: [stepId],
+  );
+
+  /// Marks a step as waiting for supply (left out of a loader cell).
+  Future<void> setStepWaiting(int stepId, bool waiting) => _db.db.update(
+    'step_definition',
+    {'waiting': waiting ? 1 : 0},
     where: 'id = ?',
     whereArgs: [stepId],
   );
@@ -321,6 +330,9 @@ class StudyRepository {
       ..['last_active_at'] = now.millisecondsSinceEpoch
       ..['group_id'] = groupId
       ..['parallel'] = 0
+      ..['cell_loader'] = 0
+      ..['cell_parts'] = 1
+      ..['cell_machines'] = 1
       ..['buffer_capacity'] = 0
       ..['buffer_store_us'] = 0
       ..['buffer_retrieve_us'] = 0
@@ -341,6 +353,7 @@ class StudyRepository {
         'study_id': copy,
         'position': st['position'],
         'name': st['name'],
+        'waiting': st['waiting'],
       });
     }
     for (final m in await txn.query(
@@ -499,6 +512,9 @@ class StudyRepository {
     bufferRetrieveMicros: r['buffer_retrieve_us'] as int? ?? 0,
     conveyorCapacity: r['conveyor_capacity'] as int? ?? 0,
     conveyorTransportMicros: r['conveyor_transport_us'] as int? ?? 0,
+    cellLoader: (r['cell_loader'] as int? ?? 0) == 1,
+    cellParts: r['cell_parts'] as int? ?? 1,
+    cellMachines: r['cell_machines'] as int? ?? 1,
   );
 
   static StepDefinition stepFromRow(Map<String, Object?> r) => StepDefinition(
@@ -506,5 +522,6 @@ class StudyRepository {
     studyId: r['study_id'] as int,
     position: r['position'] as int,
     name: r['name'] as String,
+    waiting: (r['waiting'] as int? ?? 0) == 1,
   );
 }

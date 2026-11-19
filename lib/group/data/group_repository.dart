@@ -73,6 +73,7 @@ class GroupRepository {
             'group_id': groupId,
             'group_position': position,
             'parallel': 0,
+            ..._noCell,
             ..._noBuffer,
           },
           where: 'id = ?',
@@ -85,12 +86,54 @@ class GroupRepository {
   ///
   /// A member working in parallel is no station of its own, so it loses
   /// its buffer.
+  ///
+  /// Either way the member is no loader of a cell (any more), see
+  /// [setCellLoader].
   Future<void> setParallel(int studyId, bool parallel) => _db.db.update(
     'study',
-    {'parallel': parallel ? 1 : 0, if (parallel) ..._noBuffer},
+    {
+      'parallel': parallel ? 1 : 0,
+      'cell_loader': 0,
+      if (parallel) ..._noBuffer,
+    },
     where: 'id = ?',
     whereArgs: [studyId],
   );
+
+  /// Makes study [studyId] a loader of the station of the group member
+  /// before it, which turns that station into a loader cell: the loader
+  /// serves the station's machines instead of being a machine itself. Like
+  /// a parallel machine it is no station of its own (no buffer, no
+  /// conveyor). Switching the role off makes it a station of its own.
+  Future<void> setCellLoader(int studyId, bool loader) => _db.db.update(
+    'study',
+    {
+      'parallel': loader ? 1 : 0,
+      'cell_loader': loader ? 1 : 0,
+      if (loader) ..._noBuffer,
+    },
+    where: 'id = ?',
+    whereArgs: [studyId],
+  );
+
+  /// Parts the loader [studyId] handles per own cycle (at least 1).
+  Future<void> setCellParts(int studyId, int parts) =>
+      _setCount(studyId, 'cell_parts', parts);
+
+  /// Number of equal machines study [studyId] stands for in a loader cell
+  /// (at least 1).
+  Future<void> setCellMachines(int studyId, int machines) =>
+      _setCount(studyId, 'cell_machines', machines);
+
+  Future<void> _setCount(int studyId, String column, int value) {
+    if (value < 1) throw ArgumentError.value(value, column, 'must be >= 1');
+    return _db.db.update(
+      'study',
+      {column: value},
+      where: 'id = ?',
+      whereArgs: [studyId],
+    );
+  }
 
   /// Puts a buffer before the station of study [studyId].
   Future<void> setBuffer(
@@ -130,6 +173,13 @@ class GroupRepository {
     where: 'id = ?',
     whereArgs: [studyId],
   );
+
+  /// A member outside a loader cell.
+  static const _noCell = {
+    'cell_loader': 0,
+    'cell_parts': 1,
+    'cell_machines': 1,
+  };
 
   /// Everything that connects a station to the one before it.
   static const _noBuffer = {
@@ -180,6 +230,8 @@ class GroupRepository {
         {
           'group_position': i,
           if (move != null) 'parallel': move.parallel[i] ? 1 : 0,
+          // Only a member of a station can be a loader of its cell.
+          if (move != null && !move.parallel[i]) 'cell_loader': 0,
         },
         where: 'id = ? AND group_id = ?',
         whereArgs: [studyIdsInOrder[i], groupId],

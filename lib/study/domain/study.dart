@@ -39,6 +39,9 @@ class Study {
     this.bufferRetrieveMicros = 0,
     this.conveyorCapacity = 0,
     this.conveyorTransportMicros = 0,
+    this.cellLoader = false,
+    this.cellParts = 1,
+    this.cellMachines = 1,
   });
 
   final int id;
@@ -90,6 +93,20 @@ class Study {
   final int conveyorTransportMicros;
 
   bool get hasConveyor => conveyorCapacity > 0;
+
+  /// Loader of a loader cell: serves the machine(s) of its station (the
+  /// members before it) instead of being a machine of its own. Only
+  /// meaningful together with [parallel], see [isCellLoader].
+  final bool cellLoader;
+
+  /// Loader of the cell formed by its station.
+  bool get isCellLoader => parallel && cellLoader;
+
+  /// Parts a loader handles per own cycle (loader cells only).
+  final int cellParts;
+
+  /// Number of equal machines this study stands for (loader cells only).
+  final int cellMachines;
 }
 
 /// One defined work step of a study.
@@ -99,12 +116,17 @@ class StepDefinition {
     required this.studyId,
     required this.position,
     required this.name,
+    this.waiting = false,
   });
 
   final int id;
   final int studyId;
   final int position;
   final String name;
+
+  /// Waiting for supply (a machine, material): the step counts for the
+  /// study itself, but is left out of the work time a loader cell uses.
+  final bool waiting;
 }
 
 /// Study plus figures shown on the study list card.

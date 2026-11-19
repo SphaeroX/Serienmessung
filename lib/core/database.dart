@@ -183,6 +183,22 @@ final List<Migration> migrations = [
         duration_us INTEGER NOT NULL
       )''');
   },
+  // v15: loader cells – waiting steps, loaders of a station's machine,
+  // parts per loader cycle and number of equal machines.
+  (db) async {
+    await db.execute(
+      'ALTER TABLE step_definition ADD COLUMN waiting INTEGER NOT NULL '
+      'DEFAULT 0',
+    );
+    await db.execute(
+      'ALTER TABLE study ADD COLUMN cell_loader INTEGER NOT NULL DEFAULT 0',
+    );
+    for (final column in ['cell_parts', 'cell_machines']) {
+      await db.execute(
+        'ALTER TABLE study ADD COLUMN $column INTEGER NOT NULL DEFAULT 1',
+      );
+    }
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.

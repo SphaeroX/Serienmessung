@@ -12,7 +12,10 @@ const backupFormat = 'cyclescope-backup';
 ///
 /// v2 adds groups (`groups`, `groupRef`, `groupPosition`), the revision
 /// number, `recordedAt` per time and the archived `revisions`. v1 files are
-/// still imported (those fields are optional).
+/// still imported (those fields are optional). Later optional fields keep
+/// the version: `parallel`, buffer and conveyor fields, `specialCycles`,
+/// and for loader cells `cellLoader`, `cellParts`, `cellMachines` per
+/// study and `waiting` per step.
 const backupVersion = 2;
 
 /// Why a backup could not be restored.
@@ -93,10 +96,18 @@ class BackupService {
         'bufferRetrieve': s['buffer_retrieve_us'],
         'conveyorCapacity': s['conveyor_capacity'],
         'conveyorTransport': s['conveyor_transport_us'],
+        'cellLoader': s['cell_loader'] == 1,
+        'cellParts': s['cell_parts'],
+        'cellMachines': s['cell_machines'],
         'revision': s['revision'],
         'steps': [
           for (final st in steps)
-            {'ref': st['id'], 'position': st['position'], 'name': st['name']},
+            {
+              'ref': st['id'],
+              'position': st['position'],
+              'name': st['name'],
+              'waiting': st['waiting'] == 1,
+            },
         ],
         'measurements': [
           for (final m in measurements)
@@ -273,6 +284,11 @@ class BackupService {
           'revision': s['revision'] as int? ?? 1,
           'parallel': groupId != null && s['parallel'] == true ? 1 : 0,
           if (groupId != null) ...{
+            'cell_loader': s['parallel'] == true && s['cellLoader'] == true
+                ? 1
+                : 0,
+            'cell_parts': s['cellParts'] as int? ?? 1,
+            'cell_machines': s['cellMachines'] as int? ?? 1,
             'buffer_capacity': s['bufferCapacity'] as int? ?? 0,
             'buffer_store_us': s['bufferStore'] as int? ?? 0,
             'buffer_retrieve_us': s['bufferRetrieve'] as int? ?? 0,
@@ -287,6 +303,7 @@ class BackupService {
             'study_id': studyId,
             'position': m['position'],
             'name': m['name'],
+            'waiting': m['waiting'] == true ? 1 : 0,
           });
         }
         for (final x in s['measurements'] as List) {
@@ -443,9 +460,12 @@ class BackupService {
               st['stepRef'] is int,
         ) &&
         (r['measurements'] as List).every(time);
+    bool count(Object? n) => n == null || (n is int && n >= 1);
     for (final s in studies) {
       final ok =
           s is Map &&
+          count(s['cellParts']) &&
+          count(s['cellMachines']) &&
           s['name'] is String &&
           modes.contains(s['mode']) &&
           s['createdAt'] is int &&

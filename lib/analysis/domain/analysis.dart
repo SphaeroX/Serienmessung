@@ -32,6 +32,7 @@ class StudyAnalysis {
     required this.cycleTotals,
     required this.cycleStats,
     required this.realCycleTime,
+    required this.workCycleTime,
     required this.removedCycles,
     required this.steps,
     required this.specialTotal,
@@ -44,7 +45,15 @@ class StudyAnalysis {
     required List<StepDefinition> steps,
     required StudyMode mode,
     required CycleTimeMethod method,
+    Set<int>? waitingStepIds,
   }) {
+    // Steps given as waiting by id (archived revisions carry no mark).
+    final waiting =
+        waitingStepIds ??
+        {
+          for (final s in steps)
+            if (s.waiting) s.id,
+        };
     final normals = measurements
         .where((m) => m.kind == MeasurementKind.normal)
         .toList();
@@ -54,6 +63,7 @@ class StudyAnalysis {
 
     // Cycle times: complete cycles only. The step timer has no cycles.
     var totals = <int>[];
+    var workTotals = <int>[];
     var incomplete = 0;
     if (mode != StudyMode.stepTimer) {
       final groups = groupCycles(
@@ -63,6 +73,15 @@ class StudyAnalysis {
       for (final g in groups) {
         if (g.isComplete) {
           totals.add(g.normalTotal);
+          workTotals.add(
+            g.items
+                .where(
+                  (m) =>
+                      m.kind == MeasurementKind.normal &&
+                      !waiting.contains(m.stepId),
+                )
+                .fold(0, (a, m) => a + m.durationMicros),
+          );
         } else {
           incomplete++;
         }
@@ -95,6 +114,7 @@ class StudyAnalysis {
       cycleTotals: totals,
       cycleStats: Stats.of(totals),
       realCycleTime: method.apply(totals),
+      workCycleTime: method.apply(workTotals),
       removedCycles: removed,
       steps: stepFigures,
       specialTotal: specials.fold(0, (a, m) => a + m.durationMicros),
@@ -111,6 +131,10 @@ class StudyAnalysis {
 
   /// The real cycle time by [method] (µs).
   final double realCycleTime;
+
+  /// Like [realCycleTime], but without the steps marked as waiting (µs).
+  /// The time a resource of a loader cell needs per own cycle.
+  final double workCycleTime;
 
   /// Cycles dropped as outliers (IQR method only).
   final int removedCycles;
