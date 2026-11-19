@@ -1,6 +1,7 @@
 import '../../core/time_format.dart';
 import '../../group/domain/line_analysis.dart';
 import '../../group/domain/line_simulation.dart';
+import '../../group/domain/loader_cell.dart';
 import '../../group/domain/special_cycle.dart';
 import '../../group/domain/study_group.dart';
 import 'export_data.dart';
@@ -51,74 +52,55 @@ class LineReportLabels {
     this.risk,
     this.buffers,
     this.specials,
+    this.cells,
   });
+
+  LineReportLabels _with({
+    RiskReportLabels? risk,
+    BufferReportLabels? buffers,
+    SpecialReportLabels? specials,
+    CellReportLabels? cells,
+  }) => LineReportLabels(
+    contents: contents,
+    lineAnalysis: lineAnalysis,
+    station: station,
+    totalTime: totalTime,
+    lineCycleTime: lineCycleTime,
+    bottleneck: bottleneck,
+    balance: balance,
+    outputPerHour: outputPerHour,
+    waiting: waiting,
+    share: share,
+    sheet: sheet,
+    backToContents: backToContents,
+    studies: studies,
+    risk: risk ?? this.risk,
+    buffers: buffers ?? this.buffers,
+    specials: specials ?? this.specials,
+    cells: cells ?? this.cells,
+  );
+
+  /// Texts of the loader cell sections; without them they are left out.
+  final CellReportLabels? cells;
+
+  LineReportLabels withCells(CellReportLabels cells) => _with(cells: cells);
 
   /// Texts of the special cycles table; without them it is left out.
   final SpecialReportLabels? specials;
 
   LineReportLabels withSpecials(SpecialReportLabels specials) =>
-      LineReportLabels(
-        contents: contents,
-        lineAnalysis: lineAnalysis,
-        station: station,
-        totalTime: totalTime,
-        lineCycleTime: lineCycleTime,
-        bottleneck: bottleneck,
-        balance: balance,
-        outputPerHour: outputPerHour,
-        waiting: waiting,
-        share: share,
-        sheet: sheet,
-        backToContents: backToContents,
-        studies: studies,
-        risk: risk,
-        buffers: buffers,
-        specials: specials,
-      );
+      _with(specials: specials);
 
   /// Texts of the buffer table; without them it is left out.
   final BufferReportLabels? buffers;
 
-  LineReportLabels withBuffers(BufferReportLabels buffers) => LineReportLabels(
-    contents: contents,
-    lineAnalysis: lineAnalysis,
-    station: station,
-    totalTime: totalTime,
-    lineCycleTime: lineCycleTime,
-    bottleneck: bottleneck,
-    balance: balance,
-    outputPerHour: outputPerHour,
-    waiting: waiting,
-    share: share,
-    sheet: sheet,
-    backToContents: backToContents,
-    studies: studies,
-    risk: risk,
-    buffers: buffers,
-    specials: specials,
-  );
+  LineReportLabels withBuffers(BufferReportLabels buffers) =>
+      _with(buffers: buffers);
 
   /// Texts of the failure risk chapter/sheet; without them it is left out.
   final RiskReportLabels? risk;
 
-  LineReportLabels withRisk(RiskReportLabels risk) => LineReportLabels(
-    contents: contents,
-    lineAnalysis: lineAnalysis,
-    station: station,
-    totalTime: totalTime,
-    lineCycleTime: lineCycleTime,
-    bottleneck: bottleneck,
-    balance: balance,
-    outputPerHour: outputPerHour,
-    waiting: waiting,
-    share: share,
-    sheet: sheet,
-    backToContents: backToContents,
-    studies: studies,
-    risk: risk,
-    buffers: buffers,
-    specials: specials,
-  );
+  LineReportLabels withRisk(RiskReportLabels risk) => _with(risk: risk);
 
   final String contents;
   final String lineAnalysis;
@@ -190,6 +172,56 @@ class RiskReportLabels {
 
   /// Summary of the stations without a spare machine.
   final String Function(int count) singlePoints;
+}
+
+/// Texts of the loader cell sections (one per cell of the line).
+class CellReportLabels {
+  const CellReportLabels({
+    required this.title,
+    required this.hint,
+    required this.resource,
+    required this.perPart,
+    required this.utilization,
+    required this.waiting,
+    required this.machines,
+    required this.cycleTime,
+    required this.optionsTitle,
+    required this.notMeasured,
+    required this.machineCount,
+    required this.loaderParts,
+    required this.best,
+  });
+
+  final String title;
+
+  /// How the cell is measured and computed.
+  final String hint;
+  final String resource;
+
+  /// Columns: time per part, utilization and waiting time per own cycle.
+  final String perPart;
+  final String utilization;
+  final String waiting;
+
+  /// Column "number of machines" and name of the machines as bottleneck.
+  final String machines;
+  final String cycleTime;
+  final String optionsTitle;
+  final String notMeasured;
+
+  /// "Machine ×3".
+  final String Function(String name, int count) machineCount;
+
+  /// "Loader (2 parts per cycle)".
+  final String Function(String name, int count) loaderParts;
+
+  /// From how many machines on another machine brings nothing.
+  final String Function(int count, String loader) best;
+
+  /// Name of a resource with its count.
+  String resourceName(CellResource r) => r.factor == 1
+      ? r.name
+      : (r.isMachine ? machineCount : loaderParts)(r.name, r.factor);
 }
 
 /// Texts of the special cycles table.

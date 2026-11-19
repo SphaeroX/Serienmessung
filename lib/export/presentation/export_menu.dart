@@ -123,6 +123,21 @@ LineReportLabels lineReportLabels(AppLocalizations l) => LineReportLabels(
     conveyorPlaces: l.reportConveyorPlaces,
     conveyorTime: l.conveyorTime,
   ),
+  cells: CellReportLabels(
+    title: l.loaderCell,
+    hint: l.cellHint,
+    resource: l.cellResource,
+    perPart: l.cellPerPart,
+    utilization: l.cellUtilization,
+    waiting: l.cellWaiting,
+    machines: l.cellMachines,
+    cycleTime: l.cellCycleTime,
+    optionsTitle: l.cellOptionsTitle,
+    notMeasured: l.cellNotMeasured,
+    machineCount: l.cellMachineCount,
+    loaderParts: l.cellLoaderParts,
+    best: l.cellBest,
+  ),
 );
 
 /// Texts of the failure risk chapter in the current language.

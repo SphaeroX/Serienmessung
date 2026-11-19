@@ -1,14 +1,22 @@
+import 'dart:convert';
+
 import 'package:cyclescope/analysis/domain/statistics.dart';
 import 'package:cyclescope/core/time_format.dart';
 import 'package:cyclescope/export/domain/export_data.dart';
 import 'package:cyclescope/export/domain/group_report.dart';
+import 'package:cyclescope/export/domain/group_xlsx_export.dart';
+import 'package:cyclescope/export/domain/pdf_report.dart';
 import 'package:cyclescope/group/domain/study_group.dart';
 import 'package:cyclescope/recording/domain/measurement.dart';
 import 'package:cyclescope/revision/domain/revision.dart';
 import 'package:cyclescope/study/domain/study.dart';
+import 'package:excel/excel.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'export_test.dart' show numOf;
+import 'group_report_full_test.dart' show formulaOf, lineLabels;
 import 'group_report_test.dart' show fullLabels, groupLabels;
+import 'pdf_report_test.dart' show pdfLabels;
 
 const s = 1000000;
 
@@ -110,6 +118,32 @@ ExportInput loaderWithWaiting(int id, String name) {
   );
 }
 
+final labels = lineLabels.withCells(
+  CellReportLabels(
+    title: 'Loader cell',
+    hint: 'Machines served in turn by loaders.',
+    resource: 'Resource',
+    perPart: 'Per part',
+    utilization: 'Utilization',
+    waiting: 'Waiting per cycle',
+    machines: 'Machines',
+    cycleTime: 'Cell cycle time',
+    optionsTitle: 'Cycle time by number of machines',
+    notMeasured: 'The cell needs times.',
+    machineCount: (name, count) => '$name x$count',
+    loaderParts: (name, count) => '$name ($count parts per cycle)',
+    best: (count, loader) => 'From $count machines on: $loader',
+  ),
+);
+
+/// Rows of the line sheet as texts ('' for empty cells).
+List<List<String>> lineRows(GroupReportInput input) => [
+  for (final r in Excel.decodeBytes(
+    buildGroupReportXlsx(input, labels),
+  ).tables['Line analysis']!.rows)
+    [for (final c in r) c?.value?.toString() ?? ''],
+];
+
 GroupReportInput report(List<ExportInput> entries) => GroupReportInput(
   group: StudyGroup(
     id: 1,
@@ -193,6 +227,148 @@ void main() {
       ]).line;
       expect(line.stations.single.cycleTime, closeTo(32 * s, 1));
       expect(line.stations.single.previousCycleTime, closeTo(36 * s, 1));
+    });
+  });
+
+  group('Excel report with a loader cell', () {
+    test('the cell station carries its cell cycle time as a value', () {
+      final book = Excel.decodeBytes(buildGroupReportXlsx(example(), labels));
+      final line = book.tables['Line analysis']!;
+      final station = line.rows.firstWhere(
+        (r) => r.length > 2 && r[0]?.value.toString() == '2',
+      );
+      expect(station[1]!.value.toString(), 'Machine (×3)');
+      expect(formulaOf(station[2]), isNull);
+      expect(numOf(station[2]!.value), 32);
+      // The other stations still refer to their study sheets.
+      final saw = line.rows.firstWhere(
+        (r) => r.length > 2 && r[0]?.value.toString() == '1',
+      );
+      expect(formulaOf(saw[2]), contains("'1 Saw'!B"));
+    });
+
+    test('the cell section lists resources and the machine table', () {
+      final rows = lineRows(example());
+      final title = rows.indexWhere(
+        (r) => r.isNotEmpty && r[0] == 'Loader cell: 2. Machine',
+      );
+      expect(title, greaterThan(0));
+      final header = rows.indexWhere(
+        (r) => r.isNotEmpty && r[0] == 'Resource',
+        title,
+      );
+      expect(rows[header].take(4), [
+        'Resource',
+        'Per part [s]',
+        'Utilization [%]',
+        'Waiting per cycle [s]',
+      ]);
+      expect(rows[header + 1].take(4), ['Machine x3', '29.333', '91.7', '8']);
+      expect(rows[header + 2].take(4), ['Loader 1', '32', '100', '0']);
+      expect(rows[header + 3].take(4), ['Loader 2', '20', '62.5', '12']);
+      expect(rows[header + 4].take(4), ['Loader 3', '15', '46.9', '17']);
+
+      final options = rows.indexWhere(
+        (r) => r.isNotEmpty && r[0] == 'Machines',
+        header,
+      );
+      expect(rows[options].take(3), [
+        'Machines',
+        'Cell cycle time [s]',
+        'Bottleneck',
+      ]);
+      expect(rows[options + 1].take(3), ['1', '88', 'Machines']);
+      expect(rows[options + 2].take(3), ['2', '44', 'Machines']);
+      expect(rows[options + 3].take(3), ['3', '32', 'Loader 1']);
+      expect(rows[options + 6].take(3), ['6', '32', 'Loader 1']);
+      expect(
+        rows.any((r) => r.isNotEmpty && r[0] == 'From 3 machines on: Loader 1'),
+        isTrue,
+      );
+    });
+
+    test('a cell without loader times is listed as not measured', () {
+      final input = report([
+        member(1, 'Saw', 12),
+        member(2, 'Machine', 88),
+        ExportInput(
+          study: member(3, 'Gantry', 1, loader: true).study,
+          steps: const [],
+          measurements: const [],
+          unit: TimeUnit.seconds,
+          method: CycleTimeMethod.median,
+          locale: 'en',
+          exportedAt: DateTime(2026, 3, 20),
+          labels: fullLabels,
+        ),
+      ]);
+      final rows = lineRows(input);
+      final station = rows.firstWhere((r) => r.length > 2 && r[0] == '2');
+      expect(station[1], 'Machine');
+      expect(station[2], '');
+      expect(
+        rows.any((r) => r.isNotEmpty && r[0] == 'The cell needs times.'),
+        isTrue,
+      );
+      expect(rows.any((r) => r.isNotEmpty && r[0] == 'Machines'), isFalse);
+    });
+
+    test('without the cell texts the section is left out', () {
+      final book = Excel.decodeBytes(
+        buildGroupReportXlsx(example(), lineLabels),
+      );
+      final rows = book.tables['Line analysis']!.rows;
+      expect(
+        rows.any(
+          (r) =>
+              r.isNotEmpty &&
+              (r[0]?.value.toString() ?? '').startsWith('Loader cell'),
+        ),
+        isFalse,
+      );
+    });
+  });
+
+  group('PDF report with a loader cell', () {
+    test('the line chapter describes the cell', () async {
+      final text = latin1.decode(
+        await buildGroupReportPdf(
+          example(),
+          pdfLabels,
+          labels,
+          compress: false,
+        ),
+      );
+      bool has(String words) =>
+          words.split(' ').every((w) => text.contains('[($w)]TJ'));
+      expect(has('Loader cell: 2. Machine'), isTrue);
+      expect(has('Resource'), isTrue);
+      expect(has('Utilization'), isTrue);
+      expect(has('Machine x3'), isTrue);
+      expect(has('Cycle time by number of machines'), isTrue);
+      expect(has('From 3 machines on: Loader 1'), isTrue);
+    });
+
+    test('a cell that is not measured does not break the report', () async {
+      final bytes = await buildGroupReportPdf(
+        report([
+          member(1, 'Machine', 88),
+          ExportInput(
+            study: member(2, 'Gantry', 1, loader: true).study,
+            steps: const [],
+            measurements: const [],
+            unit: TimeUnit.seconds,
+            method: CycleTimeMethod.median,
+            locale: 'en',
+            exportedAt: DateTime(2026, 3, 20),
+            labels: fullLabels,
+          ),
+        ]),
+        pdfLabels,
+        labels,
+        compress: false,
+      );
+      expect(latin1.decode(bytes), contains('[(needs)]TJ'));
     });
   });
 }

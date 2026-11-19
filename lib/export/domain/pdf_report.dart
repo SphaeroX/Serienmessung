@@ -558,6 +558,9 @@ List<pw.Widget> _lineSection(
         ],
       ),
     ],
+    if (ll.cells != null)
+      for (final st in line.stations.where((st) => st.isCell))
+        ..._cellWidgets(g, ll, st),
     if (ll.specials != null &&
         line.stations.any(
           (st) => st.machines.any((m) => m.specialCycles.isNotEmpty),
@@ -585,6 +588,65 @@ List<pw.Widget> _lineSection(
                   m.cycleTime == null ? '' : _fmt(g, m.cycleTime!),
                 ],
         ],
+      ),
+    ],
+  ];
+}
+
+/// Section of one loader cell: its resources and, for equal machines, the
+/// cell cycle time by number of machines.
+List<pw.Widget> _cellWidgets(
+  GroupReportInput g,
+  LineReportLabels ll,
+  LineStation st,
+) {
+  final cl = ll.cells!;
+  final cell = st.cell!;
+  final options = cell.options();
+  String opt(double? v) => v == null ? '' : _fmt(g, v);
+  return [
+    _section('${cl.title}: ${st.position + 1}. ${st.name}'),
+    pw.Text(_latin1(cl.hint), style: _small),
+    if (!cell.measured) pw.Text(_latin1(cl.notMeasured), style: _small),
+    pw.SizedBox(height: 4),
+    _table(
+      [cl.resource, cl.perPart, cl.utilization, cl.waiting],
+      [
+        for (final r in cell.resources)
+          [
+            r.isBottleneck
+                ? '${cl.resourceName(r)} (${ll.bottleneck})'
+                : cl.resourceName(r),
+            opt(r.perPart),
+            r.utilization == null
+                ? ''
+                : '${formatNumber(r.utilization! * 100, 1, locale: g.locale)} %',
+            opt(r.idlePerCycle),
+          ],
+      ],
+    ),
+    if (options.isNotEmpty) ...[
+      pw.SizedBox(height: 6),
+      pw.Text(
+        _latin1(cl.optionsTitle),
+        style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+      ),
+      pw.SizedBox(height: 2),
+      _table(
+        [cl.machines, cl.cycleTime, ll.bottleneck],
+        [
+          for (final o in options)
+            [
+              '${o.machines}',
+              _fmt(g, o.cycleTime),
+              o.machinesAreBottleneck ? cl.machines : cell.slowestLoader!.name,
+            ],
+        ],
+      ),
+      pw.SizedBox(height: 2),
+      pw.Text(
+        _latin1(cl.best(cell.bestMachineCount!, cell.slowestLoader!.name)),
+        style: _small,
       ),
     ],
   ];

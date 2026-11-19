@@ -331,16 +331,20 @@ void _writeLine(
     // Members of the station whose sheet holds a real cycle time, as the
     // effective cycle time of the machine (special cycles included, like
     // the line analysis in the app).
+    // A loader cell has no formula: its cycle time comes from the work
+    // times of its members (waiting steps left out), see the cell section.
     final refs = [
-      for (var j = 0; j < groups[k].length; j++)
-        if (cycleRows[groups[k][j]] != null && station.machines[j].measured)
-          _effective(
-            '${sheetRef(names[groups[k][j]])}!B${cycleRows[groups[k][j]]}',
-            station.machines[j].specialCycles,
-            unit,
-          ),
+      if (!station.isCell)
+        for (var j = 0; j < groups[k].length; j++)
+          if (cycleRows[groups[k][j]] != null && station.machines[j].measured)
+            _effective(
+              '${sheetRef(names[groups[k][j]])}!B${cycleRows[groups[k][j]]}',
+              station.machines[j].specialCycles,
+              unit,
+            ),
     ];
-    final measured = refs.isNotEmpty && station.cycleTime != null;
+    final measured =
+        (refs.isNotEmpty || station.isCell) && station.cycleTime != null;
     final prev = station.previousCycleTime;
     // Parallel machines add their capacities: 1 / (1/t1 + 1/t2 + ...).
     final cycleFormula = refs.length == 1
@@ -353,8 +357,12 @@ void _writeLine(
               names[groups[k].single],
               g.entries[groups[k].single].study.name,
             )
-          : t(_stationName(station, groups[k].length)),
-      measured ? number(cycleFormula) : null,
+          : t(_stationName(station, _machineCount(station, groups[k].length))),
+      !measured
+          ? null
+          : station.isCell
+          ? time(station.cycleTime!)
+          : number(cycleFormula),
       measured ? number('ROUND(C$row/$sumCell*100,1)', 1) : null,
       measured ? number('ROUND($maxCell-C$row,$decimals)') : null,
       prev == null ? null : time(prev),
@@ -402,7 +410,7 @@ void _writeLine(
       final c = st.conveyorBefore;
       sh.row([
         IntCellValue(st.position + 1),
-        t(_stationName(st, groups[st.position].length)),
+        t(_stationName(st, _machineCount(st, groups[st.position].length))),
         b == null ? null : IntCellValue(b.capacity),
         b == null ? null : time(b.storeMicros),
         b == null ? null : time(b.retrieveMicros),
@@ -411,6 +419,48 @@ void _writeLine(
           c == null ? null : time(c.transportMicros),
         ],
       ]);
+    }
+  }
+  final cl = ll.cells;
+  if (cl != null) {
+    for (final st in line.stations.where((st) => st.isCell)) {
+      final cell = st.cell!;
+      sh.gap();
+      sh.section('${cl.title}: ${st.position + 1}. ${st.name}');
+      sh.note(cl.hint);
+      if (!cell.measured) sh.note(cl.notMeasured);
+      sh.header([
+        cl.resource,
+        '${cl.perPart} [${unit.label}]',
+        '${cl.utilization} [%]',
+        '${cl.waiting} [${unit.label}]',
+      ]);
+      for (final r in cell.resources) {
+        sh.row([
+          t(cl.resourceName(r)),
+          r.perPart == null ? null : time(r.perPart!),
+          r.utilization == null
+              ? null
+              : fixed(DoubleCellValue(_round(r.utilization! * 100, 1)), 1),
+          r.idlePerCycle == null ? null : time(r.idlePerCycle!),
+        ]);
+      }
+      final options = cell.options();
+      if (options.isEmpty) continue;
+      sh.gap();
+      sh.header([
+        cl.machines,
+        '${cl.cycleTime} [${unit.label}]',
+        ll.bottleneck,
+      ]);
+      for (final o in options) {
+        sh.row([
+          IntCellValue(o.machines),
+          time(o.cycleTime),
+          t(o.machinesAreBottleneck ? cl.machines : cell.slowestLoader!.name),
+        ]);
+      }
+      sh.note(cl.best(cell.bestMachineCount!, cell.slowestLoader!.name));
     }
   }
   final sl = ll.specials;
@@ -452,6 +502,14 @@ void _writeLine(
 /// number (`A / B (×2)`).
 String _stationName(LineStation station, int machines) =>
     machines == 1 ? station.name : '${station.name} (×$machines)';
+
+/// Machines of a station with [members] group members: all of them, or for
+/// a loader cell the machines its loaders serve.
+int _machineCount(LineStation station, int members) => station.cell == null
+    ? members
+    : station.cell!.resources
+          .where((r) => r.isMachine)
+          .fold(0, (a, r) => a + r.factor);
 
 /// Formula of a machine's effective cycle time: `(ref + extra time per
 /// part) / availability`, with [ref] the cell of its measured cycle time.
