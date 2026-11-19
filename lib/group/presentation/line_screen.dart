@@ -7,6 +7,7 @@ import '../../export/presentation/export_menu.dart';
 import '../../l10n/app_localizations.dart';
 import '../domain/failure_risk.dart';
 import '../domain/line_analysis.dart';
+import 'loader_cell_card.dart';
 import 'simulation_screen.dart';
 
 /// The studies of a group looked at as one line: key figures, a stacked bar
@@ -251,6 +252,7 @@ class _LineBody extends StatelessWidget {
                         l.lineShare(
                           '${formatNumber(st.share * 100, 1, locale: locale)} %',
                         ),
+                        if (st.isCell) l.loaderCell,
                         if (st.isParallel) ...[
                           l.lineParallelMachines(st.machines.length),
                           for (final m in st.machines)
@@ -287,6 +289,7 @@ class _LineBody extends StatelessWidget {
                     ),
             ),
           ),
+          if (st.isCell) LoaderCellCard(station: st, time: t, locale: locale),
         ],
         ..._risk(FailureRisk.of(line), locale),
       ],

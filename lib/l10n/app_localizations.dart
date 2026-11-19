@@ -2671,6 +2671,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Privacy policy'**
   String get privacyPolicy;
+
+  /// No description provided for @loaderCell.
+  ///
+  /// In en, this message translates to:
+  /// **'Loader cell'**
+  String get loaderCell;
+
+  /// No description provided for @cellLoaderToggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Loader of the machine above'**
+  String get cellLoaderToggle;
+
+  /// No description provided for @cellMachinesMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Number of machines…'**
+  String get cellMachinesMenu;
+
+  /// No description provided for @cellPartsMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Parts per cycle…'**
+  String get cellPartsMenu;
+
+  /// No description provided for @cellMachinesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Equal machines in the cell'**
+  String get cellMachinesTitle;
+
+  /// No description provided for @cellMachinesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How many machines of this kind the loaders serve in turn. The times of this study count for each of them.'**
+  String get cellMachinesHint;
+
+  /// No description provided for @cellPartsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Parts per loader cycle'**
+  String get cellPartsTitle;
+
+  /// No description provided for @cellPartsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How many parts the loader handles in one measured cycle.'**
+  String get cellPartsHint;
+
+  /// No description provided for @cellCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get cellCountLabel;
+
+  /// No description provided for @cellCountInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number from 1'**
+  String get cellCountInvalid;
+
+  /// No description provided for @cellRoleLoaderParts.
+  ///
+  /// In en, this message translates to:
+  /// **'Loader · {count, plural, =1{1 part} other{{count} parts}} per cycle'**
+  String cellRoleLoaderParts(int count);
+
+  /// No description provided for @cellRoleMachines.
+  ///
+  /// In en, this message translates to:
+  /// **'Machine of the cell · ×{count}'**
+  String cellRoleMachines(int count);
+
+  /// No description provided for @cellHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Machines served in turn by loaders. Measure every loader and the machine over the whole cycle, with waiting as steps of their own. In the step list, mark waiting for a machine or for material as waiting time; waiting for another loader on the rail stays unmarked.'**
+  String get cellHint;
+
+  /// No description provided for @cellNotMeasured.
+  ///
+  /// In en, this message translates to:
+  /// **'The cell needs times for the machine and for at least one loader.'**
+  String get cellNotMeasured;
+
+  /// No description provided for @cellResource.
+  ///
+  /// In en, this message translates to:
+  /// **'Resource'**
+  String get cellResource;
+
+  /// No description provided for @cellPerPart.
+  ///
+  /// In en, this message translates to:
+  /// **'Per part'**
+  String get cellPerPart;
+
+  /// No description provided for @cellUtilization.
+  ///
+  /// In en, this message translates to:
+  /// **'Utilization'**
+  String get cellUtilization;
+
+  /// No description provided for @cellWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting per cycle'**
+  String get cellWaiting;
+
+  /// No description provided for @cellMachineCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} ×{count}'**
+  String cellMachineCount(String name, int count);
+
+  /// No description provided for @cellLoaderParts.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} ({count} parts per cycle)'**
+  String cellLoaderParts(String name, int count);
+
+  /// No description provided for @cellOptionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle time by number of machines'**
+  String get cellOptionsTitle;
+
+  /// No description provided for @cellMachines.
+  ///
+  /// In en, this message translates to:
+  /// **'Machines'**
+  String get cellMachines;
+
+  /// No description provided for @cellCycleTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Cell cycle time'**
+  String get cellCycleTime;
+
+  /// No description provided for @cellBest.
+  ///
+  /// In en, this message translates to:
+  /// **'From {count} machines on, another machine brings nothing: {loader} sets the pace.'**
+  String cellBest(int count, String loader);
+
+  /// No description provided for @stepWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting time'**
+  String get stepWaiting;
+
+  /// No description provided for @stepWaitingTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a machine or for material: left out in a loader cell'**
+  String get stepWaitingTooltip;
 }
 
 class _AppLocalizationsDelegate

@@ -1527,4 +1527,103 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get privacyPolicy => 'Datenschutzerklärung';
+
+  @override
+  String get loaderCell => 'Laderzelle';
+
+  @override
+  String get cellLoaderToggle => 'Lader der Maschine darüber';
+
+  @override
+  String get cellMachinesMenu => 'Anzahl Maschinen …';
+
+  @override
+  String get cellPartsMenu => 'Teile pro Zyklus …';
+
+  @override
+  String get cellMachinesTitle => 'Gleiche Maschinen in der Zelle';
+
+  @override
+  String get cellMachinesHint =>
+      'Wie viele Maschinen dieser Art die Lader der Reihe nach bedienen. Die Zeiten dieser Studie gelten für jede von ihnen.';
+
+  @override
+  String get cellPartsTitle => 'Teile pro Lader-Zyklus';
+
+  @override
+  String get cellPartsHint =>
+      'Wie viele Teile der Lader in einem gemessenen Zyklus bewegt.';
+
+  @override
+  String get cellCountLabel => 'Anzahl';
+
+  @override
+  String get cellCountInvalid => 'Ganze Zahl ab 1 eingeben';
+
+  @override
+  String cellRoleLoaderParts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Teile',
+      one: '1 Teil',
+    );
+    return 'Lader · $_temp0 pro Zyklus';
+  }
+
+  @override
+  String cellRoleMachines(int count) {
+    return 'Maschine der Zelle · ×$count';
+  }
+
+  @override
+  String get cellHint =>
+      'Maschinen, die der Reihe nach von Ladern bedient werden. Jeden Lader und die Maschine über den ganzen Zyklus messen, Warten als eigene Schritte. In der Schrittliste das Warten auf eine Maschine oder auf Material als Wartezeit markieren; das Warten auf einen anderen Lader auf der Schiene bleibt unmarkiert.';
+
+  @override
+  String get cellNotMeasured =>
+      'Die Zelle braucht Zeiten für die Maschine und für mindestens einen Lader.';
+
+  @override
+  String get cellResource => 'Ressource';
+
+  @override
+  String get cellPerPart => 'Pro Teil';
+
+  @override
+  String get cellUtilization => 'Auslastung';
+
+  @override
+  String get cellWaiting => 'Warten pro Zyklus';
+
+  @override
+  String cellMachineCount(String name, int count) {
+    return '$name ×$count';
+  }
+
+  @override
+  String cellLoaderParts(String name, int count) {
+    return '$name ($count Teile pro Zyklus)';
+  }
+
+  @override
+  String get cellOptionsTitle => 'Taktzeit nach Anzahl Maschinen';
+
+  @override
+  String get cellMachines => 'Maschinen';
+
+  @override
+  String get cellCycleTime => 'Taktzeit der Zelle';
+
+  @override
+  String cellBest(int count, String loader) {
+    return 'Ab $count Maschinen bringt eine weitere nichts mehr: $loader bestimmt den Takt.';
+  }
+
+  @override
+  String get stepWaiting => 'Wartezeit';
+
+  @override
+  String get stepWaitingTooltip =>
+      'Warten auf eine Maschine oder auf Material: zählt in einer Laderzelle nicht';
 }

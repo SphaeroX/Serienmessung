@@ -163,6 +163,14 @@ class _EditStudyScreenState extends ConsumerState<EditStudyScreen> {
     await _load(fields: false);
   }
 
+  /// Marks or unmarks [step] as waiting for supply (loader cells).
+  Future<void> _toggleWaiting(StepDefinition step) async {
+    await ref
+        .read(studyRepositoryProvider)
+        .setStepWaiting(step.id, !step.waiting);
+    await _load(fields: false);
+  }
+
   Future<void> _add() async {
     final name = _newStep.text.trim();
     if (name.isEmpty) return;
@@ -334,13 +342,31 @@ class _EditStudyScreenState extends ConsumerState<EditStudyScreen> {
                               child: const Icon(Icons.drag_handle),
                             ),
                             title: Text(s.name),
-                            subtitle: Text(l.stepOf(i + 1, _steps.length)),
+                            subtitle: Text(
+                              '${l.stepOf(i + 1, _steps.length)}'
+                              '${s.waiting ? ' · ${l.stepWaiting}' : ''}',
+                            ),
                             onTap: () => _rename(s),
-                            trailing: IconButton(
-                              key: Key('deleteStep-$i'),
-                              tooltip: l.deleteStep,
-                              icon: const Icon(Icons.delete_outline),
-                              onPressed: () => _delete(s),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  key: Key('waitingStep-$i'),
+                                  tooltip: l.stepWaitingTooltip,
+                                  isSelected: s.waiting,
+                                  icon: const Icon(Icons.hourglass_empty),
+                                  selectedIcon: const Icon(
+                                    Icons.hourglass_full,
+                                  ),
+                                  onPressed: () => _toggleWaiting(s),
+                                ),
+                                IconButton(
+                                  key: Key('deleteStep-$i'),
+                                  tooltip: l.deleteStep,
+                                  icon: const Icon(Icons.delete_outline),
+                                  onPressed: () => _delete(s),
+                                ),
+                              ],
                             ),
                           );
                         },

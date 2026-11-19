@@ -921,5 +921,75 @@
   "demoStepFirstPart": "First-part check",
   "sourceCodeOnGitHub": "Source code on GitHub",
   "linkOpenFailed": "Could not open the link.",
-  "privacyPolicy": "Privacy policy"
+  "privacyPolicy": "Privacy policy",
+  "loaderCell": "Loader cell",
+  "cellLoaderToggle": "Loader of the machine above",
+  "cellMachinesMenu": "Number of machines…",
+  "cellPartsMenu": "Parts per cycle…",
+  "cellMachinesTitle": "Equal machines in the cell",
+  "cellMachinesHint": "How many machines of this kind the loaders serve in turn. The times of this study count for each of them.",
+  "cellPartsTitle": "Parts per loader cycle",
+  "cellPartsHint": "How many parts the loader handles in one measured cycle.",
+  "cellCountLabel": "Number",
+  "cellCountInvalid": "Enter a whole number from 1",
+  "cellRoleLoaderParts": "Loader · {count, plural, =1{1 part} other{{count} parts}} per cycle",
+  "@cellRoleLoaderParts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cellRoleMachines": "Machine of the cell · ×{count}",
+  "@cellRoleMachines": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cellHint": "Machines served in turn by loaders. Measure every loader and the machine over the whole cycle, with waiting as steps of their own. In the step list, mark waiting for a machine or for material as waiting time; waiting for another loader on the rail stays unmarked.",
+  "cellNotMeasured": "The cell needs times for the machine and for at least one loader.",
+  "cellResource": "Resource",
+  "cellPerPart": "Per part",
+  "cellUtilization": "Utilization",
+  "cellWaiting": "Waiting per cycle",
+  "cellMachineCount": "{name} ×{count}",
+  "@cellMachineCount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cellLoaderParts": "{name} ({count} parts per cycle)",
+  "@cellLoaderParts": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cellOptionsTitle": "Cycle time by number of machines",
+  "cellMachines": "Machines",
+  "cellCycleTime": "Cell cycle time",
+  "cellBest": "From {count} machines on, another machine brings nothing: {loader} sets the pace.",
+  "@cellBest": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "loader": {
+        "type": "String"
+      }
+    }
+  },
+  "stepWaiting": "Waiting time",
+  "stepWaitingTooltip": "Waiting for a machine or for material: left out in a loader cell"
 }

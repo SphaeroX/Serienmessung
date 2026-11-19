@@ -1520,4 +1520,103 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyPolicy => 'Privacy policy';
+
+  @override
+  String get loaderCell => 'Loader cell';
+
+  @override
+  String get cellLoaderToggle => 'Loader of the machine above';
+
+  @override
+  String get cellMachinesMenu => 'Number of machines…';
+
+  @override
+  String get cellPartsMenu => 'Parts per cycle…';
+
+  @override
+  String get cellMachinesTitle => 'Equal machines in the cell';
+
+  @override
+  String get cellMachinesHint =>
+      'How many machines of this kind the loaders serve in turn. The times of this study count for each of them.';
+
+  @override
+  String get cellPartsTitle => 'Parts per loader cycle';
+
+  @override
+  String get cellPartsHint =>
+      'How many parts the loader handles in one measured cycle.';
+
+  @override
+  String get cellCountLabel => 'Number';
+
+  @override
+  String get cellCountInvalid => 'Enter a whole number from 1';
+
+  @override
+  String cellRoleLoaderParts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count parts',
+      one: '1 part',
+    );
+    return 'Loader · $_temp0 per cycle';
+  }
+
+  @override
+  String cellRoleMachines(int count) {
+    return 'Machine of the cell · ×$count';
+  }
+
+  @override
+  String get cellHint =>
+      'Machines served in turn by loaders. Measure every loader and the machine over the whole cycle, with waiting as steps of their own. In the step list, mark waiting for a machine or for material as waiting time; waiting for another loader on the rail stays unmarked.';
+
+  @override
+  String get cellNotMeasured =>
+      'The cell needs times for the machine and for at least one loader.';
+
+  @override
+  String get cellResource => 'Resource';
+
+  @override
+  String get cellPerPart => 'Per part';
+
+  @override
+  String get cellUtilization => 'Utilization';
+
+  @override
+  String get cellWaiting => 'Waiting per cycle';
+
+  @override
+  String cellMachineCount(String name, int count) {
+    return '$name ×$count';
+  }
+
+  @override
+  String cellLoaderParts(String name, int count) {
+    return '$name ($count parts per cycle)';
+  }
+
+  @override
+  String get cellOptionsTitle => 'Cycle time by number of machines';
+
+  @override
+  String get cellMachines => 'Machines';
+
+  @override
+  String get cellCycleTime => 'Cell cycle time';
+
+  @override
+  String cellBest(int count, String loader) {
+    return 'From $count machines on, another machine brings nothing: $loader sets the pace.';
+  }
+
+  @override
+  String get stepWaiting => 'Waiting time';
+
+  @override
+  String get stepWaitingTooltip =>
+      'Waiting for a machine or for material: left out in a loader cell';
 }

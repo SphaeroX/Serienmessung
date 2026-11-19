@@ -141,6 +141,16 @@ void main() {
       expect(cell.resources[2].utilization, isNull);
     });
 
+    test('the slowest loader is known even while the machines pace', () {
+      expect(example(1).machinesAreBottleneck, isTrue);
+      expect(example(1).slowestLoader!.name, 'Loader 1');
+      final unmeasured = LoaderCell.of(
+        machines: const [CellMachine(name: 'M', workMicros: 88 * s)],
+        loaders: const [CellLoader(name: 'L1', workMicros: null)],
+      );
+      expect(unmeasured.slowestLoader, isNull);
+    });
+
     test('machine time is the time one part occupies a machine', () {
       expect(example(3).machineTime, 88 * s);
       expect(example(3).loaderPace, 32 * s);

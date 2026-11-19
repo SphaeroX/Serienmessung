@@ -342,3 +342,58 @@ Future<ConveyorFields?> showConveyorDialog(
     ),
   );
 }
+
+/// Asks for a whole number from 1 (machines of a loader cell, parts per
+/// loader cycle). Null if cancelled.
+Future<int?> showCellCountDialog(
+  BuildContext context, {
+  required String title,
+  required String hint,
+  required int initial,
+}) {
+  final l = AppLocalizations.of(context);
+  final count = TextEditingController(text: '$initial');
+  final formKey = GlobalKey<FormState>();
+  int? parse(String? v) {
+    final n = int.tryParse((v ?? '').trim());
+    return n == null || n < 1 ? null : n;
+  }
+
+  return showDialog<int>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(title),
+      content: Form(
+        key: formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(hint, style: Theme.of(ctx).textTheme.bodySmall),
+              TextFormField(
+                key: const Key('cellCountField'),
+                controller: count,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(labelText: l.cellCountLabel),
+                validator: (v) => parse(v) == null ? l.cellCountInvalid : null,
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l.cancel)),
+        FilledButton(
+          key: const Key('saveCellCount'),
+          onPressed: () {
+            if (!formKey.currentState!.validate()) return;
+            Navigator.pop(ctx, parse(count.text));
+          },
+          child: Text(l.save),
+        ),
+      ],
+    ),
+  );
+}

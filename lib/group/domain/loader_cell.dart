@@ -89,8 +89,8 @@ class LoaderCell {
     required this.loaderPace,
     required this.machinePace,
     required this.machineTime,
-    required double? singleMachineTime,
-  }) : _singleMachineTime = singleMachineTime;
+    required this.singleMachineTime,
+  });
 
   factory LoaderCell.of({
     required List<CellMachine> machines,
@@ -206,13 +206,26 @@ class LoaderCell {
   /// Time one part occupies its machine (µs; mean over the machines).
   final double? machineTime;
 
-  final double? _singleMachineTime;
+  /// Time one part occupies a machine when the cell has one machine type
+  /// (µs); null for unequal machines. Basis of [options].
+  final double? singleMachineTime;
 
   bool get measured => cycleTime != null;
 
   /// The machines pace the cell (otherwise the slowest loader does).
   bool get machinesAreBottleneck =>
       measured && resources.any((r) => r.isMachine && r.isBottleneck);
+
+  /// The loader with the longest time per part; it paces the cell once
+  /// there are enough machines. Null without a measured loader.
+  CellResource? get slowestLoader {
+    CellResource? slowest;
+    for (final r in resources) {
+      if (r.isMachine || r.perPart == null) continue;
+      if (slowest == null || r.perPart! > slowest.perPart!) slowest = r;
+    }
+    return slowest;
+  }
 
   /// The resources that pace the cell.
   List<CellResource> get bottleneck => [
@@ -223,7 +236,7 @@ class LoaderCell {
   /// Smallest number of machines from which the slowest loader paces the
   /// cell – another machine brings nothing. Null for unequal machines.
   int? get bestMachineCount {
-    final machine = _singleMachineTime;
+    final machine = singleMachineTime;
     if (!measured || machine == null) return null;
     return (machine / loaderPace!).ceil();
   }
@@ -231,7 +244,7 @@ class LoaderCell {
   /// Cycle time of the cell with 1 to [maxMachines] machines; empty for
   /// unequal machines or a cell that is not measured.
   List<CellOption> options({int maxMachines = 6}) {
-    final machine = _singleMachineTime;
+    final machine = singleMachineTime;
     if (!measured || machine == null) return const [];
     return [
       for (var n = 1; n <= maxMachines; n++)

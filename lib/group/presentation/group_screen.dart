@@ -33,6 +33,9 @@ enum _StudyAction {
   moveUp,
   moveDown,
   parallel,
+  cellLoader,
+  cellMachines,
+  cellParts,
   cycleTime,
   buffer,
   conveyor,
@@ -43,6 +46,9 @@ enum _StudyAction {
 }
 
 enum _GroupAction { edit, delete }
+
+/// What a group member is within a loader cell.
+enum _CellRole { none, machine, loader }
 
 class _GroupScreenState extends ConsumerState<GroupScreen> {
   StudyGroup? _group;
@@ -118,9 +124,37 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         ids.insert(index + 1, ids.removeAt(index));
         await _reorder(ids, study.id);
       case _StudyAction.parallel:
+        // A loader becomes a plain parallel machine.
         await ref
             .read(groupRepositoryProvider)
-            .setParallel(study.id, !study.parallel);
+            .setParallel(study.id, !study.parallel || study.isCellLoader);
+        await _changed();
+      case _StudyAction.cellLoader:
+        await ref
+            .read(groupRepositoryProvider)
+            .setCellLoader(study.id, !study.isCellLoader);
+        await _changed();
+      case _StudyAction.cellMachines:
+        final l = AppLocalizations.of(context);
+        final n = await showCellCountDialog(
+          context,
+          title: l.cellMachinesTitle,
+          hint: l.cellMachinesHint,
+          initial: study.cellMachines,
+        );
+        if (n == null) return;
+        await ref.read(groupRepositoryProvider).setCellMachines(study.id, n);
+        await _changed();
+      case _StudyAction.cellParts:
+        final l = AppLocalizations.of(context);
+        final n = await showCellCountDialog(
+          context,
+          title: l.cellPartsTitle,
+          hint: l.cellPartsHint,
+          initial: study.cellParts,
+        );
+        if (n == null) return;
+        await ref.read(groupRepositoryProvider).setCellParts(study.id, n);
         await _changed();
       case _StudyAction.cycleTime:
         final micros = await showCycleTimeDialog(
@@ -423,7 +457,19 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
   }
 
   Widget _list() {
-    final labels = stationLabels([for (final m in _members) m.study.parallel]);
+    final parallel = [for (final m in _members) m.study.parallel];
+    final labels = stationLabels(parallel);
+    // A station with a loader is a loader cell: its other members are the
+    // machines the loaders serve.
+    final roles = List.filled(_members.length, _CellRole.none);
+    for (final station in stationGroups(parallel)) {
+      bool loader(int i) =>
+          i != station.first && _members[i].study.isCellLoader;
+      if (!station.any(loader)) continue;
+      for (final i in station) {
+        roles[i] = loader(i) ? _CellRole.loader : _CellRole.machine;
+      }
+    }
     return ReorderableListView.builder(
       buildDefaultDragHandles: false,
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
@@ -434,6 +480,7 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         index: i,
         count: _members.length,
         label: labels[i],
+        cellRole: roles[i],
         // Parallel machines carry a letter ("2a").
         inStation: RegExp('[a-z]').hasMatch(labels[i]),
         summary: _members[i],
@@ -462,7 +509,11 @@ class _MemberTile extends StatelessWidget {
     required this.onConveyor,
     required this.unit,
     this.specialCount = 0,
+    this.cellRole = _CellRole.none,
   });
+
+  /// Role of the member in the loader cell its station forms.
+  final _CellRole cellRole;
 
   /// Number of special cycles of the member.
   final int specialCount;
@@ -579,7 +630,12 @@ class _MemberTile extends StatelessWidget {
               : study.mode == StudyMode.stepTimer
               ? l.measurementsLabel
               : l.cyclesLabel}'
-          '${specialCount > 0 ? ' · ${l.specialCycleCount(specialCount)}' : ''}',
+          '${specialCount > 0 ? ' · ${l.specialCycleCount(specialCount)}' : ''}'
+          '${switch (cellRole) {
+            _CellRole.none => '',
+            _CellRole.machine => '\n${l.cellRoleMachines(study.cellMachines)}',
+            _CellRole.loader => '\n${l.cellRoleLoaderParts(study.cellParts)}',
+          }}',
         ),
         trailing: PopupMenuButton<_StudyAction>(
           key: Key('groupStudyMenu_${study.id}'),
@@ -601,8 +657,27 @@ class _MemberTile extends StatelessWidget {
               CheckedPopupMenuItem(
                 key: const Key('toggleParallel'),
                 value: _StudyAction.parallel,
-                checked: study.parallel,
+                checked: study.parallel && !study.isCellLoader,
                 child: Text(l.parallelToPrevious),
+              ),
+            if (index > 0)
+              CheckedPopupMenuItem(
+                key: const Key('toggleCellLoader'),
+                value: _StudyAction.cellLoader,
+                checked: study.isCellLoader,
+                child: Text(l.cellLoaderToggle),
+              ),
+            if (cellRole == _CellRole.machine)
+              PopupMenuItem(
+                key: const Key('setCellMachines'),
+                value: _StudyAction.cellMachines,
+                child: Text(l.cellMachinesMenu),
+              ),
+            if (cellRole == _CellRole.loader)
+              PopupMenuItem(
+                key: const Key('setCellParts'),
+                value: _StudyAction.cellParts,
+                child: Text(l.cellPartsMenu),
               ),
             if (index > 0 && !study.parallel && !study.hasConveyor)
               PopupMenuItem(
