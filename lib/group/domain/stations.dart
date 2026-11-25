@@ -24,26 +24,52 @@ List<String> stationLabels(List<bool> parallel) {
 ///   station (the member behind it works in parallel); anywhere else it is
 ///   a station of its own.
 ///
+/// [isArea] (in the old order) marks the members that are areas – groups
+/// inside the group. An area is always a station boundary (see
+/// [stationFlags]): an area dropped inside a station splits it, and the
+/// member behind the area becomes the first machine of a station of its
+/// own ([split], its index in the new order). That member keeps no buffer
+/// and no conveyor of its own – they stay with the station before.
+///
 /// The flag of the first member is never set.
-({List<bool> parallel, int? newHead}) parallelAfterMove(
+({List<bool> parallel, int? newHead, int? split}) parallelAfterMove(
   List<bool> parallel,
   int from,
-  int to,
-) {
-  final flags = [...parallel];
-  if (flags.isNotEmpty) flags[0] = false;
-  if (from == to) return (parallel: flags, newHead: null);
+  int to, {
+  List<bool>? isArea,
+}) {
+  final area = isArea ?? List.filled(parallel.length, false);
+  final flags = stationFlags(parallel, area);
+  if (from == to) return (parallel: flags, newHead: null, split: null);
   final wasHead = !flags[from];
   final follower = from + 1 < flags.length && flags[from + 1];
+  final movedArea = area[from];
   flags.removeAt(from);
+  final areas = [...area]..removeAt(from);
   int? newHead;
   if (wasHead && follower) {
     flags[from] = false;
     newHead = from >= to ? from + 1 : from;
   }
-  flags.insert(to, to < flags.length && flags[to]);
-  return (parallel: flags, newHead: newHead);
+  int? split;
+  final inside = to < flags.length && flags[to];
+  if (movedArea && inside) {
+    flags[to] = false;
+    split = to + 1;
+  }
+  flags.insert(to, !movedArea && inside);
+  areas.insert(to, movedArea);
+  return (parallel: stationFlags(flags, areas), newHead: newHead, split: split);
 }
+
+/// The parallel flags as they count for the stations: the first member,
+/// an area (a group inside the group, [isArea]) and the member right
+/// behind an area are never parallel – an area is always a station
+/// boundary.
+List<bool> stationFlags(List<bool> parallel, List<bool> isArea) => [
+  for (var i = 0; i < parallel.length; i++)
+    i > 0 && parallel[i] && !isArea[i] && !isArea[i - 1],
+];
 
 /// Indices of the members per station, in order.
 List<List<int>> stationGroups(List<bool> parallel) {

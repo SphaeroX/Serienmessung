@@ -13,6 +13,8 @@ import 'package:cyclescope/core/clock.dart';
 import 'package:cyclescope/core/database.dart';
 import 'package:cyclescope/core/providers.dart';
 import 'package:cyclescope/core/time_format.dart';
+import 'package:cyclescope/demo/data/demo_data_service.dart';
+import 'package:cyclescope/demo/presentation/demo_data_tile.dart';
 import 'package:cyclescope/group/data/group_repository.dart';
 import 'package:cyclescope/group/data/machine_service.dart';
 import 'package:cyclescope/group/data/special_cycle_repository.dart';
@@ -583,6 +585,30 @@ void main() {
         scrollable: find.byType(Scrollable).first,
       );
       await shot(tester, lang, '13_cell_line');
+    });
+
+    screenshotTest('$lang: plant with areas', (tester) async {
+      late int plant;
+      await tester.runAsync(() async {
+        final texts = demoTextsOf(lookupAppLocalizations(Locale(lang)));
+        final line = await DemoDataService(
+          db,
+          now: () => DateTime(2026, 11, 13, 10),
+        ).load(texts);
+        plant = (await GroupRepository(db).getGroup(line))!.parentId!;
+      });
+      await show(tester, lang, GroupScreen(groupId: plant));
+      await settle(tester);
+      await shot(tester, lang, '14_plant_group');
+
+      await show(tester, lang, LineScreen(groupId: plant));
+      await settle(tester);
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('lineAreas')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await shot(tester, lang, '15_plant_line');
     });
 
     screenshotTest('$lang: settings', (tester) async {

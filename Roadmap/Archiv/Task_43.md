@@ -41,11 +41,11 @@ Die Simulation und das Ausfallrisiko sind auch für eine große Anlage aus viele
 
 ## Umsetzungsschritte
 
-1. [ ] Zusammenfassung je Bereich als reine Funktion (TDD).
-2. [ ] Simulationsbildschirm: Bereichskarte, Zwischenüberschriften, Maschinenauswahl, Beschriftung der Verbindungen (Widget-Tests).
-3. [ ] Ausfallrisiko mit Bereichsangabe.
-4. [ ] Laufzeit messen, bei Bedarf auslagern, Schutztest.
-5. [ ] Texte, Doku, volle Suite, `flutter analyze`, `dart format`.
+1. [x] Zusammenfassung je Bereich als reine Funktion (TDD).
+2. [x] Simulationsbildschirm: Bereichskarte, Zwischenüberschriften, Maschinenauswahl, Beschriftung der Verbindungen (Widget-Tests).
+3. [x] Ausfallrisiko mit Bereichsangabe.
+4. [x] Laufzeit messen, bei Bedarf auslagern, Schutztest.
+5. [x] Texte, Doku, volle Suite, `flutter analyze`, `dart format`.
 
 ## Tests
 
@@ -68,11 +68,11 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
-- [ ] Gemessene Laufzeiten (Simulation 24 h, alle Ausfallszenarien) stehen in den Notizen.
-- [ ] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
-- [ ] `docs/architecture.md` und `Roadmap/README.md` aktuell.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Gemessene Laufzeiten (Simulation 24 h, alle Ausfallszenarien) stehen in den Notizen.
+- [x] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
+- [x] `docs/architecture.md` und `Roadmap/README.md` aktuell.
 
 ## Offene Fragen / Annahmen
 
@@ -84,16 +84,21 @@ Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder ei
 Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergreifendes gehört in `Roadmap/README.md`.
 
 - Laufzeit-Tests mit echter Uhr schwanken auf CI-Rechnern. Die Schutzgrenze deshalb großzügig wählen (Faktor 10 über dem lokal gemessenen Wert) und die genauen Messwerte hier notieren statt im Test.
+- **Gemessen** (Windows-Desktop, `flutter test`, Debug/JIT, `tests/group/domain/area_simulation_test.dart`, 12 Bereiche × 5 Stationen = 60 Stationen, ~100 Maschinen, Puffer, Band, Parallel- und wartende Station): Simulation 24 h ≈ 430 ms; `failureScenarios` (jede Maschine, mit und ohne Puffer, 8-h-Schicht) ≈ 23,7 s. Schutzgrenzen im Test: 5 s bzw. 240 s, Test-Timeout 5 min. Auf dem Gerät (AOT) nicht gemessen.
 
 ## Abschluss-Checkliste
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-(Beim Abschluss ausfüllen.)
+- **Auslagerung:** Die Ausfallszenarien sind bei großen Anlagen der teure Teil (Maschinen × 4 Läufe). `simulation_runner.dart` lagert ab `offThreadMachines` (30 simulierte Maschinen) per `Isolate.run` aus – im Simulationsbildschirm (`runSimulation`, Fortschrittsbalken `simBusy`, Knopf solange gesperrt) und beim Gruppen-Export (`withLargeScenarios` in `export_menu.dart`, Fortschrittsdialog `simCalculating`, Ergebnis als `GroupReportInput.precomputedScenarios`). Kleinere Linien rechnen wie bisher synchron, damit bestehende Widget-Tests (kurze `settle`-Fenster) unverändert laufen. Neue Stellen, die `failureScenarios` aufrufen (z. B. PDF in Task_44), sollen `GroupReportInput.failureScenarios` nutzen, damit die vorberechneten Werte greifen.
+- `LineSimulation`, `SimResult` usw. sind reine Daten und lassen sich ohne Umbau an ein Isolate schicken; der Test `tests/group/domain/simulation_runner_test.dart` vergleicht die Ergebnisse mit und ohne Isolate.
+- **Bereichs-Zusammenfassung:** `areaSimulation` ordnet simulierte Stationen über ihre Linienposition (`_numbers - 1`) den Bereichen zu; nicht gemessene Stationen werden nicht simuliert und zählen nicht. Der Puffer *vor* einem Bereich zählt zu dessen Pufferplätzen.
+- **Texte:** `simCalculating`, `beforeArea`, `areaMachine` („Bereich · Maschine“, auch im Ausfallrisiko der Linienanalyse). Für die Bereichskarte wurde `lineAreas` wiederverwendet.
+- Der Langläufer-Test macht die Suite etwa 25 s länger.

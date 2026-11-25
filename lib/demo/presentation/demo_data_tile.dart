@@ -10,6 +10,11 @@ import '../domain/demo_texts.dart';
 DemoTexts demoTextsOf(AppLocalizations l) => DemoTexts(
   groupName: l.demoGroupName,
   groupDescription: l.demoGroupDescription,
+  plantName: l.demoPlantName,
+  plantDescription: l.demoPlantDescription,
+  shippingName: l.demoShippingName,
+  labeler: l.demoLabeler,
+  palletizer: l.demoPalletizer,
   saw: l.demoSaw,
   bladeChange: l.demoBladeChange,
   millingCentre: l.demoMillingCentre,
@@ -105,7 +110,7 @@ class DemoDataTile extends ConsumerWidget {
       ..invalidate(studyListProvider)
       ..invalidate(groupListProvider);
     messenger.showSnackBar(
-      SnackBar(content: Text(l.demoDataLoaded(texts.groupName))),
+      SnackBar(content: Text(l.demoDataLoaded(texts.plantName))),
     );
   }
 

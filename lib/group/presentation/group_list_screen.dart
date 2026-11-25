@@ -6,6 +6,7 @@ import '../../backup/presentation/share_actions.dart';
 import '../../core/providers.dart';
 import '../../l10n/app_localizations.dart';
 import '../../study/presentation/study_list_screen.dart' show OpenStudy;
+import '../domain/group_paths.dart';
 import '../domain/study_group.dart';
 import 'group_dialogs.dart';
 import 'group_screen.dart';
@@ -92,13 +93,14 @@ class _GroupListScreenState extends ConsumerState<GroupListScreen> {
     if (choice == null) return;
     final groups = ref.read(groupRepositoryProvider);
     for (final id in {..._selected}) {
-      if (choice == _DeleteGroups.withStudies) {
-        final members = await ref
-            .read(studyRepositoryProvider)
-            .listStudies(groupId: id);
-        await deleteStudies(ref, [for (final m in members) m.study.id]);
+      // With studies the whole subtree goes (areas and their studies);
+      // otherwise the areas become groups of the top level.
+      final withStudies = choice == _DeleteGroups.withStudies;
+      if (withStudies) {
+        final members = await groups.subtreeStudies(id);
+        await deleteStudies(ref, [for (final s in members) s.id]);
       }
-      await groups.deleteGroup(id);
+      await groups.deleteGroup(id, withStudies: withStudies);
     }
     if (mounted) setState(_selected.clear);
     ref
@@ -160,56 +162,69 @@ class _GroupListScreenState extends ConsumerState<GroupListScreen> {
                     ),
                   ),
                 )
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
-                  itemCount: list.length,
-                  itemBuilder: (context, i) {
-                    final g = list[i];
-                    final id = g.group.id;
-                    final selected = _selected.contains(id);
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      color: selected
-                          ? theme.colorScheme.secondaryContainer
-                          : null,
-                      child: ListTile(
-                        key: Key('group_$id'),
-                        leading: CircleAvatar(
-                          backgroundColor: selected
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.tertiaryContainer,
-                          child: Icon(
-                            selected ? Icons.check : Icons.folder_outlined,
-                            color: selected
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onTertiaryContainer,
-                          ),
-                        ),
-                        title: Text(
-                          g.group.name,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                        subtitle: Text(
-                          [
-                            if (g.group.description.isNotEmpty)
-                              g.group.description,
-                            l.groupStudyCount(g.studyCount),
-                          ].join('\n'),
-                        ),
-                        isThreeLine: g.group.description.isNotEmpty,
-                        trailing: selecting
-                            ? null
-                            : const Icon(Icons.chevron_right),
-                        onTap: selecting
-                            ? () => _toggle(id)
-                            : () => _open(context, id),
-                        onLongPress: () => _toggle(id),
-                      ),
-                    );
-                  },
-                ),
+              : _tree(context, list, theme, l, selecting),
         ),
       ),
+    );
+  }
+
+  /// All groups as a tree: areas indented under their parent group.
+  Widget _tree(
+    BuildContext context,
+    List<GroupSummary> list,
+    ThemeData theme,
+    AppLocalizations l,
+    bool selecting,
+  ) {
+    final byId = {for (final g in list) g.group.id: g};
+    final order = groupTreeOrder([for (final g in list) g.group]);
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
+      itemCount: order.length,
+      itemBuilder: (context, i) {
+        final (group, depth) = order[i];
+        final g = byId[group.id]!;
+        final id = g.group.id;
+        final selected = _selected.contains(id);
+        return Card(
+          margin: EdgeInsets.only(top: 6, bottom: 6, left: 24.0 * depth),
+          color: selected ? theme.colorScheme.secondaryContainer : null,
+          child: ListTile(
+            key: Key('group_$id'),
+            leading: CircleAvatar(
+              backgroundColor: selected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.tertiaryContainer,
+              child: Icon(
+                selected
+                    ? Icons.check
+                    : depth > 0
+                    ? Icons.account_tree_outlined
+                    : Icons.folder_outlined,
+                color: selected
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.onTertiaryContainer,
+              ),
+            ),
+            title: Text(
+              g.group.name,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              [
+                if (g.group.description.isNotEmpty) g.group.description,
+                g.areaCount > 0
+                    ? l.groupAreaCount(g.areaCount, g.totalStudyCount)
+                    : l.groupStudyCount(g.studyCount),
+              ].join('\n'),
+            ),
+            isThreeLine: g.group.description.isNotEmpty,
+            trailing: selecting ? null : const Icon(Icons.chevron_right),
+            onTap: selecting ? () => _toggle(id) : () => _open(context, id),
+            onLongPress: () => _toggle(id),
+          ),
+        );
+      },
     );
   }
 }

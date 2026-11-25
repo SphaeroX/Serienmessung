@@ -62,12 +62,12 @@ Der Gesamtentwurf der Erweiterung (Task_38–46) steht in `Roadmap/README.md` un
 
 ## Umsetzungsschritte
 
-1. [ ] Stationsregeln mit Bereichen als reine Domain-Funktionen (TDD, `tests/group/domain/`).
-2. [ ] Migration v17 und Modell (`StudyGroup`, `GroupMember`, `GroupSummary`), Test mit einer v16-Datenbank, die hochgezogen wird.
-3. [ ] `listMembers`, Bereich hinein- und herauslegen, Kreisprüfung, Vor- und Nachfahren.
-4. [ ] Gemischte Reihenfolge mit `moved`; `nextGroupPosition`, `handOverStation`, `tidyStations`, `_stationOf` auf die gemischte Reihenfolge umstellen.
-5. [ ] Löschen mit und ohne Studien.
-6. [ ] Doku, volle Suite, `flutter analyze`, `dart format`.
+1. [x] Stationsregeln mit Bereichen als reine Domain-Funktionen (TDD, `tests/group/domain/`).
+2. [x] Migration v17 und Modell (`StudyGroup`, `GroupMember`, `GroupSummary`), Test mit einer v16-Datenbank, die hochgezogen wird.
+3. [x] `listMembers`, Bereich hinein- und herauslegen, Kreisprüfung, Vor- und Nachfahren.
+4. [x] Gemischte Reihenfolge mit `moved`; `nextGroupPosition`, `handOverStation`, `tidyStations`, `_stationOf` auf die gemischte Reihenfolge umstellen.
+5. [x] Löschen mit und ohne Studien.
+6. [x] Doku, volle Suite, `flutter analyze`, `dart format`.
 
 ## Tests
 
@@ -92,10 +92,10 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
-- [ ] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
-- [ ] `docs/architecture.md` und `Roadmap/README.md` aktuell.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
+- [x] `docs/architecture.md` und `Roadmap/README.md` aktuell.
 
 ## Offene Fragen / Annahmen
 
@@ -114,11 +114,19 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-(Beim Abschluss ausfüllen.)
+- **API:** `GroupRepository.listMembers(groupId)` → `List<GroupMember>` (sealed `StudyMember(study)` / `AreaMember(group)`, `lib/group/domain/group_member.dart`); `MemberKey.study(id)` / `MemberKey.area(id)` identifizieren Mitglieder (mit `==`). `setParent(groupId, parentId)` (null = oberste Ebene, wirft `GroupCycleException`), `ancestors(groupId)` (oben → Eltern), `descendants(groupId)` (Ids, rekursives CTE), `subtreeStudies(groupId)` (für das Video-Aufräumen vor `deleteGroup(..., withStudies: true)`), `reorderMembers(groupId, [MemberKey…], moved:)`.
+- **Gemischte Reihenfolge in SQL:** `StudyRepository.memberRows(db, groupId)` liefert Studien und Bereiche per `UNION ALL`, sortiert nach `pos, area, id`, mit Spalte `area` (0/1) und den Stationsspalten (bei Bereichen 0). `memberStationFlags(rows)` = `stationFlags(parallel, isArea)`. Wer Stationen aus der DB bildet, nimmt diese beiden – nicht mehr nur die Studien der Gruppe.
+- **Bereich = Stationsgrenze** ist dreifach gesichert: `stationFlags` (rein), `setParallel`/`setCellLoader` (Einschalten direkt hinter einem Bereich wird ignoriert, ohne den Puffer zu löschen) und `tidyStations` (setzt `parallel`/`cell_loader` einer Studie direkt hinter einem Bereich zurück). Dadurch bleiben auch die bisherigen Auswertungen, die nur `listStudies(groupId:)` lesen, korrekt: hinter einem Bereich steht in der DB nie `parallel = 1`.
+- **`reorder(groupId, studyIds, moved:)` mit Bereichen:** Die bewegte Studie kommt direkt vor die Studie, vor der sie jetzt steht (oder ans Ende); ohne `moved` füllen die Studien die alten Studien-Plätze, Bereiche bleiben stehen. `reorder` ruft jetzt auch ohne `moved` `tidyStations` auf (räumt nur bedeutungslose Warte-Flags und Flags hinter Bereichen auf; alle bestehenden Tests unverändert grün).
+- **Aufteilen einer Station durch einen Bereich:** `parallelAfterMove(..., isArea:)` liefert `split` (Index der Maschine hinter dem Bereich). Sie bekommt die Warte-Option des alten Stationskopfs, keinen Puffer und kein Band; `tidyStations` entfernt die Option, wenn ein Teil nur noch eine Maschine hat.
+- **Löschen:** Ohne Studien setzt der Fremdschlüssel (`ON DELETE SET NULL`) die direkten Bereiche auf oberste Ebene; `parent_position` bleibt dabei stehen (auf oberster Ebene bedeutungslos). Mit Studien wird der Teilbaum in einer Transaktion gelöscht.
+- **UI noch nicht angepasst (für Task_41):** `GroupScreen` räumt beim Löschen mit Studien nur die Videos der direkten Studien auf, `GroupListScreen` löscht bei „mit Studien“ nur die direkten Studien und dann die Gruppe (Bereiche würden oberste Ebene). Beides in Task_41 auf `subtreeStudies` / `deleteGroup(withStudies: true)` umstellen; bis dahin lassen sich Bereiche in der App nicht anlegen.
+- **Vorbestehende Testfehler unter Windows:** `tests/video/video_paths_test.dart` und `tests/video/video_study_screen_test.dart` (je ein Test) scheitern auf `main` schon vor diesem Task am Pfadtrenner (`videos/x.mp4` gegen `videos\x.mp4`). Nicht Teil dieses Tasks, unverändert gelassen.
+- **Zeilenenden:** Python unter Windows schreibt im Textmodus CRLF; das Repo nutzt LF. Beim Schreiben per Skript `newline=''` verwenden oder hinterher normalisieren.

@@ -10,7 +10,9 @@ import '../../study/domain/study.dart';
 import '../../study/presentation/create_study_screen.dart';
 import '../../study/presentation/mode_texts.dart';
 import '../../study/presentation/study_list_screen.dart' show OpenStudy;
-import '../../video/data/video_cleanup.dart';
+import '../domain/area_selection.dart';
+import '../domain/group_member.dart';
+import '../domain/group_paths.dart';
 import '../domain/study_group.dart';
 import '../../settings/presentation/settings_controller.dart';
 import '../../core/time_format.dart';
@@ -20,8 +22,12 @@ import 'machine_dialogs.dart';
 import 'special_cycles_screen.dart';
 import 'line_screen.dart';
 
-/// One group: its studies in order (drag to reorder), adding, moving,
-/// copying and removing studies, editing and deleting the group.
+/// One group: its studies and areas (groups inside the group) in order
+/// (drag to reorder), adding, moving, copying and removing studies, adding
+/// and arranging areas, editing and deleting the group.
+///
+/// Station numbers run through the areas like in the line analysis: an
+/// area shows the range of its stations ("3–7").
 class GroupScreen extends ConsumerStatefulWidget {
   const GroupScreen({super.key, required this.groupId, this.onOpenStudy});
 
@@ -49,17 +55,53 @@ enum _StudyAction {
   remove,
 }
 
-enum _GroupAction { edit, share, delete }
+enum _GroupAction { edit, share, detach, delete }
+
+enum _AreaAction {
+  moveUp,
+  moveDown,
+  buffer,
+  conveyor,
+  moveToGroup,
+  detach,
+  dissolve,
+  delete,
+}
 
 /// What a group member is within a loader cell.
 enum _CellRole { none, machine, loader }
 
+/// An area as its card shows it.
+typedef _AreaInfo = ({
+  StudyGroup group,
+  String label,
+  int studies,
+  double? cycleTime,
+});
+
 class _GroupScreenState extends ConsumerState<GroupScreen> {
   StudyGroup? _group;
+
+  /// The groups above this one, from the top level down.
+  List<StudyGroup> _path = const [];
+
+  /// The studies of the group in order (without the areas).
   List<StudySummary> _members = const [];
+
+  /// Studies and areas in group order.
+  List<MemberKey> _order = const [];
+  Map<int, _AreaInfo> _areas = const {};
+
+  /// Station label per study id, numbered through the areas.
+  Map<int, String> _labels = const {};
 
   /// Number of special cycles per member study.
   Map<int, int> _specialCounts = const {};
+
+  /// Studies of the group and all its areas, and the number of areas below
+  /// it (for the delete dialog).
+  List<Study> _subtree = const [];
+  int _areaCount = 0;
   bool _loaded = false;
 
   @override
@@ -69,19 +111,75 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
   }
 
   Future<void> _load() async {
-    final group = await ref
-        .read(groupRepositoryProvider)
-        .getGroup(widget.groupId);
+    final groups = ref.read(groupRepositoryProvider);
+    final group = await groups.getGroup(widget.groupId);
+    final below = await groups.descendants(widget.groupId);
     final members = await ref
         .read(studyRepositoryProvider)
         .listStudies(groupId: widget.groupId);
     final counts = await ref.read(specialCycleRepositoryProvider).countFor([
       for (final m in members) m.study.id,
     ]);
+    // A plain group (no areas, no parent) needs no more than before.
+    final path = group?.parentId == null
+        ? const <StudyGroup>[]
+        : await groups.ancestors(widget.groupId);
+    final areaCount = below.length;
+    final mixed = below.isEmpty
+        ? [for (final m in members) StudyMember(m.study)]
+        : await groups.listMembers(widget.groupId);
+    final subtree = below.isEmpty
+        ? [for (final m in members) m.study]
+        : await groups.subtreeStudies(widget.groupId);
+    var labels = <int, String>{};
+    final areas = <int, _AreaInfo>{};
+    if (mixed.every((m) => m is StudyMember)) {
+      final list = stationLabels([for (final m in members) m.study.parallel]);
+      labels = {
+        for (var i = 0; i < members.length; i++) members[i].study.id: list[i],
+      };
+    } else {
+      // Number the stations through the areas, like the line analysis.
+      if (!mounted) return;
+      final input = await loadGroupReport(
+        ref,
+        AppLocalizations.of(context),
+        Localizations.localeOf(context).languageCode,
+        widget.groupId,
+      );
+      if (input == null) return;
+      final list = stationLabels([
+        for (final e in input.entries) e.study.parallel,
+      ]);
+      labels = {
+        for (var i = 0; i < input.entries.length; i++)
+          input.entries[i].study.id: list[i],
+      };
+      for (final f in input.areaFigures) {
+        final first = f.firstStation;
+        final last = f.lastStation;
+        areas[f.area.group.id] = (
+          group: f.area.group,
+          label: first == null
+              ? '–'
+              : first == last
+              ? '${first + 1}'
+              : '${first + 1}–${last! + 1}',
+          studies: f.area.end - f.area.start,
+          cycleTime: f.cycleTime,
+        );
+      }
+    }
     if (!mounted) return;
     setState(() {
       _group = group;
+      _path = path;
+      _subtree = subtree;
+      _areaCount = areaCount;
       _members = members;
+      _order = [for (final m in mixed) m.key];
+      _areas = areas;
+      _labels = labels;
       _specialCounts = counts;
       _loaded = true;
     });
@@ -95,38 +193,42 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     await _load();
   }
 
-  /// Stores the new order; [moved] is the member that changed its place, so
-  /// the stations of the other members stay together.
-  Future<void> _reorder(List<int> ids, int moved) async {
+  /// Stores the new order of studies and areas; [moved] is the member that
+  /// changed its place, so the stations of the other members stay together.
+  Future<void> _reorder(List<MemberKey> order, MemberKey moved) async {
     await ref
         .read(groupRepositoryProvider)
-        .reorder(widget.groupId, ids, moved: moved);
+        .reorderMembers(widget.groupId, order, moved: moved);
     await _changed();
   }
 
   /// Drag reorder; [to] is already adjusted for the removed item.
   Future<void> _onReorder(int from, int to) async {
-    final moved = _members[from];
+    final moved = _order[from];
     setState(() {
-      _members = [..._members]
+      _order = [..._order]
         ..removeAt(from)
         ..insert(to, moved);
     });
-    await _reorder([for (final m in _members) m.study.id], moved.study.id);
+    await _reorder(_order, moved);
+  }
+
+  /// Moves member [key] one place up ([by] = -1) or down (+1).
+  Future<void> _step(MemberKey key, int by) async {
+    final k = _order.indexOf(key);
+    if (k + by < 0 || k + by >= _order.length) return;
+    final order = [..._order];
+    order.insert(k + by, order.removeAt(k));
+    await _reorder(order, key);
   }
 
   Future<void> _studyAction(_StudyAction action, int index) async {
     final study = _members[index].study;
-    final ids = [for (final m in _members) m.study.id];
     switch (action) {
       case _StudyAction.moveUp:
-        if (index == 0) return;
-        ids.insert(index - 1, ids.removeAt(index));
-        await _reorder(ids, study.id);
+        await _step(MemberKey.study(study.id), -1);
       case _StudyAction.moveDown:
-        if (index == ids.length - 1) return;
-        ids.insert(index + 1, ids.removeAt(index));
-        await _reorder(ids, study.id);
+        await _step(MemberKey.study(study.id), 1);
       case _StudyAction.parallel:
         // A loader becomes a plain parallel machine.
         await ref
@@ -200,7 +302,6 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
   Future<void> _groupAction(_GroupAction action) async {
     final group = _group;
     if (group == null) return;
-    final l = AppLocalizations.of(context);
     switch (action) {
       case _GroupAction.edit:
         final fields = await showGroupDialog(
@@ -225,76 +326,197 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
           ExportSelection(groupIds: {group.id}),
           label: group.name,
         );
+      case _GroupAction.detach:
+        await ref.read(groupRepositoryProvider).setParent(group.id, null);
+        await _changed();
       case _GroupAction.delete:
-        final members = [for (final m in _members) m.study];
-        // null = cancelled, otherwise whether the studies go too.
-        final withStudies = await showDialog<bool>(
-          context: context,
-          builder: (ctx) {
-            var studiesToo = false;
-            return StatefulBuilder(
-              builder: (ctx, setState) => AlertDialog(
-                title: Text(l.deleteGroup),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      studiesToo
-                          ? l.deleteGroupWithStudiesConfirm(
-                              group.name,
-                              members.length,
-                            )
-                          : l.deleteGroupConfirm(group.name),
-                    ),
-                    if (members.isNotEmpty)
-                      CheckboxListTile(
-                        key: const Key('deleteGroupStudies'),
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        value: studiesToo,
-                        title: Text(l.deleteGroupStudiesOption(members.length)),
-                        onChanged: (v) =>
-                            setState(() => studiesToo = v ?? false),
-                      ),
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: Text(l.cancel),
-                  ),
-                  TextButton(
-                    key: const Key('confirmDeleteGroup'),
-                    onPressed: () => Navigator.pop(ctx, studiesToo),
-                    child: Text(l.delete),
-                  ),
-                ],
-              ),
-            );
-          },
+        final deleted = await deleteGroupInteractively(
+          context,
+          ref,
+          group,
+          subtree: _subtree,
+          areaCount: _areaCount,
         );
-        if (withStudies == null) return;
-        await ref
-            .read(groupRepositoryProvider)
-            .deleteGroup(group.id, withStudies: withStudies);
-        if (withStudies) {
-          // Videos no study plays any more go with their studies.
-          final studies = ref.read(studyRepositoryProvider);
-          final files = ref.read(videoFilesProvider);
-          for (final path in {for (final m in members) ?m.videoPath}) {
-            await deleteUnusedVideo(studies, files, path);
-          }
-          // A recording of a deleted study cannot go on.
-          if (_members.any((m) => m.isRecording)) {
-            await ref.read(recordingNotifierProvider).hide();
-          }
+        if (deleted && mounted) {
+          Navigator.of(context).maybePop();
         }
-        ref
-          ..invalidate(groupListProvider)
-          ..invalidate(studyListProvider);
-        if (mounted) Navigator.of(context).maybePop();
     }
+  }
+
+  Future<void> _areaAction(_AreaAction action, StudyGroup area) async {
+    final groups = ref.read(groupRepositoryProvider);
+    switch (action) {
+      case _AreaAction.moveUp:
+        await _step(MemberKey.area(area.id), -1);
+      case _AreaAction.moveDown:
+        await _step(MemberKey.area(area.id), 1);
+      case _AreaAction.buffer:
+        await _editAreaBuffer(area);
+      case _AreaAction.conveyor:
+        await _editAreaConveyor(area);
+      case _AreaAction.moveToGroup:
+        final below = await groups.descendants(area.id);
+        if (!mounted) return;
+        final pick = await pickGroup(
+          context,
+          ref,
+          excludeIds: {area.id, widget.groupId, ...below},
+        );
+        if (pick == null) return;
+        await groups.setParent(area.id, pick.groupId);
+        await _changed();
+      case _AreaAction.dissolve:
+        final l = AppLocalizations.of(context);
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(l.dissolveArea),
+            content: Text(l.dissolveAreaConfirm(area.name)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(l.cancel),
+              ),
+              TextButton(
+                key: const Key('confirmDissolveArea'),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(l.dissolveArea),
+              ),
+            ],
+          ),
+        );
+        if (ok != true) return;
+        await groups.dissolveArea(area.id);
+        await _changed();
+      case _AreaAction.detach:
+        await groups.setParent(area.id, null);
+        await _changed();
+      case _AreaAction.delete:
+        if (await deleteGroupInteractively(context, ref, area)) {
+          await _changed();
+        }
+    }
+  }
+
+  /// Adds, edits or removes the buffer before [area] in this group.
+  Future<void> _editAreaBuffer(StudyGroup area) async {
+    final fields = await showBufferDialog(
+      context,
+      ref.read(settingsProvider).defaultUnit,
+      existing: area.hasBuffer
+          ? (
+              capacity: area.bufferCapacity,
+              storeMicros: area.bufferStoreMicros,
+              retrieveMicros: area.bufferRetrieveMicros,
+            )
+          : null,
+    );
+    if (fields == null) return;
+    final groups = ref.read(groupRepositoryProvider);
+    if (fields.remove) {
+      await groups.removeAreaBuffer(area.id);
+    } else {
+      await groups.setAreaBuffer(
+        area.id,
+        capacity: fields.capacity,
+        storeMicros: fields.storeMicros,
+        retrieveMicros: fields.retrieveMicros,
+      );
+    }
+    await _changed();
+  }
+
+  /// Adds, edits or removes the conveyor before [area] in this group.
+  Future<void> _editAreaConveyor(StudyGroup area) async {
+    final fields = await showConveyorDialog(
+      context,
+      ref.read(settingsProvider).defaultUnit,
+      existing: area.hasConveyor
+          ? (
+              capacity: area.conveyorCapacity,
+              transportMicros: area.conveyorTransportMicros,
+            )
+          : null,
+    );
+    if (fields == null) return;
+    final groups = ref.read(groupRepositoryProvider);
+    if (fields.remove) {
+      await groups.removeAreaConveyor(area.id);
+    } else {
+      await groups.setAreaConveyor(
+        area.id,
+        capacity: fields.capacity,
+        transportMicros: fields.transportMicros,
+      );
+    }
+    await _changed();
+  }
+
+  Future<void> _openArea(int id) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            GroupScreen(groupId: id, onOpenStudy: widget.onOpenStudy),
+      ),
+    );
+    await _changed();
+  }
+
+  /// Adds a group of the top level as an area (not this group itself and
+  /// none of the groups it lies in).
+  Future<void> _addExistingGroup() async {
+    final l = AppLocalizations.of(context);
+    final blocked = {widget.groupId, for (final g in _path) g.id};
+    final candidates = [
+      for (final g in await ref.read(groupRepositoryProvider).listGroups())
+        if (g.group.parentId == null && !blocked.contains(g.group.id)) g,
+    ];
+    if (!mounted) return;
+    final chosen = await showDialog<int>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l.addExistingGroup),
+        children: [
+          if (candidates.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(l.noGroupsToAdd),
+            ),
+          for (final g in candidates)
+            SimpleDialogOption(
+              key: Key('addGroupChoice_${g.group.id}'),
+              onPressed: () => Navigator.pop(ctx, g.group.id),
+              child: ListTile(
+                leading: const Icon(Icons.folder_outlined),
+                title: Text(g.group.name),
+                subtitle: Text(
+                  g.areaCount > 0
+                      ? l.groupAreaCount(g.areaCount, g.totalStudyCount)
+                      : l.groupStudyCount(g.studyCount),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (chosen == null) return;
+    await ref.read(groupRepositoryProvider).setParent(chosen, widget.groupId);
+    await _changed();
+  }
+
+  /// Creates a new group inside this one and opens it.
+  Future<void> _addNewArea() async {
+    final fields = await showGroupDialog(context);
+    if (fields == null) return;
+    final groups = ref.read(groupRepositoryProvider);
+    final id = await groups.createGroup(
+      name: fields.name,
+      description: fields.description,
+      now: ref.read(wallClockProvider)(),
+    );
+    await groups.setParent(id, widget.groupId);
+    await _changed();
+    if (mounted) await _openArea(id);
   }
 
   Future<void> _add() async {
@@ -302,31 +524,49 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     final choice = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
+      // Five entries need more than half of a phone screen.
+      isScrollControlled: true,
       builder: (sheet) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              key: const Key('addNewStudy'),
-              leading: const Icon(Icons.add),
-              title: Text(l.addNewStudy),
-              onTap: () => Navigator.pop(sheet, 'new'),
-            ),
-            ListTile(
-              key: const Key('addMachine'),
-              leading: const Icon(Icons.precision_manufacturing_outlined),
-              title: Text(l.addMachine),
-              subtitle: Text(l.addMachineHint),
-              onTap: () => Navigator.pop(sheet, 'machine'),
-            ),
-            ListTile(
-              key: const Key('addExistingStudies'),
-              leading: const Icon(Icons.playlist_add),
-              title: Text(l.addExistingStudies),
-              subtitle: Text(l.addExistingHint),
-              onTap: () => Navigator.pop(sheet, 'existing'),
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                key: const Key('addNewStudy'),
+                leading: const Icon(Icons.add),
+                title: Text(l.addNewStudy),
+                onTap: () => Navigator.pop(sheet, 'new'),
+              ),
+              ListTile(
+                key: const Key('addMachine'),
+                leading: const Icon(Icons.precision_manufacturing_outlined),
+                title: Text(l.addMachine),
+                subtitle: Text(l.addMachineHint),
+                onTap: () => Navigator.pop(sheet, 'machine'),
+              ),
+              ListTile(
+                key: const Key('addExistingStudies'),
+                leading: const Icon(Icons.playlist_add),
+                title: Text(l.addExistingStudies),
+                subtitle: Text(l.addExistingHint),
+                onTap: () => Navigator.pop(sheet, 'existing'),
+              ),
+              ListTile(
+                key: const Key('addNewArea'),
+                leading: const Icon(Icons.account_tree_outlined),
+                title: Text(l.addNewArea),
+                subtitle: Text(l.addNewAreaHint),
+                onTap: () => Navigator.pop(sheet, 'newArea'),
+              ),
+              ListTile(
+                key: const Key('addExistingGroup'),
+                leading: const Icon(Icons.drive_file_move_outline),
+                title: Text(l.addExistingGroup),
+                subtitle: Text(l.addExistingGroupHint),
+                onTap: () => Navigator.pop(sheet, 'existingGroup'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -334,6 +574,8 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     if (choice == 'new') await _addNew();
     if (choice == 'existing') await _addExisting();
     if (choice == 'machine') await _addMachine();
+    if (choice == 'newArea') await _addNewArea();
+    if (choice == 'existingGroup') await _addExistingGroup();
   }
 
   /// Adds, edits or removes the buffer before the station of [study].
@@ -394,7 +636,8 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     final fields = await showMachineDialog(
       context,
       ref.read(settingsProvider).defaultUnit,
-      canBeParallel: _members.isNotEmpty,
+      // Nothing works in parallel with an area.
+      canBeParallel: _order.isNotEmpty && !_order.last.isArea,
     );
     if (fields == null) return;
     await ref
@@ -446,57 +689,158 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     await _load();
   }
 
+  /// Members selected to become an area (long press); empty = no
+  /// selection. Always whole stations.
+  Set<MemberKey> _selected = const {};
+
+  /// Station flags of the current order (an area is a station of its own).
+  List<bool> get _flags {
+    final byId = {for (final m in _members) m.study.id: m.study.parallel};
+    return stationFlags(
+      [for (final k in _order) !k.isArea && (byId[k.id] ?? false)],
+      [for (final k in _order) k.isArea],
+    );
+  }
+
+  /// Selects or deselects [key] with its whole station.
+  void _toggle(MemberKey key) => setState(() {
+    final station = expandToStations(_order, _flags, {key});
+    _selected = _selected.contains(key)
+        ? _selected.difference(station)
+        : {..._selected, ...station};
+  });
+
+  /// Makes the selected members an area named by the user.
+  Future<void> _groupSelected() async {
+    final fields = await showGroupDialog(context);
+    if (fields == null) return;
+    await ref
+        .read(groupRepositoryProvider)
+        .groupIntoArea(
+          widget.groupId,
+          [
+            for (final k in _order)
+              if (_selected.contains(k)) k,
+          ],
+          name: fields.name,
+          description: fields.description,
+          now: ref.read(wallClockProvider)(),
+        );
+    setState(() => _selected = const {});
+    await _changed();
+  }
+
+  PreferredSizeWidget _selectionBar(AppLocalizations l) {
+    final contiguous = isContiguous(_order, _selected);
+    return AppBar(
+      leading: IconButton(
+        key: const Key('clearSelection'),
+        tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+        icon: const Icon(Icons.close),
+        onPressed: () => setState(() => _selected = const {}),
+      ),
+      title: Text(l.selectedCount(_selected.length)),
+      actions: [
+        IconButton(
+          key: const Key('groupIntoArea'),
+          tooltip: l.groupIntoArea,
+          icon: const Icon(Icons.account_tree_outlined),
+          onPressed: contiguous ? _groupSelected : null,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final selecting = _selected.isNotEmpty;
+    return PopScope(
+      canPop: !selecting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(() => _selected = const {});
+      },
+      child: _scaffold(l, theme, selecting),
+    );
+  }
+
+  Widget _scaffold(AppLocalizations l, ThemeData theme, bool selecting) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_group?.name ?? ''),
-        actions: [
-          IconButton(
-            key: const Key('lineAnalysisButton'),
-            tooltip: l.lineAnalysis,
-            icon: const Icon(Icons.stacked_bar_chart),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => LineScreen(groupId: widget.groupId),
-              ),
+      appBar: selecting
+          ? _selectionBar(l)
+          : AppBar(
+              title: _path.isEmpty
+                  ? Text(_group?.name ?? '')
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          [for (final g in _path) g.name]
+                              .join(groupPathSeparator),
+                          key: const Key('groupPath'),
+                          style: theme.textTheme.labelMedium,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          _group?.name ?? '',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+              actions: [
+                IconButton(
+                  key: const Key('lineAnalysisButton'),
+                  tooltip: l.lineAnalysis,
+                  icon: const Icon(Icons.stacked_bar_chart),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => LineScreen(groupId: widget.groupId),
+                    ),
+                  ),
+                ),
+                GroupExportButton(groupId: widget.groupId),
+                PopupMenuButton<_GroupAction>(
+                  key: const Key('groupMenu'),
+                  onSelected: _groupAction,
+                  itemBuilder: (_) => [
+                    PopupMenuItem(
+                      key: const Key('editGroup'),
+                      value: _GroupAction.edit,
+                      child: Text(l.editGroup),
+                    ),
+                    PopupMenuItem(
+                      key: const Key('shareGroup'),
+                      value: _GroupAction.share,
+                      child: Text(l.shareGroup),
+                    ),
+                    if (_group?.parentId != null)
+                      PopupMenuItem(
+                        key: const Key('detachFromParent'),
+                        value: _GroupAction.detach,
+                        child: Text(l.detachFromParent),
+                      ),
+                    PopupMenuItem(
+                      key: const Key('deleteGroup'),
+                      value: _GroupAction.delete,
+                      child: Text(l.deleteGroup),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ),
-          GroupExportButton(groupId: widget.groupId),
-          PopupMenuButton<_GroupAction>(
-            key: const Key('groupMenu'),
-            onSelected: _groupAction,
-            itemBuilder: (_) => [
-              PopupMenuItem(
-                key: const Key('editGroup'),
-                value: _GroupAction.edit,
-                child: Text(l.editGroup),
-              ),
-              PopupMenuItem(
-                key: const Key('shareGroup'),
-                value: _GroupAction.share,
-                child: Text(l.shareGroup),
-              ),
-              PopupMenuItem(
-                key: const Key('deleteGroup'),
-                value: _GroupAction.delete,
-                child: Text(l.deleteGroup),
-              ),
-            ],
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('addStudiesFab'),
-        onPressed: _add,
-        icon: const Icon(Icons.add),
-        label: Text(l.addStudies),
-      ),
+      floatingActionButton: selecting
+          ? null
+          : FloatingActionButton.extended(
+              key: const Key('addStudiesFab'),
+              onPressed: _add,
+              icon: const Icon(Icons.add),
+              label: Text(l.addStudies),
+            ),
       body: !_loaded
           ? const Center(child: CircularProgressIndicator())
-          : _members.isEmpty
+          : _order.isEmpty
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
@@ -511,10 +855,25 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                     child: Text(_group!.description),
                   ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Text(l.reorderHint, style: theme.textTheme.bodySmall),
-                ),
+                if (selecting && !isContiguous(_order, _selected))
+                  Padding(
+                    key: const Key('selectionGapHint'),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Text(
+                      l.selectionGapHint,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Text(
+                      l.reorderHint,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
                 Expanded(child: _list()),
               ],
             ),
@@ -533,7 +892,10 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
 
   Widget _list() {
     final parallel = [for (final m in _members) m.study.parallel];
-    final labels = stationLabels(parallel);
+    final unit = ref.read(settingsProvider).defaultUnit;
+    final studyIndex = {
+      for (var i = 0; i < _members.length; i++) _members[i].study.id: i,
+    };
     // A station with a loader is a loader cell: its other members are the
     // machines the loaders serve.
     final roles = List.filled(_members.length, _CellRole.none);
@@ -548,25 +910,248 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     return ReorderableListView.builder(
       buildDefaultDragHandles: false,
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
-      itemCount: _members.length,
+      itemCount: _order.length,
       onReorderItem: _onReorder,
-      itemBuilder: (context, i) => _MemberTile(
-        key: ValueKey(_members[i].study.id),
-        index: i,
-        count: _members.length,
-        label: labels[i],
-        cellRole: roles[i],
-        // Parallel machines carry a letter ("2a").
-        inStation: RegExp('[a-z]').hasMatch(labels[i]),
-        stationWaits: _stationWaits(i),
-        stationHead: _stationHead(i) == i,
-        summary: _members[i],
-        onTap: () => _open(_members[i].study.id),
-        onAction: (a) => _studyAction(a, i),
-        onBuffer: () => _editBuffer(_members[i].study),
-        onConveyor: () => _editConveyor(_members[i].study),
-        specialCount: _specialCounts[_members[i].study.id] ?? 0,
-        unit: ref.read(settingsProvider).defaultUnit,
+      itemBuilder: (context, k) {
+        final key = _order[k];
+        if (key.isArea) {
+          final area = _areas[key.id];
+          return _AreaTile(
+            key: ValueKey('areaItem_${key.id}'),
+            index: k,
+            count: _order.length,
+            area: area,
+            areaId: key.id,
+            unit: unit,
+            selected: _selected.contains(key),
+            onLongPress: () => _toggle(key),
+            onTap: _selected.isNotEmpty
+                ? () => _toggle(key)
+                : () => _openArea(key.id),
+            onAction: (a) {
+              if (area != null) _areaAction(a, area.group);
+            },
+          );
+        }
+        final i = studyIndex[key.id]!;
+        final label = _labels[key.id] ?? '';
+        return _MemberTile(
+          key: ValueKey(key.id),
+          index: k,
+          count: _order.length,
+          afterArea: k > 0 && _order[k - 1].isArea,
+          label: label,
+          cellRole: roles[i],
+          // Parallel machines carry a letter ("2a").
+          inStation: RegExp('[a-z]').hasMatch(label),
+          stationWaits: _stationWaits(i),
+          stationHead: _stationHead(i) == i,
+          summary: _members[i],
+          selected: _selected.contains(key),
+          onLongPress: () => _toggle(key),
+          onTap: _selected.isNotEmpty
+              ? () => _toggle(key)
+              : () => _open(key.id),
+          onAction: (a) => _studyAction(a, i),
+          onBuffer: () => _editBuffer(_members[i].study),
+          onConveyor: () => _editConveyor(_members[i].study),
+          specialCount: _specialCounts[key.id] ?? 0,
+          unit: unit,
+        );
+      },
+    );
+  }
+}
+
+/// Card of an area (a group inside the group): its station range, its
+/// studies and its cycle time; opens the area on tap.
+class _AreaTile extends StatelessWidget {
+  const _AreaTile({
+    super.key,
+    required this.index,
+    required this.count,
+    required this.area,
+    required this.areaId,
+    required this.unit,
+    required this.onTap,
+    required this.onAction,
+    this.selected = false,
+    this.onLongPress,
+  });
+
+  /// Part of the selection that may become an area.
+  final bool selected;
+  final VoidCallback? onLongPress;
+
+  final int index;
+  final int count;
+
+  /// Null while the figures are loading.
+  final _AreaInfo? area;
+  final int areaId;
+  final TimeUnit unit;
+  final VoidCallback onTap;
+  final ValueChanged<_AreaAction> onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final group = area?.group;
+    // What stands before the area in this group (not before the first
+    // member, where nothing stands).
+    final showConveyor = index > 0 && (group?.hasConveyor ?? false);
+    final showBuffer = index > 0 && (group?.hasBuffer ?? false);
+    final card = _card(context, theme);
+    if (group == null || (!showBuffer && !showConveyor)) return card;
+    final l = AppLocalizations.of(context);
+    String t(int micros) => formatTime(
+      micros,
+      unit,
+      locale: Localizations.localeOf(context).languageCode,
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (showConveyor)
+          Card(
+            key: Key('areaConveyor_$areaId'),
+            margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 32),
+            color: theme.colorScheme.surfaceContainerHighest,
+            child: ListTile(
+              dense: true,
+              onTap: () => onAction(_AreaAction.conveyor),
+              leading: const Icon(Icons.linear_scale),
+              title: Text(l.conveyorCard(group.conveyorCapacity)),
+              subtitle: Text(
+                l.conveyorTransport(t(group.conveyorTransportMicros)),
+              ),
+              trailing: const Icon(Icons.edit_outlined, size: 18),
+            ),
+          ),
+        if (showBuffer)
+          Card(
+            key: Key('areaBuffer_$areaId'),
+            margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 32),
+            color: theme.colorScheme.secondaryContainer,
+            child: ListTile(
+              dense: true,
+              onTap: () => onAction(_AreaAction.buffer),
+              leading: const Icon(Icons.inventory_2_outlined),
+              title: Text(l.bufferPlaces(group.bufferCapacity)),
+              subtitle: Text(
+                l.bufferTimes(
+                  t(group.bufferStoreMicros),
+                  t(group.bufferRetrieveMicros),
+                ),
+              ),
+              trailing: const Icon(Icons.edit_outlined, size: 18),
+            ),
+          ),
+        card,
+      ],
+    );
+  }
+
+  Widget _card(BuildContext context, ThemeData theme) {
+    final l = AppLocalizations.of(context);
+    final a = area;
+    final cycle = a?.cycleTime;
+    return Card(
+      key: Key('area_$areaId'),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      color: selected
+          ? theme.colorScheme.secondaryContainer
+          : theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+      child: ListTile(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        leading: ReorderableDragStartListener(
+          index: index,
+          child: const Padding(
+            padding: EdgeInsets.all(8),
+            child: Icon(Icons.drag_handle),
+          ),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.account_tree_outlined,
+              size: 18,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                '${a?.label ?? '–'}. ${a?.group.name ?? ''}',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
+        subtitle: Text(
+          [
+            l.areaLabel,
+            l.groupStudyCount(a?.studies ?? 0),
+            if (cycle != null)
+              l.areaCycleTime(
+                formatTime(
+                  cycle.round(),
+                  unit,
+                  locale: Localizations.localeOf(context).languageCode,
+                ),
+              ),
+          ].join(' · '),
+        ),
+        trailing: PopupMenuButton<_AreaAction>(
+          key: Key('areaMenu_$areaId'),
+          onSelected: onAction,
+          itemBuilder: (_) => [
+            if (index > 0)
+              PopupMenuItem(
+                key: const Key('areaMoveUp'),
+                value: _AreaAction.moveUp,
+                child: Text(l.moveUp),
+              ),
+            if (index < count - 1)
+              PopupMenuItem(
+                key: const Key('areaMoveDown'),
+                value: _AreaAction.moveDown,
+                child: Text(l.moveDown),
+              ),
+            if (index > 0 && !(a?.group.hasConveyor ?? true))
+              PopupMenuItem(
+                key: const Key('areaAddConveyor'),
+                value: _AreaAction.conveyor,
+                child: Text(l.addConveyor),
+              ),
+            if (index > 0 && !(a?.group.hasBuffer ?? true))
+              PopupMenuItem(
+                key: const Key('areaAddBuffer'),
+                value: _AreaAction.buffer,
+                child: Text(l.addBuffer),
+              ),
+            PopupMenuItem(
+              key: const Key('areaMoveToGroup'),
+              value: _AreaAction.moveToGroup,
+              child: Text(l.moveToGroup),
+            ),
+            PopupMenuItem(
+              key: const Key('detachArea'),
+              value: _AreaAction.detach,
+              child: Text(l.detachArea),
+            ),
+            PopupMenuItem(
+              key: const Key('dissolveArea'),
+              value: _AreaAction.dissolve,
+              child: Text(l.dissolveArea),
+            ),
+            PopupMenuItem(
+              key: const Key('deleteArea'),
+              value: _AreaAction.delete,
+              child: Text(l.deleteGroup),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -589,7 +1174,18 @@ class _MemberTile extends StatelessWidget {
     required this.unit,
     this.specialCount = 0,
     this.cellRole = _CellRole.none,
+    this.afterArea = false,
+    this.selected = false,
+    this.onLongPress,
   });
+
+  /// Part of the selection that may become an area.
+  final bool selected;
+  final VoidCallback? onLongPress;
+
+  /// Stands right behind an area: nothing can work in parallel with an
+  /// area, so it is always the first machine of its station.
+  final bool afterArea;
 
   /// Role of the member in the loader cell its station forms.
   final _CellRole cellRole;
@@ -706,6 +1302,7 @@ class _MemberTile extends StatelessWidget {
         bottom: 4,
         left: study.parallel && index > 0 ? 24 : 0,
       ),
+      color: selected ? theme.colorScheme.secondaryContainer : null,
       shape: inStation
           ? RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -714,6 +1311,7 @@ class _MemberTile extends StatelessWidget {
           : null,
       child: ListTile(
         onTap: onTap,
+        onLongPress: onLongPress,
         leading: ReorderableDragStartListener(
           index: index,
           child: const Padding(
@@ -756,14 +1354,14 @@ class _MemberTile extends StatelessWidget {
                 value: _StudyAction.moveDown,
                 child: Text(l.moveDown),
               ),
-            if (index > 0)
+            if (index > 0 && !afterArea)
               CheckedPopupMenuItem(
                 key: const Key('toggleParallel'),
                 value: _StudyAction.parallel,
                 checked: study.parallel && !study.isCellLoader,
                 child: Text(l.parallelToPrevious),
               ),
-            if (index > 0)
+            if (index > 0 && !afterArea)
               CheckedPopupMenuItem(
                 key: const Key('toggleCellLoader'),
                 value: _StudyAction.cellLoader,

@@ -41,12 +41,12 @@ Die Erweiterung „Bereiche“ ist rund: Die Demo-Daten zeigen eine Anlage aus B
 
 ## Umsetzungsschritte
 
-1. [ ] Freigabe des Nutzers für die Demo-Erweiterung und die dafür nötigen Zähler-Änderungen in `tests/demo/` einholen. Ohne Freigabe diesen Punkt überspringen und in den Erkenntnissen vermerken.
-2. [ ] Demo-Daten (TDD; neue Tests für die Anlage, freigegebene Anpassung der Zähler).
-3. [ ] Screenshot-Szenen, lokal gerendert geprüft.
-4. [ ] Dokumentation, Landingpage, Root-README.
-5. [ ] Version 1.9.0.
-6. [ ] Volle Suite, `flutter analyze`, `dart format`, Debug-Build; manuelle Prüfung protokollieren.
+1. [x] Freigabe des Nutzers für die Demo-Erweiterung und die dafür nötigen Zähler-Änderungen in `tests/demo/` einholen. Ohne Freigabe diesen Punkt überspringen und in den Erkenntnissen vermerken.
+2. [x] Demo-Daten (TDD; neue Tests für die Anlage, freigegebene Anpassung der Zähler).
+3. [x] Screenshot-Szenen, lokal gerendert geprüft.
+4. [x] Dokumentation, Landingpage, Root-README.
+5. [x] Version 1.9.0.
+6. [x] Volle Suite, `flutter analyze`, `dart format`, Debug-Build; manuelle Prüfung protokollieren.
 
 ## Tests
 
@@ -67,11 +67,11 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber, `flutter build apk --debug` erfolgreich.
-- [ ] Demo-Daten zeigen eine Anlage aus Bereichen (oder: Freigabe nicht erteilt, vermerkt).
-- [ ] Bestehende Tests nur dort geändert, wo der Nutzer es ausdrücklich freigegeben hat (Zähler in `tests/demo/`); die Änderungen sind in den Notizen aufgelistet.
-- [ ] `docs/`, Root-`README.md`, Landingpage und `Roadmap/README.md` aktuell; Version 1.9.0 an allen drei Stellen.
-- [ ] Manuelle Geräteprüfung protokolliert oder als offen vermerkt.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber, `flutter build apk --debug` erfolgreich.
+- [x] Demo-Daten zeigen eine Anlage aus Bereichen (oder: Freigabe nicht erteilt, vermerkt).
+- [x] Bestehende Tests nur dort geändert, wo der Nutzer es ausdrücklich freigegeben hat (Zähler in `tests/demo/`); die Änderungen sind in den Notizen aufgelistet.
+- [x] `docs/`, Root-`README.md`, Landingpage und `Roadmap/README.md` aktuell; Version 1.9.0 an allen drei Stellen.
+- [x] Manuelle Geräteprüfung protokolliert oder als offen vermerkt.
 
 ## Offene Fragen / Annahmen
 
@@ -84,16 +84,22 @@ Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder ei
 Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergreifendes gehört in `Roadmap/README.md`.
 
 - Unter Windows können `lib/l10n` und Ordner in `build/` schreibgeschützt sein (`attrib -r` hilft, siehe `Roadmap/README.md`).
+- **Freigabe:** Der Nutzer hat am 2026-11-25 die Demo-Erweiterung samt Anpassung der Demo-Tests freigegeben. Geänderte bestehende Tests: `tests/demo/demo_data_service_test.dart` (Gruppenzahl 1 → 3 und die Gehäuselinie per Id statt `.single`; bei zweimal Laden Gruppen 2 → 6, Studien 1 + 2·16 → 1 + 2·18), `tests/demo/demo_data_tile_test.dart` (Snackbar nennt „Demo: plant“; Gehäuselinie per Name statt `.single`, 15 Studien unverändert; deutsche Namen als Menge mit Werk/Gehäuselinie/Versand). Zusätzlich musste `tests/screenshots/store_screenshots_test.dart` die fünf neuen `DemoTexts`-Felder durchreichen (reine Kompilierkorrektur, keine Prüfung geändert).
+- **Abschlussprüfung (2026-11-25, Windows):** `flutter test tests/` 840 bestanden, 20 übersprungen (Screenshot-Generatoren), 2 fehlgeschlagen – die vorbestehenden Pfadtrenner-Fehler in `tests/video/` (siehe Task_38). `flutter analyze` ohne Befunde, `dart format` sauber, `flutter build apk --debug` erfolgreich (nach `attrib -R build\* /S /D` und Löschen von `build/unit_test_assets`).
+- **Screenshots:** Szenen 14 (Anlage im Gruppen-Bildschirm) und 15 (Linienanalyse der Anlage mit Bereichskarte) lokal gerendert und gesichtet; dabei überlappte der Bereichsname im Diagramm den Wert des Engpassbalkens → `YamazumiPainter` reserviert bei Bereichen ein eigenes Band oben. Bilder nicht committet (CI erzeugt sie); Root-README und Landingpage verweisen deshalb noch nicht auf sie.
+- **Manuelle Geräteprüfung: offen.** Anlage aus zwei Bereichen anlegen, Bereich öffnen und messen, Linienanalyse und Simulation, Report teilen, Anlage teilen und auf einem zweiten Gerät importieren – auf einem echten Gerät noch nicht geprüft.
 
 ## Abschluss-Checkliste
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst (letzter Task der Erweiterung: Status der Roadmap auf "abgeschlossen" setzen)
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst (letzter Task der Erweiterung: Status der Roadmap auf "abgeschlossen" setzen)
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-(Beim Abschluss ausfüllen.)
+- `DemoDataService.load` gibt weiter die Id der **Gehäuselinie** zurück (nicht der Anlage); die Obergruppe ist `getGroup(id).parentId`. So blieben die meisten Demo-Tests unverändert. Wer die Demo erweitert: Gehäuselinie allein = 1000 Teile, ganze Anlage = 998 Teile in 24 h; beide Werte hängen an der Simulation.
+- Das Snackbar-Ziel nach dem Laden ist jetzt die Anlage („Demo: Werk“), weil sie oben in der Gruppenliste steht.
+- Nach dem Merge: Release-Tag `v1.9.0`, Screenshots kommen per CI; danach Szenen 14/15 bei Bedarf in Root-README und `site/index.html` (Galerie) aufnehmen.

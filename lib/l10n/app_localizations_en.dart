@@ -829,6 +829,109 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeFromGroup => 'Remove from group';
 
   @override
+  String get addExistingGroup => 'Add existing group';
+
+  @override
+  String get addExistingGroupHint =>
+      'It becomes an area of this group, e.g. one section of a plant.';
+
+  @override
+  String get addNewArea => 'New area';
+
+  @override
+  String get addNewAreaHint => 'A new group inside this group.';
+
+  @override
+  String get noGroupsToAdd => 'No group can be added here.';
+
+  @override
+  String get areaLabel => 'Area';
+
+  @override
+  String areaCycleTime(String time) {
+    return 'Cycle time $time';
+  }
+
+  @override
+  String groupAreaCount(int areas, int studies) {
+    String _temp0 = intl.Intl.pluralLogic(
+      areas,
+      locale: localeName,
+      other: '$areas areas',
+      one: '1 area',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      studies,
+      locale: localeName,
+      other: '$studies studies',
+      one: '1 study',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String get detachArea => 'Take out of this group';
+
+  @override
+  String get detachFromParent => 'Take out of the parent group';
+
+  @override
+  String deleteGroupStudiesAndAreasOption(int studies, int areas) {
+    String _temp0 = intl.Intl.pluralLogic(
+      studies,
+      locale: localeName,
+      other: '$studies studies and ',
+      one: '1 study and ',
+      zero: '',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      areas,
+      locale: localeName,
+      other: '$areas areas',
+      one: '1 area',
+    );
+    return 'Also delete the $_temp0$_temp1 of this group';
+  }
+
+  @override
+  String deleteGroupWithAreasConfirm(String name, int areas, int studies) {
+    String _temp0 = intl.Intl.pluralLogic(
+      areas,
+      locale: localeName,
+      other: 'its $areas areas',
+      one: 'its area',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      studies,
+      locale: localeName,
+      other: '$studies studies',
+      one: '1 study',
+      zero: 'no studies',
+    );
+    return 'Delete the group \"$name\" with $_temp0 and $_temp1 including all measurements? This cannot be undone.';
+  }
+
+  @override
+  String deleteGroupKeepAreasConfirm(String name) {
+    return 'Delete the group \"$name\"? Its studies are kept without a group, its areas become groups of their own.';
+  }
+
+  @override
+  String get groupIntoArea => 'Make an area';
+
+  @override
+  String get selectionGapHint =>
+      'Only members in a row can become an area. Whole stations are selected together.';
+
+  @override
+  String get dissolveArea => 'Dissolve area';
+
+  @override
+  String dissolveAreaConfirm(String name) {
+    return 'Dissolve the area \"$name\"? Its studies and areas take its place in this group; the line stays the same.';
+  }
+
+  @override
   String get chooseGroup => 'Choose group';
 
   @override
@@ -1003,6 +1106,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lineStations => 'Stations';
+
+  @override
+  String get lineAreas => 'Areas';
+
+  @override
+  String get lineAreasHint =>
+      'Each area on its own and within the plant. Tap an area to open its own line analysis.';
+
+  @override
+  String lineAreaStations(String from, String to) {
+    return 'Stations $from–$to';
+  }
+
+  @override
+  String lineAreaStation(String number) {
+    return 'Station $number';
+  }
+
+  @override
+  String get lineAreaEmpty => 'No stations';
+
+  @override
+  String lineAreaOutput(String output) {
+    return 'Alone: $output parts/h';
+  }
+
+  @override
+  String get lineAreaBottleneck => 'Bottleneck area';
+
+  @override
+  String get simCalculating => 'Calculating the simulation…';
+
+  @override
+  String beforeArea(String name) {
+    return 'before area $name';
+  }
+
+  @override
+  String areaMachine(String area, String machine) {
+    return '$area · $machine';
+  }
 
   @override
   String get lineChartHint =>
@@ -1432,6 +1576,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get demoGroupDescription =>
       'Sample data – from the raw part to the packed housing';
+
+  @override
+  String get demoPlantName => 'Demo: plant';
+
+  @override
+  String get demoPlantDescription =>
+      'Sample plant – the housing line and shipping as two areas';
+
+  @override
+  String get demoShippingName => 'Demo: shipping';
+
+  @override
+  String get demoLabeler => 'Labeler';
+
+  @override
+  String get demoPalletizer => 'Palletizer';
 
   @override
   String get demoSaw => 'Saw';

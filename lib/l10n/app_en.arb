@@ -404,6 +404,77 @@
   "moveToGroup": "Move to group…",
   "copyToGroup": "Copy to group…",
   "removeFromGroup": "Remove from group",
+  "addExistingGroup": "Add existing group",
+  "addExistingGroupHint": "It becomes an area of this group, e.g. one section of a plant.",
+  "addNewArea": "New area",
+  "addNewAreaHint": "A new group inside this group.",
+  "noGroupsToAdd": "No group can be added here.",
+  "areaLabel": "Area",
+  "areaCycleTime": "Cycle time {time}",
+  "@areaCycleTime": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "groupAreaCount": "{areas, plural, =1{1 area} other{{areas} areas}} · {studies, plural, =1{1 study} other{{studies} studies}}",
+  "@groupAreaCount": {
+    "placeholders": {
+      "areas": {
+        "type": "int"
+      },
+      "studies": {
+        "type": "int"
+      }
+    }
+  },
+  "detachArea": "Take out of this group",
+  "detachFromParent": "Take out of the parent group",
+  "deleteGroupStudiesAndAreasOption": "Also delete the {studies, plural, =0{} =1{1 study and } other{{studies} studies and }}{areas, plural, =1{1 area} other{{areas} areas}} of this group",
+  "@deleteGroupStudiesAndAreasOption": {
+    "placeholders": {
+      "studies": {
+        "type": "int"
+      },
+      "areas": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteGroupWithAreasConfirm": "Delete the group \"{name}\" with {areas, plural, =1{its area} other{its {areas} areas}} and {studies, plural, =0{no studies} =1{1 study} other{{studies} studies}} including all measurements? This cannot be undone.",
+  "@deleteGroupWithAreasConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "areas": {
+        "type": "int"
+      },
+      "studies": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteGroupKeepAreasConfirm": "Delete the group \"{name}\"? Its studies are kept without a group, its areas become groups of their own.",
+  "@deleteGroupKeepAreasConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "groupIntoArea": "Make an area",
+  "selectionGapHint": "Only members in a row can become an area. Whole stations are selected together.",
+  "dissolveArea": "Dissolve area",
+  "dissolveAreaConfirm": "Dissolve the area \"{name}\"? Its studies and areas take its place in this group; the line stays the same.",
+  "@dissolveAreaConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "chooseGroup": "Choose group",
   "noGroup": "No group",
   "copyName": "{name} (copy)",
@@ -560,6 +631,57 @@
   "lineBalanceLabel": "Line balance",
   "lineOutputLabel": "Output per hour",
   "lineStations": "Stations",
+  "lineAreas": "Areas",
+  "lineAreasHint": "Each area on its own and within the plant. Tap an area to open its own line analysis.",
+  "lineAreaStations": "Stations {from}–{to}",
+  "@lineAreaStations": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "lineAreaStation": "Station {number}",
+  "@lineAreaStation": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "lineAreaEmpty": "No stations",
+  "lineAreaOutput": "Alone: {output} parts/h",
+  "@lineAreaOutput": {
+    "placeholders": {
+      "output": {
+        "type": "String"
+      }
+    }
+  },
+  "lineAreaBottleneck": "Bottleneck area",
+  "simCalculating": "Calculating the simulation…",
+  "beforeArea": "before area {name}",
+  "@beforeArea": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "areaMachine": "{area} · {machine}",
+  "@areaMachine": {
+    "placeholders": {
+      "area": {
+        "type": "String"
+      },
+      "machine": {
+        "type": "String"
+      }
+    }
+  },
   "lineChartHint": "Stations in group order, stacked by step. The dashed line marks the bottleneck that paces the line.",
   "lineWaiting": "Waiting: {time}",
   "@lineWaiting": {
@@ -880,6 +1002,11 @@
   },
   "demoGroupName": "Demo: housing line",
   "demoGroupDescription": "Sample data – from the raw part to the packed housing",
+  "demoPlantName": "Demo: plant",
+  "demoPlantDescription": "Sample plant – the housing line and shipping as two areas",
+  "demoShippingName": "Demo: shipping",
+  "demoLabeler": "Labeler",
+  "demoPalletizer": "Palletizer",
   "demoSaw": "Saw",
   "demoBladeChange": "Blade change",
   "demoMillingCentre": "Milling centre {n}",

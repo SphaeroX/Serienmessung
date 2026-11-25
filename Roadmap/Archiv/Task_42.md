@@ -44,12 +44,12 @@ Zwischen zwei Bereichen einer Anlage kann ein Puffer und ein Transportband stehe
 
 ## Umsetzungsschritte
 
-1. [ ] Abflachen mit Bereichsverbindung als reine Funktion (TDD, alle Regeln aus dem Entwurf).
-2. [ ] Migration v18, Modell, Repository-Methoden, Zurücksetzen beim Verlassen.
-3. [ ] Gruppen-Bildschirm: Menüpunkte und Karten (Widget-Tests).
-4. [ ] Linienanalyse und Simulation mit Verbindung zwischen Bereichen belegen.
-5. [ ] Backup-Felder, Rundreise.
-6. [ ] Texte, Doku, volle Suite, `flutter analyze`, `dart format`.
+1. [x] Abflachen mit Bereichsverbindung als reine Funktion (TDD, alle Regeln aus dem Entwurf).
+2. [x] Migration v18, Modell, Repository-Methoden, Zurücksetzen beim Verlassen.
+3. [x] Gruppen-Bildschirm: Menüpunkte und Karten (Widget-Tests).
+4. [x] Linienanalyse und Simulation mit Verbindung zwischen Bereichen belegen.
+5. [x] Backup-Felder, Rundreise.
+6. [x] Texte, Doku, volle Suite, `flutter analyze`, `dart format`.
 
 ## Tests
 
@@ -73,10 +73,10 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
-- [ ] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
-- [ ] `docs/architecture.md` und `Roadmap/README.md` aktuell.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
+- [x] `docs/architecture.md` und `Roadmap/README.md` aktuell.
 
 ## Offene Fragen / Annahmen
 
@@ -91,11 +91,16 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-(Beim Abschluss ausfüllen.)
+- **Abflachen mit Verbindung** (`flattenGroup`): eine „wartende Verbindung“ (`link`) wird beim Betreten eines Bereichs gesetzt, wenn keine äußere wartet (äußere gewinnt), und von der nächsten Studie verbraucht. Ist noch keine Studie in der Linie, wirkt sie nicht (wird aber verbraucht). Bleibt ein Bereich leer, wird der vorherige Zustand wiederhergestellt – die Verbindung wandert nicht über einen leeren Bereich hinaus zur nächsten Studie.
+- **Zurücksetzen:** `setParent` setzt die fünf Felder immer zurück (auch beim Wechsel in dieselbe Obergruppe, das ist dort ein „ans Ende hängen“); `deleteGroup` setzt sie bei den direkten Bereichen zurück, bevor der Fremdschlüssel sie zur obersten Ebene macht. Task_45 (Zusammenfassen/Auflösen) muss die Verbindung beim Umhängen bewusst mitnehmen bzw. auf Studien übertragen.
+- **Gleichwertigkeit belegt:** `tests/group/domain/area_link_test.dart` vergleicht eine Anlage aus zwei Bereichen mit denselben Studien in einer flachen Gruppe (Taktzeit, Durchlaufzeit, Ausbringung der 24-h-Simulation gleich). Die Engine ist unverändert.
+- **Backup:** Verbindungsfelder werden nur für Gruppen mit `parentRef` geschrieben und nur beim Neuanlegen in einer Obergruppe gelesen; beim Wiederverwenden einer vorhandenen Gruppe bleiben ihre Werte. Werte werden in `_parentsFirst` geprüft (ganze Zahl ≥ 0).
+- **UI-Texte** wiederverwendet (`addBuffer`, `addConveyor`, `bufferPlaces`, `conveyorCard` …), keine neuen ARB-Einträge.
+- Die Puffer-/Bandkarten vor einem Bereich erscheinen im Gruppen-Bildschirm nur, wenn der Bereich nicht das erste Mitglied ist (dort wirkt nichts); gespeichert bleibt die Verbindung trotzdem.

@@ -1,4 +1,6 @@
 import '../../core/time_format.dart';
+import '../../group/domain/area_analysis.dart';
+import '../../group/domain/group_tree.dart';
 import '../../group/domain/line_analysis.dart';
 import '../../group/domain/line_simulation.dart';
 import '../../group/domain/loader_cell.dart';
@@ -16,7 +18,12 @@ class GroupReportLabels {
     required this.cycles,
     required this.previous,
     required this.total,
+    this.area,
   });
+
+  /// Overview column with the area of each study; the column is only
+  /// written when it is set and the group has areas.
+  final String? area;
 
   final String title;
 
@@ -54,6 +61,7 @@ class LineReportLabels {
     this.specials,
     this.cells,
     this.waitsForSlowest,
+    this.areas,
   });
 
   LineReportLabels _with({
@@ -62,6 +70,7 @@ class LineReportLabels {
     SpecialReportLabels? specials,
     CellReportLabels? cells,
     String? waitsForSlowest,
+    AreaReportLabels? areas,
   }) => LineReportLabels(
     contents: contents,
     lineAnalysis: lineAnalysis,
@@ -81,7 +90,15 @@ class LineReportLabels {
     specials: specials ?? this.specials,
     cells: cells ?? this.cells,
     waitsForSlowest: waitsForSlowest ?? this.waitsForSlowest,
+    areas: areas ?? this.areas,
   );
+
+  /// Texts of the plant's areas (area columns, areas section, contents by
+  /// area); without them, or for a group without areas, the report looks
+  /// as for a single line.
+  final AreaReportLabels? areas;
+
+  LineReportLabels withAreas(AreaReportLabels areas) => _with(areas: areas);
 
   /// Texts of the loader cell sections; without them they are left out.
   final CellReportLabels? cells;
@@ -128,6 +145,28 @@ class LineReportLabels {
   final String sheet;
   final String backToContents;
   final String studies;
+}
+
+/// Texts of a plant's areas in the full report.
+class AreaReportLabels {
+  const AreaReportLabels({
+    required this.area,
+    required this.title,
+    required this.stations,
+    required this.bottleneck,
+  });
+
+  /// Column with the area of a station or study.
+  final String area;
+
+  /// Section with one row per area.
+  final String title;
+
+  /// Column with the stations of an area ("2–4").
+  final String stations;
+
+  /// Marks the area the line's bottleneck lies in.
+  final String bottleneck;
 }
 
 /// Texts of the failure risk chapter (PDF) and sheet (Excel).
@@ -305,7 +344,64 @@ class GroupReportInput {
     this.simulationHorizonMicros,
     this.simulationFailureMicros,
     this.specialCycles = const {},
+    this.areas = const [],
+    this.precomputedScenarios,
   });
+
+  /// Failure scenarios computed beforehand (e.g. in a background isolate
+  /// for a large plant); [failureScenarios] returns them instead of
+  /// simulating.
+  final List<FailureScenario>? precomputedScenarios;
+
+  /// This input with [scenarios] as [precomputedScenarios].
+  GroupReportInput withFailureScenarios(List<FailureScenario>? scenarios) =>
+      GroupReportInput(
+        group: group,
+        entries: entries,
+        unit: unit,
+        locale: locale,
+        exportedAt: exportedAt,
+        labels: labels,
+        exportLabels: exportLabels,
+        simulationHorizonMicros: simulationHorizonMicros,
+        simulationFailureMicros: simulationFailureMicros,
+        specialCycles: specialCycles,
+        areas: areas,
+        precomputedScenarios: scenarios,
+      );
+
+  /// The direct areas of the group as spans of [entries] (empty for a
+  /// group without areas). The entries of a plant are the flattened studies
+  /// of all its areas, see `flattenGroup`.
+  final List<LineArea> areas;
+
+  /// The area of every entry (null for a direct study of the group).
+  List<String?> get entryAreas => [
+    for (var k = 0; k < entries.length; k++)
+      areas
+          .where((a) => k >= a.start && k < a.end)
+          .map((a) => a.group.name)
+          .firstOrNull,
+  ];
+
+  /// The area of every station of [line] by position (null for a direct
+  /// station).
+  List<String?> stationAreas(List<AreaFigures> figures, int stations) => [
+    for (var p = 0; p < stations; p++)
+      figures
+          .where(
+            (f) =>
+                f.firstStation != null &&
+                p >= f.firstStation! &&
+                p <= f.lastStation!,
+          )
+          .map((f) => f.area.group.name)
+          .firstOrNull,
+  ];
+
+  /// Figures of [areas] within the whole line.
+  List<AreaFigures> get areaFigures =>
+      analyseAreas(line, [for (final x in entries) x.study.parallel], areas);
 
   /// Special cycles and planned stops per study id.
   final Map<int, List<SpecialCycle>> specialCycles;
@@ -319,6 +415,7 @@ class GroupReportInput {
   /// null without simulation settings or without buffers. The failure
   /// starts after a quarter of the period.
   List<FailureScenario>? get failureScenarios {
+    if (precomputedScenarios != null) return precomputedScenarios;
     final horizon = simulationHorizonMicros;
     final failure = simulationFailureMicros;
     if (horizon == null || failure == null) return null;

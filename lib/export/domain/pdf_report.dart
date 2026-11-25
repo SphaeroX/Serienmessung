@@ -9,6 +9,7 @@ import '../../recording/domain/measurement.dart';
 import '../../study/domain/study.dart';
 import '../../revision/domain/revision_comparison.dart';
 import 'export_data.dart';
+import '../../group/domain/area_analysis.dart';
 import '../../group/domain/failure_risk.dart';
 import '../../group/domain/line_analysis.dart';
 import 'group_report.dart';
@@ -105,14 +106,23 @@ Future<Uint8List> buildGroupReportPdf(
         ..._groupOverview(g, p, date).skipWhile((w) => w is! _Marker),
       ]),
     );
+    final areas = _areaStarts(g, ll);
+    final inArea = ll.areas == null ? const <String?>[] : g.entryAreas;
     for (var k = 0; k < g.entries.length; k++) {
       found['study$k'] = next();
       doc.addPage(
         _page(footer, [
+          if (areas[k] case final area?)
+            pw.Outline(
+              name: 'area$k',
+              title: _latin1(area),
+              level: 1,
+              child: pw.SizedBox(),
+            ),
           pw.Outline(
             name: 'study$k',
             title: _latin1('${k + 1}. ${g.entries[k].study.name}'),
-            level: 1,
+            level: k < inArea.length && inArea[k] != null ? 2 : 1,
             child: pw.SizedBox(),
           ),
           ..._studyWidgets(g.entries[k], p),
@@ -127,6 +137,16 @@ Future<Uint8List> buildGroupReportPdf(
   onSections?.call(found);
   return doc.save();
 }
+
+/// First entry of every non-empty area of a plant with the area's name;
+/// empty without area texts.
+Map<int, String> _areaStarts(GroupReportInput g, LineReportLabels ll) =>
+    ll.areas == null
+    ? const {}
+    : {
+        for (final a in g.areas)
+          if (!a.isEmpty) a.start: a.group.name,
+      };
 
 /// Marks where the overview section starts in [_groupOverview], so the full
 /// report can use the overview without the group header.
@@ -193,6 +213,8 @@ List<pw.Widget> _cover(
 ) {
   final gl = g.labels;
   final el = g.exportLabels;
+  final starts = _areaStarts(g, ll);
+  final inArea = ll.areas == null ? const <String?>[] : g.entryAreas;
   pw.Widget entry(String key, String title, {int level = 0}) => pw.Link(
     destination: key,
     child: pw.Padding(
@@ -251,6 +273,16 @@ List<pw.Widget> _cover(
       ),
       style: const pw.TextStyle(fontSize: 10),
     ),
+    if (ll.areas != null && g.areas.isNotEmpty)
+      pw.Padding(
+        padding: const pw.EdgeInsets.only(top: 4),
+        child: pw.Text(
+          _latin1(
+            '${ll.areas!.title}: ${[for (final a in g.areas) a.group.name].join(', ')}',
+          ),
+          style: const pw.TextStyle(fontSize: 10),
+        ),
+      ),
     pw.SizedBox(height: 24),
     if (line.measuredCount > 0)
       pw.Container(
@@ -309,8 +341,14 @@ List<pw.Widget> _cover(
         style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
       ),
     ),
-    for (var k = 0; k < g.entries.length; k++)
-      entry('study$k', '${k + 1}. ${g.entries[k].study.name}', level: 1),
+    for (var k = 0; k < g.entries.length; k++) ...[
+      if (starts[k] case final area?) entry('study$k', area, level: 1),
+      entry(
+        'study$k',
+        '${k + 1}. ${g.entries[k].study.name}',
+        level: k < inArea.length && inArea[k] != null ? 2 : 1,
+      ),
+    ],
   ];
 }
 
@@ -335,6 +373,13 @@ List<pw.Widget> _riskSection(
   final withSim = simulated != null && rl.lostWithBuffers != null;
   final singles = risk.singlePoints.length;
   String number(double v) => formatNumber(v, 1, locale: g.locale);
+  final areas = ll.areas == null || g.areas.isEmpty
+      ? const <String?>[]
+      : g.stationAreas(g.areaFigures, line.stations.length);
+  String machine(int position, String name) =>
+      position < areas.length && areas[position] != null
+      ? '${areas[position]} · $name'
+      : name;
   return [
     pw.Outline(
       name: 'risk',
@@ -399,7 +444,7 @@ List<pw.Widget> _riskSection(
           for (final f in risk.failures)
             [
               '${f.station.position + 1}',
-              f.machine,
+              machine(f.station.position, f.machine),
               number(f.outputAfter),
               f.standstill
                   ? '100 % – ${rl.standstill}'
@@ -429,6 +474,14 @@ List<pw.Widget> _lineSection(
   final conveyors = ll.buffers?.withConveyors ?? false;
   bool listed(LineStation st) =>
       st.bufferBefore != null || (conveyors && st.conveyorBefore != null);
+  // A plant: areas table, area rows in the chart and an area column.
+  final al = g.areas.isEmpty ? null : ll.areas;
+  final figures = al == null ? const <AreaFigures>[] : g.areaFigures;
+  final stationAreas = g.stationAreas(figures, line.stations.length);
+  final areaAt = {
+    for (final f in figures)
+      if (f.firstStation != null) f.firstStation!: f.area.group.name,
+  };
   return [
     pw.Outline(
       name: 'line',
@@ -444,9 +497,45 @@ List<pw.Widget> _lineSection(
     ),
     pw.SizedBox(height: 8),
     _table(['', ''], _lineFigures(g, ll, line)),
+    if (al != null) ...[
+      _section(al.title),
+      _table(
+        [al.area, al.stations, el.realCycleTime, ll.outputPerHour, ''],
+        [
+          for (final f in figures)
+            [
+              f.area.group.name,
+              f.firstStation == null
+                  ? '-'
+                  : f.firstStation == f.lastStation
+                  ? '${f.firstStation! + 1}'
+                  : '${f.firstStation! + 1}-${f.lastStation! + 1}',
+              f.cycleTime == null ? '' : _fmt(g, f.cycleTime!),
+              f.outputPerHour == null
+                  ? ''
+                  : formatNumber(f.outputPerHour!, 1, locale: g.locale),
+              f.isBottleneck ? al.bottleneck : '',
+            ],
+        ],
+      ),
+    ],
     if (max != null && max > 0) ...[
       _section(el.realCycleTime),
-      for (final st in line.stations)
+      for (final st in line.stations) ...[
+        if (areaAt[st.position] case final area?)
+          pw.Container(
+            margin: const pw.EdgeInsets.only(top: 4, bottom: 2),
+            padding: const pw.EdgeInsets.only(top: 2),
+            decoration: const pw.BoxDecoration(
+              border: pw.Border(
+                top: pw.BorderSide(color: PdfColors.grey600, width: 0.5),
+              ),
+            ),
+            child: pw.Text(
+              _latin1(area),
+              style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold),
+            ),
+          ),
         pw.Padding(
           padding: const pw.EdgeInsets.only(bottom: 3),
           child: pw.Row(
@@ -488,6 +577,7 @@ List<pw.Widget> _lineSection(
             ],
           ),
         ),
+      ],
     ],
     _section(ll.station),
     _table(
@@ -499,6 +589,7 @@ List<pw.Widget> _lineSection(
         ll.waiting,
         gl.previous,
         el.revision?.delta ?? '',
+        ?al?.area,
       ],
       [
         for (final st in line.stations)
@@ -524,6 +615,7 @@ List<pw.Widget> _lineSection(
                     decimals: _decimals(g.unit),
                     locale: g.locale,
                   ),
+            if (al != null) stationAreas[st.position] ?? '',
           ],
       ],
     ),
@@ -730,6 +822,8 @@ List<pw.Widget> _groupOverview(GroupReportInput g, PdfLabels p, String date) {
         );
   var total = 0.0;
   final rows = <List<String>>[];
+  final areaCol = _hasAreaColumn(g);
+  final entryAreas = g.entryAreas;
   for (var k = 0; k < g.entries.length; k++) {
     final x = g.entries[k];
     final a = x.analysis;
@@ -739,6 +833,7 @@ List<pw.Widget> _groupOverview(GroupReportInput g, PdfLabels p, String date) {
     rows.add([
       '${k + 1}',
       x.study.name,
+      if (areaCol) entryAreas[k] ?? '',
       x.labels.modeName,
       '${x.study.revision}',
       x.lastMeasuredText ?? '',
@@ -799,6 +894,20 @@ List<pw.Widget> _overviewTable(
   final gl = g.labels;
   final el = g.exportLabels;
   final rl = el.revision;
+  final areaCol = _hasAreaColumn(g);
+  // Column widths; a plant has the area column after the study.
+  final widths = <pw.TableColumnWidth>[
+    const pw.FixedColumnWidth(26),
+    const pw.FlexColumnWidth(3),
+    if (areaCol) const pw.FlexColumnWidth(1.6),
+    const pw.FlexColumnWidth(1.6),
+    const pw.FixedColumnWidth(44),
+    const pw.FixedColumnWidth(66),
+    const pw.FixedColumnWidth(36),
+    const pw.FlexColumnWidth(1.4),
+    const pw.FlexColumnWidth(1.4),
+    const pw.FlexColumnWidth(2),
+  ];
   return [
     heading,
     if (g.entries.isEmpty)
@@ -808,6 +917,7 @@ List<pw.Widget> _overviewTable(
         [
           gl.position,
           el.study,
+          if (areaCol) gl.area!,
           el.mode,
           rl?.revision ?? '',
           rl?.lastMeasured ?? '',
@@ -818,22 +928,16 @@ List<pw.Widget> _overviewTable(
         ],
         [
           ...rows,
-          ['', gl.total, '', '', '', '', t(total), '', ''],
+          ['', gl.total, if (areaCol) '', '', '', '', '', t(total), '', ''],
         ],
-        columnWidths: const {
-          0: pw.FixedColumnWidth(26),
-          1: pw.FlexColumnWidth(3),
-          2: pw.FlexColumnWidth(1.6),
-          3: pw.FixedColumnWidth(44),
-          4: pw.FixedColumnWidth(66),
-          5: pw.FixedColumnWidth(36),
-          6: pw.FlexColumnWidth(1.4),
-          7: pw.FlexColumnWidth(1.4),
-          8: pw.FlexColumnWidth(2),
-        },
+        columnWidths: widths.asMap(),
       ),
   ];
 }
+
+/// The overview of a plant names the area of every study.
+bool _hasAreaColumn(GroupReportInput g) =>
+    g.labels.area != null && g.areas.isNotEmpty;
 
 /// Header, key figures, steps, deviation, cycles and special times of one
 /// study.
@@ -1049,6 +1153,8 @@ pw.Widget _cycleTable(
 /// characters and drop anything else that cannot be drawn.
 String _latin1(String v) {
   final mapped = v
+      .replaceAll(' › ', ' / ')
+      .replaceAll('›', '/')
       .replaceAll('–', '-')
       .replaceAll('—', '-')
       .replaceAll('·', '·')

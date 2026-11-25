@@ -26,9 +26,16 @@ const _jitter = [0.0, 0.6, -0.4, 1.1, -0.8, 0.3, -0.2, 0.5, -0.6, 0.9, -0.3];
 /// study outside the group. Existing data is left alone; every load adds a
 /// new copy.
 ///
+/// The housing line is an area of the plant "Demo: plant"; the second area
+/// is shipping (labeler 35 s, palletizer 40 s, both typed), with a conveyor
+/// before it (6 places, 45 s). The housing line is the plant's bottleneck
+/// area.
+///
 /// The times are chosen so that the simulation of 24 hours without a
-/// failure gives exactly 1000 parts (line cycle time about 85.7 s; the
-/// line starts empty, so the first parts come late).
+/// failure gives exactly 1000 parts for the housing line on its own (line
+/// cycle time about 85.7 s; the line starts empty, so the first parts come
+/// late) and 998 for the whole plant (the conveyor delays the first
+/// parts).
 ///
 /// The line (stations in order):
 /// 1. Saw – typed 57 s, blade change every 8 h (10 min).
@@ -54,15 +61,22 @@ class DemoDataService {
   /// Wall clock for creation dates and `recorded_at`.
   final DateTime Function() now;
 
-  /// Loads the demo data and returns the id of the demo group.
+  /// Loads the demo data and returns the id of the housing line (an area
+  /// of the demo plant).
   Future<int> load(DemoTexts t) async {
     final today = now();
     final groups = GroupRepository(_db);
+    final plant = await groups.createGroup(
+      name: t.plantName,
+      description: t.plantDescription,
+      now: today.subtract(const Duration(days: 40)),
+    );
     final groupId = await groups.createGroup(
       name: t.groupName,
       description: t.groupDescription,
       now: today.subtract(const Duration(days: 40)),
     );
+    await groups.setParent(groupId, plant);
     final machines = MachineService(
       _db,
       now: () => today.subtract(const Duration(days: 2)),
@@ -190,6 +204,28 @@ class DemoDataService {
     final packing = await _laps(t.packing, today);
     await groups.moveToGroup(packing, groupId);
     await groups.setConveyor(packing, capacity: 10, transportMicros: 30 * _s);
+
+    // The second area: shipping, a conveyor before it.
+    final shipping = await groups.createGroup(
+      name: t.shippingName,
+      now: today.subtract(const Duration(days: 40)),
+    );
+    await groups.setParent(shipping, plant);
+    await groups.setAreaConveyor(
+      shipping,
+      capacity: 6,
+      transportMicros: 45 * _s,
+    );
+    await machines.createMachine(
+      name: t.labeler,
+      groupId: shipping,
+      cycleMicros: 35 * _s,
+    );
+    await machines.createMachine(
+      name: t.palletizer,
+      groupId: shipping,
+      cycleMicros: 40 * _s,
+    );
 
     // Outside the group: a changeover timed with the step timer.
     await _changeover(t, today);

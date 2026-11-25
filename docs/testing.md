@@ -67,7 +67,7 @@ A change is done when all of these hold:
 - `tests/screenshots/store_screenshots_test.dart` renders the store screens (phone and 13" tablet, EN + DE) from the demo data into the git-ignored `store/raw/`. It is skipped unless `--dart-define=STORE_SCREENSHOTS=true` is set, so CI never runs it; `tool/generate_store_assets.py` frames the result.
 - Real fonts (Roboto, Material Icons) are loaded from `$FLUTTER_ROOT/bin/cache/artifacts/material_fonts`; shadows are switched on per test (`debugDisableShadows`) and switched off again before the test ends.
 - CI: `.github/workflows/screenshots.yml` runs the full suite and the generator on every push to `main` (Ubuntu, Flutter pinned to the local version) and commits changed images. Do not commit locally rendered screenshots; CI is the single source.
-- New screens or major UI changes: add a scene to the generator (scenes 08 group, 09 revisions, 10 line analysis, 11 simulation, 12 loader cell in the group, 13 loader cell in the line analysis).
+- New screens or major UI changes: add a scene to the generator (scenes 08 group, 09 revisions, 10 line analysis, 11 simulation, 12 loader cell in the group, 13 loader cell in the line analysis, 14 plant with areas in the group screen, 15 plant line analysis with the areas card – both from the demo plant).
 
 ---
 Maintenance: update this file immediately when the test suite or strategy changes.
