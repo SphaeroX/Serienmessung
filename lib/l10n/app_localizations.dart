@@ -1508,6 +1508,108 @@ abstract class AppLocalizations {
   /// **'Remove from group'**
   String get removeFromGroup;
 
+  /// No description provided for @addExistingGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Add existing group'**
+  String get addExistingGroup;
+
+  /// No description provided for @addExistingGroupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'It becomes an area of this group, e.g. one section of a plant.'**
+  String get addExistingGroupHint;
+
+  /// No description provided for @addNewArea.
+  ///
+  /// In en, this message translates to:
+  /// **'New area'**
+  String get addNewArea;
+
+  /// No description provided for @addNewAreaHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A new group inside this group.'**
+  String get addNewAreaHint;
+
+  /// No description provided for @noGroupsToAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'No group can be added here.'**
+  String get noGroupsToAdd;
+
+  /// No description provided for @areaLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Area'**
+  String get areaLabel;
+
+  /// No description provided for @areaCycleTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Cycle time {time}'**
+  String areaCycleTime(String time);
+
+  /// No description provided for @groupAreaCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{areas, plural, =1{1 area} other{{areas} areas}} · {studies, plural, =1{1 study} other{{studies} studies}}'**
+  String groupAreaCount(int areas, int studies);
+
+  /// No description provided for @detachArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Take out of this group'**
+  String get detachArea;
+
+  /// No description provided for @detachFromParent.
+  ///
+  /// In en, this message translates to:
+  /// **'Take out of the parent group'**
+  String get detachFromParent;
+
+  /// No description provided for @deleteGroupStudiesAndAreasOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Also delete the {studies, plural, =0{} =1{1 study and } other{{studies} studies and }}{areas, plural, =1{1 area} other{{areas} areas}} of this group'**
+  String deleteGroupStudiesAndAreasOption(int studies, int areas);
+
+  /// No description provided for @deleteGroupWithAreasConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the group \"{name}\" with {areas, plural, =1{its area} other{its {areas} areas}} and {studies, plural, =0{no studies} =1{1 study} other{{studies} studies}} including all measurements? This cannot be undone.'**
+  String deleteGroupWithAreasConfirm(String name, int areas, int studies);
+
+  /// No description provided for @deleteGroupKeepAreasConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the group \"{name}\"? Its studies are kept without a group, its areas become groups of their own.'**
+  String deleteGroupKeepAreasConfirm(String name);
+
+  /// No description provided for @groupIntoArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Make an area'**
+  String get groupIntoArea;
+
+  /// No description provided for @selectionGapHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Only members in a row can become an area. Whole stations are selected together.'**
+  String get selectionGapHint;
+
+  /// No description provided for @dissolveArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Dissolve area'**
+  String get dissolveArea;
+
+  /// No description provided for @dissolveAreaConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Dissolve the area \"{name}\"? Its studies and areas take its place in this group; the line stays the same.'**
+  String dissolveAreaConfirm(String name);
+
   /// No description provided for @chooseGroup.
   ///
   /// In en, this message translates to:
@@ -1801,6 +1903,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stations'**
   String get lineStations;
+
+  /// No description provided for @lineAreas.
+  ///
+  /// In en, this message translates to:
+  /// **'Areas'**
+  String get lineAreas;
+
+  /// No description provided for @lineAreasHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Each area on its own and within the plant. Tap an area to open its own line analysis.'**
+  String get lineAreasHint;
+
+  /// No description provided for @lineAreaStations.
+  ///
+  /// In en, this message translates to:
+  /// **'Stations {from}–{to}'**
+  String lineAreaStations(String from, String to);
+
+  /// No description provided for @lineAreaStation.
+  ///
+  /// In en, this message translates to:
+  /// **'Station {number}'**
+  String lineAreaStation(String number);
+
+  /// No description provided for @lineAreaEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No stations'**
+  String get lineAreaEmpty;
+
+  /// No description provided for @lineAreaOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Alone: {output} parts/h'**
+  String lineAreaOutput(String output);
+
+  /// No description provided for @lineAreaBottleneck.
+  ///
+  /// In en, this message translates to:
+  /// **'Bottleneck area'**
+  String get lineAreaBottleneck;
+
+  /// No description provided for @simCalculating.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating the simulation…'**
+  String get simCalculating;
+
+  /// No description provided for @beforeArea.
+  ///
+  /// In en, this message translates to:
+  /// **'before area {name}'**
+  String beforeArea(String name);
+
+  /// No description provided for @areaMachine.
+  ///
+  /// In en, this message translates to:
+  /// **'{area} · {machine}'**
+  String areaMachine(String area, String machine);
 
   /// No description provided for @lineChartHint.
   ///
@@ -2503,6 +2665,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sample data – from the raw part to the packed housing'**
   String get demoGroupDescription;
+
+  /// No description provided for @demoPlantName.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo: plant'**
+  String get demoPlantName;
+
+  /// No description provided for @demoPlantDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Sample plant – the housing line and shipping as two areas'**
+  String get demoPlantDescription;
+
+  /// No description provided for @demoShippingName.
+  ///
+  /// In en, this message translates to:
+  /// **'Demo: shipping'**
+  String get demoShippingName;
+
+  /// No description provided for @demoLabeler.
+  ///
+  /// In en, this message translates to:
+  /// **'Labeler'**
+  String get demoLabeler;
+
+  /// No description provided for @demoPalletizer.
+  ///
+  /// In en, this message translates to:
+  /// **'Palletizer'**
+  String get demoPalletizer;
 
   /// No description provided for @demoSaw.
   ///

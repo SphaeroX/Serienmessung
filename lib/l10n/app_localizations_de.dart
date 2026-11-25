@@ -836,6 +836,109 @@ class AppLocalizationsDe extends AppLocalizations {
   String get removeFromGroup => 'Aus Gruppe entfernen';
 
   @override
+  String get addExistingGroup => 'Vorhandene Gruppe hinzufügen';
+
+  @override
+  String get addExistingGroupHint =>
+      'Sie wird ein Bereich dieser Gruppe, z. B. ein Abschnitt einer Anlage.';
+
+  @override
+  String get addNewArea => 'Neuer Bereich';
+
+  @override
+  String get addNewAreaHint => 'Eine neue Gruppe innerhalb dieser Gruppe.';
+
+  @override
+  String get noGroupsToAdd => 'Hier lässt sich keine Gruppe hinzufügen.';
+
+  @override
+  String get areaLabel => 'Bereich';
+
+  @override
+  String areaCycleTime(String time) {
+    return 'Taktzeit $time';
+  }
+
+  @override
+  String groupAreaCount(int areas, int studies) {
+    String _temp0 = intl.Intl.pluralLogic(
+      areas,
+      locale: localeName,
+      other: '$areas Bereiche',
+      one: '1 Bereich',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      studies,
+      locale: localeName,
+      other: '$studies Studien',
+      one: '1 Studie',
+    );
+    return '$_temp0 · $_temp1';
+  }
+
+  @override
+  String get detachArea => 'Aus der Gruppe lösen';
+
+  @override
+  String get detachFromParent => 'Aus Obergruppe lösen';
+
+  @override
+  String deleteGroupStudiesAndAreasOption(int studies, int areas) {
+    String _temp0 = intl.Intl.pluralLogic(
+      studies,
+      locale: localeName,
+      other: 'die $studies Studien und ',
+      one: 'die Studie und ',
+      zero: '',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      areas,
+      locale: localeName,
+      other: 'die $areas Bereiche',
+      one: 'den Bereich',
+    );
+    return 'Auch $_temp0$_temp1 dieser Gruppe löschen';
+  }
+
+  @override
+  String deleteGroupWithAreasConfirm(String name, int areas, int studies) {
+    String _temp0 = intl.Intl.pluralLogic(
+      areas,
+      locale: localeName,
+      other: 'ihren $areas Bereichen',
+      one: 'ihrem Bereich',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      studies,
+      locale: localeName,
+      other: '$studies Studien',
+      one: 'einer Studie',
+      zero: 'ohne Studien',
+    );
+    return 'Gruppe \"$name\" mit $_temp0 und $_temp1 inklusive aller Messungen löschen? Das lässt sich nicht rückgängig machen.';
+  }
+
+  @override
+  String deleteGroupKeepAreasConfirm(String name) {
+    return 'Gruppe \"$name\" löschen? Ihre Studien bleiben ohne Gruppe erhalten, ihre Bereiche werden eigenständige Gruppen.';
+  }
+
+  @override
+  String get groupIntoArea => 'Als Bereich zusammenfassen';
+
+  @override
+  String get selectionGapHint =>
+      'Nur zusammenhängende Mitglieder lassen sich zu einem Bereich zusammenfassen. Stationen werden immer ganz ausgewählt.';
+
+  @override
+  String get dissolveArea => 'Bereich auflösen';
+
+  @override
+  String dissolveAreaConfirm(String name) {
+    return 'Bereich \"$name\" auflösen? Seine Studien und Bereiche rücken an seine Stelle in diese Gruppe; die Linie bleibt gleich.';
+  }
+
+  @override
   String get chooseGroup => 'Gruppe wählen';
 
   @override
@@ -1010,6 +1113,47 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get lineStations => 'Stationen';
+
+  @override
+  String get lineAreas => 'Bereiche';
+
+  @override
+  String get lineAreasHint =>
+      'Jeder Bereich für sich und in der Anlage. Antippen öffnet die Linienanalyse des Bereichs.';
+
+  @override
+  String lineAreaStations(String from, String to) {
+    return 'Stationen $from–$to';
+  }
+
+  @override
+  String lineAreaStation(String number) {
+    return 'Station $number';
+  }
+
+  @override
+  String get lineAreaEmpty => 'Keine Stationen';
+
+  @override
+  String lineAreaOutput(String output) {
+    return 'Allein: $output Teile/h';
+  }
+
+  @override
+  String get lineAreaBottleneck => 'Engpass-Bereich';
+
+  @override
+  String get simCalculating => 'Simulation wird berechnet …';
+
+  @override
+  String beforeArea(String name) {
+    return 'vor Bereich $name';
+  }
+
+  @override
+  String areaMachine(String area, String machine) {
+    return '$area · $machine';
+  }
 
   @override
   String get lineChartHint =>
@@ -1439,6 +1583,22 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get demoGroupDescription =>
       'Beispieldaten – vom Rohteil bis zum verpackten Gehäuse';
+
+  @override
+  String get demoPlantName => 'Demo: Werk';
+
+  @override
+  String get demoPlantDescription =>
+      'Beispielanlage – Gehäuselinie und Versand als zwei Bereiche';
+
+  @override
+  String get demoShippingName => 'Demo: Versand';
+
+  @override
+  String get demoLabeler => 'Etikettierer';
+
+  @override
+  String get demoPalletizer => 'Palettierer';
 
   @override
   String get demoSaw => 'Säge';

@@ -307,6 +307,11 @@ DemoTexts _storeTexts(DemoTexts t, String lang) => DemoTexts(
   cellLoader1Steps: t.cellLoader1Steps,
   cellLoader2Steps: t.cellLoader2Steps,
   cellMagazineLoader: t.cellMagazineLoader,
+  plantName: t.plantName,
+  plantDescription: t.plantDescription,
+  shippingName: t.shippingName,
+  labeler: t.labeler,
+  palletizer: t.palletizer,
 );
 
 Future<int> _seedVideoStudy(

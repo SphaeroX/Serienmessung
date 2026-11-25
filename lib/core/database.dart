@@ -207,6 +207,33 @@ final List<Migration> migrations = [
       'DEFAULT 0',
     );
   },
+  // v17: nested groups – a group can be an area of a parent group. Studies
+  // and areas share one position space in their group.
+  (db) async {
+    await db.execute(
+      'ALTER TABLE study_group ADD COLUMN parent_id INTEGER '
+      'REFERENCES study_group(id) ON DELETE SET NULL',
+    );
+    await db.execute(
+      'ALTER TABLE study_group ADD COLUMN parent_position INTEGER NOT NULL '
+      'DEFAULT 0',
+    );
+  },
+  // v18: buffer and conveyor before an area in its parent group.
+  (db) async {
+    for (final column in [
+      'buffer_capacity',
+      'buffer_store_us',
+      'buffer_retrieve_us',
+      'conveyor_capacity',
+      'conveyor_transport_us',
+    ]) {
+      await db.execute(
+        'ALTER TABLE study_group ADD COLUMN $column INTEGER NOT NULL '
+        'DEFAULT 0',
+      );
+    }
+  },
 ];
 
 /// Thin wrapper around the sqflite [Database] that owns schema migrations.

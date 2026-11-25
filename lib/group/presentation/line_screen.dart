@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +7,7 @@ import '../../core/time_format.dart';
 import '../../export/domain/group_report.dart';
 import '../../export/presentation/export_menu.dart';
 import '../../l10n/app_localizations.dart';
+import '../domain/area_analysis.dart';
 import '../domain/failure_risk.dart';
 import '../domain/line_analysis.dart';
 import 'loader_cell_card.dart';
@@ -12,6 +15,9 @@ import 'simulation_screen.dart';
 
 /// The studies of a group looked at as one line: key figures, a stacked bar
 /// chart (yamazumi) of the stations in group order and the station list.
+///
+/// A plant (a group with areas) is one line through all its areas; the
+/// area card lists each direct area on its own and within the plant.
 class LineScreen extends ConsumerStatefulWidget {
   const LineScreen({super.key, required this.groupId});
 
@@ -24,6 +30,7 @@ class LineScreen extends ConsumerStatefulWidget {
 class _LineScreenState extends ConsumerState<LineScreen> {
   GroupReportInput? _input;
   LineAnalysis? _line;
+  List<AreaFigures> _areas = const [];
 
   @override
   void didChangeDependencies() {
@@ -42,6 +49,7 @@ class _LineScreenState extends ConsumerState<LineScreen> {
     setState(() {
       _input = input;
       _line = input.line;
+      _areas = input.areaFigures;
     });
   }
 
@@ -73,7 +81,13 @@ class _LineScreenState extends ConsumerState<LineScreen> {
       ),
       body: input == null || line == null
           ? const Center(child: CircularProgressIndicator())
-          : _LineBody(input: input, line: line, l: l, theme: theme),
+          : _LineBody(
+              input: input,
+              line: line,
+              areas: _areas,
+              l: l,
+              theme: theme,
+            ),
     );
   }
 }
@@ -82,12 +96,14 @@ class _LineBody extends StatelessWidget {
   const _LineBody({
     required this.input,
     required this.line,
+    required this.areas,
     required this.l,
     required this.theme,
   });
 
   final GroupReportInput input;
   final LineAnalysis line;
+  final List<AreaFigures> areas;
   final AppLocalizations l;
   final ThemeData theme;
 
@@ -177,21 +193,45 @@ class _LineBody extends StatelessWidget {
             ],
           ),
         ),
+        if (areas.isNotEmpty) ..._areaCard(context, t, locale),
         if (line.measuredCount > 0) ...[
           const SizedBox(height: 12),
-          SizedBox(
-            height: 240,
-            child: CustomPaint(
-              key: const Key('yamazumiChart'),
-              painter: YamazumiPainter(
-                line: line,
-                colors: _palette(theme),
-                axisColor: theme.colorScheme.onSurfaceVariant,
-                bottleneckColor: theme.colorScheme.error,
-                label: (v) => t(v),
-                textStyle: theme.textTheme.labelSmall!,
-              ),
-            ),
+          LayoutBuilder(
+            builder: (context, box) {
+              // Bars stay readable with many stations: scroll sideways.
+              final width = line.stations.length * YamazumiPainter.minSlot;
+              final chart = SizedBox(
+                height: 240,
+                width: math.max(box.maxWidth, width),
+                child: CustomPaint(
+                  key: const Key('yamazumiChart'),
+                  painter: YamazumiPainter(
+                    line: line,
+                    colors: _palette(theme),
+                    axisColor: theme.colorScheme.onSurfaceVariant,
+                    bottleneckColor: theme.colorScheme.error,
+                    label: (v) => t(v),
+                    textStyle: theme.textTheme.labelSmall!,
+                    areas: [
+                      for (final a in areas)
+                        if (a.firstStation != null)
+                          (
+                            name: a.area.group.name,
+                            first: a.firstStation!,
+                            last: a.lastStation!,
+                          ),
+                    ],
+                  ),
+                ),
+              );
+              return width <= box.maxWidth
+                  ? chart
+                  : SingleChildScrollView(
+                      key: const Key('yamazumiScroll'),
+                      scrollDirection: Axis.horizontal,
+                      child: chart,
+                    );
+            },
           ),
           const SizedBox(height: 4),
           Text(l.lineChartHint, style: theme.textTheme.bodySmall),
@@ -199,6 +239,30 @@ class _LineBody extends StatelessWidget {
         const SizedBox(height: 16),
         Text(l.lineStations, style: theme.textTheme.titleMedium),
         for (final st in line.stations) ...[
+          for (final a in areas)
+            if (a.firstStation == st.position)
+              Padding(
+                key: Key('lineAreaHeading_${a.area.group.id}'),
+                padding: const EdgeInsets.fromLTRB(4, 12, 4, 2),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.account_tree_outlined,
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        a.area.group.name,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           if (st.conveyorBefore != null)
             Card(
               key: Key('lineConveyor_${st.position}'),
@@ -298,6 +362,79 @@ class _LineBody extends StatelessWidget {
     );
   }
 
+  List<Widget> _areaCard(
+    BuildContext context,
+    String Function(double) t,
+    String locale,
+  ) => [
+    const SizedBox(height: 16),
+    Text(l.lineAreas, style: theme.textTheme.titleMedium),
+    const SizedBox(height: 4),
+    Text(l.lineAreasHint, style: theme.textTheme.bodySmall),
+    Card(
+      key: const Key('lineAreas'),
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        children: [
+          for (final a in areas)
+            ListTile(
+              key: Key('lineArea_${a.area.group.id}'),
+              leading: const Icon(Icons.account_tree_outlined),
+              title: Text(
+                a.area.group.name,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                [
+                  if (a.firstStation == null)
+                    l.lineAreaEmpty
+                  else if (a.firstStation == a.lastStation)
+                    l.lineAreaStation('${a.firstStation! + 1}')
+                  else
+                    l.lineAreaStations(
+                      '${a.firstStation! + 1}',
+                      '${a.lastStation! + 1}',
+                    ),
+                  if (a.outputPerHour != null)
+                    l.lineAreaOutput(
+                      formatNumber(a.outputPerHour!, 1, locale: locale),
+                    ),
+                  if (a.isBottleneck)
+                    l.lineAreaBottleneck
+                  else if (a.waiting != null)
+                    l.lineWaiting(t(a.waiting!)),
+                ].join('\n'),
+              ),
+              trailing: Text(
+                a.cycleTime == null ? l.lineNotMeasured : t(a.cycleTime!),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: a.isBottleneck ? theme.colorScheme.error : null,
+                ),
+              ),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => LineScreen(groupId: a.area.group.id),
+                ),
+              ),
+            ),
+        ],
+      ),
+    ),
+  ];
+
+  /// [machine] of the station at [position], with its area in a plant
+  /// ("Back · Tester").
+  String _withArea(int position, String machine) {
+    for (final a in areas) {
+      final first = a.firstStation;
+      if (first != null && position >= first && position <= a.lastStation!) {
+        return l.areaMachine(a.area.group.name, machine);
+      }
+    }
+    return machine;
+  }
+
   List<Widget> _risk(FailureRisk risk, String locale) {
     if (risk.baseOutput == null) return const [];
     final singles = risk.singlePoints.length;
@@ -324,7 +461,8 @@ class _LineBody extends StatelessWidget {
           child: ListTile(
             dense: true,
             title: Text(
-              '${risk.failures[i].station.position + 1}. ${risk.failures[i].machine}',
+              '${risk.failures[i].station.position + 1}. '
+              '${_withArea(risk.failures[i].station.position, risk.failures[i].machine)}',
             ),
             subtitle: Text(
               l.outputDuringFailure(
@@ -362,7 +500,8 @@ class _LineBody extends StatelessWidget {
 }
 
 /// Stacked bar chart of the stations (yamazumi): one bar per station in
-/// group order, one segment per step, a dashed line at the bottleneck.
+/// group order, one segment per step, a dashed line at the bottleneck. The
+/// [areas] of a plant are separated by dotted lines and named on top.
 class YamazumiPainter extends CustomPainter {
   YamazumiPainter({
     required this.line,
@@ -371,7 +510,14 @@ class YamazumiPainter extends CustomPainter {
     required this.bottleneckColor,
     required this.label,
     required this.textStyle,
+    this.areas = const [],
   });
+
+  /// Smallest width per station; a wider line scrolls sideways.
+  static const minSlot = 28.0;
+
+  /// Areas as ranges of station positions.
+  final List<({String name, int first, int last})> areas;
 
   final LineAnalysis line;
   final List<Color> colors;
@@ -384,7 +530,8 @@ class YamazumiPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final max = line.lineCycleTime;
     if (max == null || max == 0 || line.stations.isEmpty) return;
-    const top = 18.0;
+    // Area names get their own band above the value labels.
+    final top = areas.isEmpty ? 18.0 : 34.0;
     const bottom = 20.0;
     final chartHeight = size.height - top - bottom;
     final n = line.stations.length;
@@ -463,6 +610,31 @@ class YamazumiPainter extends CustomPainter {
         );
       }
     }
+    // Areas: a dotted line on each border, the name on top.
+    final border = Paint()
+      ..color = axisColor.withValues(alpha: 0.6)
+      ..strokeWidth = 1;
+    for (final a in areas) {
+      for (final x in {slot * a.first, slot * (a.last + 1)}) {
+        if (x <= 0 || x >= size.width) continue;
+        for (var yy = 0.0; yy < y(0); yy += 6) {
+          canvas.drawLine(Offset(x, yy), Offset(x, yy + 3), border);
+        }
+      }
+      final name = TextPainter(
+        text: TextSpan(
+          text: a.name,
+          style: textStyle.copyWith(
+            color: axisColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+        maxLines: 1,
+        ellipsis: '…',
+      )..layout(maxWidth: math.max(0, slot * (a.last - a.first + 1) - 4));
+      name.paint(canvas, Offset(slot * a.first + 3, 0));
+    }
     // Axis and dashed bottleneck line.
     final axis = Paint()
       ..color = axisColor
@@ -477,5 +649,6 @@ class YamazumiPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(YamazumiPainter old) => old.line != line;
+  bool shouldRepaint(YamazumiPainter old) =>
+      old.line != line || old.areas != areas;
 }

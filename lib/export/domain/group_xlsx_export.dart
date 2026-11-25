@@ -7,6 +7,7 @@ import '../../group/domain/line_simulation.dart';
 import '../../group/domain/special_cycle.dart';
 import '../../recording/domain/measurement.dart';
 import '../../study/domain/study.dart';
+import '../../group/domain/area_analysis.dart';
 import '../../group/domain/failure_risk.dart';
 import '../../group/domain/stations.dart';
 import 'group_report.dart';
@@ -65,6 +66,9 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
   final contents = ll == null ? null : excel[ll.contents];
   final lineSheet = ll == null ? null : excel[ll.lineAnalysis];
   final riskSheet = ll?.risk == null ? null : excel[ll!.risk!.title];
+  // A plant: the area of every study in the overview.
+  final areaCol = gl.area != null && g.areas.isNotEmpty;
+  final entryAreas = g.entryAreas;
   final names = studySheetNames(
     [for (final x in g.entries) x.study.name],
     reserved: gl.overview,
@@ -86,6 +90,7 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
   ov.header([
     gl.position,
     el.study,
+    if (areaCol) gl.area!,
     el.mode,
     rl?.revision ?? '',
     rl?.lastMeasured ?? '',
@@ -106,6 +111,7 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
     ov.row([
       i(k + 1),
       t(x.study.name),
+      if (areaCol) entryAreas[k] == null ? null : t(entryAreas[k]!),
       t(x.labels.modeName),
       i(x.study.revision),
       x.lastMeasuredText == null ? null : t(x.lastMeasuredText!),
@@ -117,7 +123,16 @@ List<int> _build(GroupReportInput g, LineReportLabels? ll) {
       if (ll != null) sheetLink(names[k], names[k]),
     ]);
   }
-  ov.row([t(gl.total), null, null, null, null, null, d(total)], total: true);
+  ov.row([
+    t(gl.total),
+    null,
+    if (areaCol) null,
+    null,
+    null,
+    null,
+    null,
+    d(total),
+  ], total: true);
   ov.finish();
 
   // One sheet per study. In the linked workbook the row of the real cycle
@@ -273,7 +288,15 @@ void _writeContents(
   sh.cells([sheetLink(g.labels.overview, g.labels.overview)]);
   sh.gap();
   sh.section(ll.studies);
+  // A plant: the studies of each area under its name.
+  final starts = ll.areas == null
+      ? const <int, String>{}
+      : {
+          for (final a in g.areas)
+            if (!a.isEmpty) a.start: a.group.name,
+        };
   for (var k = 0; k < names.length; k++) {
+    if (starts[k] case final area?) sh.section(area);
     sh.cells([sheetLink(names[k], names[k]), t(g.entries[k].study.name)]);
   }
   sh.finish();
@@ -307,6 +330,13 @@ void _writeLine(
   sh.keyValue(gl.group, t(g.group.name));
   sh.keyValue(el.unit, t(unit.label));
   sh.gap();
+  final line = g.line;
+  // A plant: area column and areas section (only with their texts).
+  final al = g.areas.isEmpty ? null : ll.areas;
+  final figures = al == null ? const <AreaFigures>[] : g.areaFigures;
+  final stationAreas = g.stationAreas(figures, line.stations.length);
+  CellValue? areaCell(int position) =>
+      stationAreas[position] == null ? null : t(stationAreas[position]!);
   sh.header([
     gl.position,
     ll.station,
@@ -315,8 +345,8 @@ void _writeLine(
     '${ll.waiting} [${unit.label}]',
     '${gl.previous} [${unit.label}]',
     '${el.revision?.delta ?? 'Δ'} [${unit.label}]',
+    ?al?.area,
   ]);
-  final line = g.line;
   final groups = stationGroups([for (final x in g.entries) x.study.parallel]);
   final first = sh.nextRow; // 1-based row of the first station
   final last = first + line.stations.length - 1;
@@ -376,6 +406,7 @@ void _writeLine(
       measured ? number('ROUND($maxCell-C$row,$decimals)') : null,
       prev == null ? null : time(prev),
       prev == null || !measured ? null : number('ROUND(C$row-F$row,$decimals)'),
+      if (al != null) areaCell(k),
     ]);
   }
   sh.gap();
@@ -396,6 +427,38 @@ void _writeLine(
     ll.outputPerHour,
     number('ROUND(3600/($maxCell*$secondsPerUnit),1)', 1),
   );
+  if (al != null) {
+    sh.gap();
+    sh.section(al.title);
+    sh.header([
+      al.area,
+      al.stations,
+      '${el.realCycleTime} [${unit.label}]',
+      ll.outputPerHour,
+      ll.bottleneck,
+    ]);
+    for (final f in figures) {
+      final row = sh.nextRow;
+      final from = f.firstStation;
+      final to = f.lastStation;
+      sh.row([
+        t(f.area.group.name),
+        t(
+          from == null
+              ? '–'
+              : from == to
+              ? '${from + 1}'
+              : '${from + 1}–${to! + 1}',
+        ),
+        // The area's pace: its slowest station.
+        from == null ? null : number('MAX(C${first + from}:C${first + to!})'),
+        from == null
+            ? null
+            : number('IF(C$row>0,ROUND(3600/(C$row*$secondsPerUnit),1),"")', 1),
+        f.isBottleneck ? t(al.bottleneck) : null,
+      ]);
+    }
+  }
   final bl = ll.buffers;
   final conveyors = bl != null && bl.withConveyors;
   bool listed(LineStation st) =>
@@ -413,6 +476,7 @@ void _writeLine(
         bl.conveyorPlaces!,
         '${bl.conveyorTime} [${unit.label}]',
       ],
+      ?al?.area,
     ]);
     for (final st in line.stations.where(listed)) {
       final b = st.bufferBefore;
@@ -427,6 +491,7 @@ void _writeLine(
           c == null ? null : IntCellValue(c.capacity),
           c == null ? null : time(c.transportMicros),
         ],
+        if (al != null) areaCell(st.position),
       ]);
     }
   }
@@ -553,6 +618,13 @@ void _writeRisk(SheetLayout sh, GroupReportInput g, LineReportLabels ll) {
   final rl = ll.risk!;
   final risk = FailureRisk.of(g.line);
   final gl = g.labels;
+  final areas = ll.areas == null || g.areas.isEmpty
+      ? const <String?>[]
+      : g.stationAreas(g.areaFigures, g.line.stations.length);
+  String machine(int position, String name) =>
+      position < areas.length && areas[position] != null
+      ? '${areas[position]} · $name'
+      : name;
   sh.title(rl.title);
   sh.note(rl.hint);
   sh.keyValue(gl.group, t(g.group.name));
@@ -585,7 +657,7 @@ void _writeRisk(SheetLayout sh, GroupReportInput g, LineReportLabels ll) {
     final state = f.standstill ? rl.standstill : (f.loss == 0 ? rl.noLoss : '');
     sh.row([
       IntCellValue(f.station.position + 1),
-      t(f.machine),
+      t(machine(f.station.position, f.machine)),
       one(f.outputAfter),
       one(f.loss * 100),
       state.isEmpty ? null : t(state),

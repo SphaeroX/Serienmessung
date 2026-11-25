@@ -28,7 +28,21 @@ class DemoTexts {
     required this.cellLoader1Steps,
     required this.cellLoader2Steps,
     required this.cellMagazineLoader,
+    required this.plantName,
+    required this.plantDescription,
+    required this.shippingName,
+    required this.labeler,
+    required this.palletizer,
   });
+
+  /// The plant (top group) with the housing line and shipping as areas.
+  final String plantName;
+  final String plantDescription;
+
+  /// The second area: shipping with two machines.
+  final String shippingName;
+  final String labeler;
+  final String palletizer;
 
   final String groupName;
   final String groupDescription;

@@ -65,16 +65,19 @@ void main() {
     );
 
     expect(
-      find.text('Demo data loaded: see the group “Demo: housing line”.'),
+      find.text('Demo data loaded: see the group “Demo: plant”.'),
       findsOneWidget,
     );
     final groups = (await tester.runAsync(
       () => GroupRepository(db).listGroups(),
     ))!;
-    expect(groups.single.group.name, 'Demo: housing line');
+    final housing = groups.firstWhere(
+      (g) => g.group.name == 'Demo: housing line',
+    );
+    expect(housing.group.parentId, isNotNull);
     // 15 members: the line with its loader cell (a lathe and three loaders)
     // and the cover press and seal cutter.
-    expect(groups.single.studyCount, 15);
+    expect(housing.studyCount, 15);
   });
 
   testWidgets('the demo data follows the app language', (tester) async {
@@ -95,12 +98,11 @@ void main() {
       names,
       containsAll(['Säge', 'Bearbeitungszentrum 2', 'Prüfstand 3']),
     );
-    expect(
-      (await tester.runAsync(() => GroupRepository(db).listGroups()))!
-          .single
-          .group
-          .name,
-      'Demo: Gehäuselinie',
-    );
+    expect({
+      for (final g in (await tester.runAsync(
+        () => GroupRepository(db).listGroups(),
+      ))!)
+        g.group.name,
+    }, containsAll(['Demo: Werk', 'Demo: Gehäuselinie', 'Demo: Versand']));
   });
 }

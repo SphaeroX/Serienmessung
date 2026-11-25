@@ -114,6 +114,44 @@ class Study {
 
   /// Number of equal machines this study stands for (loader cells only).
   final int cellMachines;
+
+  /// This study with other line fields (how it stands in its group's
+  /// line), e.g. the effective values of a flattened plant.
+  Study copyWith({
+    bool? parallel,
+    bool? waitForSlowest,
+    bool? cellLoader,
+    int? bufferCapacity,
+    int? bufferStoreMicros,
+    int? bufferRetrieveMicros,
+    int? conveyorCapacity,
+    int? conveyorTransportMicros,
+  }) => Study(
+    id: id,
+    name: name,
+    description: description,
+    mode: mode,
+    createdAt: createdAt,
+    lastActiveAt: lastActiveAt,
+    cycleTimeMethod: cycleTimeMethod,
+    videoPath: videoPath,
+    stepsOpen: stepsOpen,
+    notes: notes,
+    groupId: groupId,
+    groupPosition: groupPosition,
+    revision: revision,
+    parallel: parallel ?? this.parallel,
+    waitForSlowest: waitForSlowest ?? this.waitForSlowest,
+    bufferCapacity: bufferCapacity ?? this.bufferCapacity,
+    bufferStoreMicros: bufferStoreMicros ?? this.bufferStoreMicros,
+    bufferRetrieveMicros: bufferRetrieveMicros ?? this.bufferRetrieveMicros,
+    conveyorCapacity: conveyorCapacity ?? this.conveyorCapacity,
+    conveyorTransportMicros:
+        conveyorTransportMicros ?? this.conveyorTransportMicros,
+    cellLoader: cellLoader ?? this.cellLoader,
+    cellParts: cellParts,
+    cellMachines: cellMachines,
+  );
 }
 
 /// One defined work step of a study.
@@ -147,7 +185,8 @@ class StudySummary {
 
   final Study study;
 
-  /// Name of the study's group, null if it has none.
+  /// Name of the study's group, null if it has none. For an area the path
+  /// from the top level ("Plant › Press").
   final String? groupName;
 
   /// Number of cycles (laps / measurements for modes without cycles).

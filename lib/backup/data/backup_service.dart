@@ -15,7 +15,9 @@ const backupFormat = 'cyclescope-backup';
 /// still imported (those fields are optional). Later optional fields keep
 /// the version: `parallel`, buffer and conveyor fields, `specialCycles`,
 /// and for loader cells `cellLoader`, `cellParts`, `cellMachines` per
-/// study and `waiting` per step.
+/// study and `waiting` per step, and for nested groups `parentRef` (only
+/// when the parent group is in the file too) and `parentPosition` per
+/// group. An older app reads such a file with all groups side by side.
 const backupVersion = 2;
 
 /// Why a backup could not be restored.
@@ -50,9 +52,11 @@ class ImportResult {
 }
 
 /// Part of the data to export instead of everything: the studies
-/// [studyIds] and the groups [groupIds] with all their studies.
+/// [studyIds] and the groups [groupIds] with all their studies and all
+/// areas below them (with their studies).
 ///
-/// A selected study whose group is not selected leaves without its group.
+/// A selected study whose group is not selected leaves without its group;
+/// a selected area whose parent is not selected leaves without its parent.
 class ExportSelection {
   const ExportSelection({this.studyIds = const {}, this.groupIds = const {}});
 
@@ -85,14 +89,25 @@ class BackupService {
     var groups = await db.query('study_group', orderBy: 'id');
     var studies = await db.query('study', orderBy: 'id');
     if (selection != null) {
+      final groupIds = {...selection.groupIds};
+      // A selected group takes its whole subtree along.
+      for (var grown = true; grown;) {
+        grown = false;
+        for (final g in groups) {
+          if (groupIds.contains(g['parent_id']) &&
+              groupIds.add(g['id'] as int)) {
+            grown = true;
+          }
+        }
+      }
       groups = [
         for (final g in groups)
-          if (selection.groupIds.contains(g['id'])) g,
+          if (groupIds.contains(g['id'])) g,
       ];
       studies = [
         for (final s in studies)
           if (selection.studyIds.contains(s['id']) ||
-              selection.groupIds.contains(s['group_id']))
+              groupIds.contains(s['group_id']))
             s,
       ];
     }
@@ -187,6 +202,20 @@ class BackupService {
             'name': g['name'],
             'description': g['description'],
             'createdAt': g['created_at'],
+            if (exportedGroups.contains(g['parent_id'])) ...{
+              'parentRef': g['parent_id'],
+              'parentPosition': g['parent_position'],
+              // What stands before the area in its parent.
+              if (g['buffer_capacity'] != 0) ...{
+                'bufferCapacity': g['buffer_capacity'],
+                'bufferStore': g['buffer_store_us'],
+                'bufferRetrieve': g['buffer_retrieve_us'],
+              },
+              if (g['conveyor_capacity'] != 0) ...{
+                'conveyorCapacity': g['conveyor_capacity'],
+                'conveyorTransport': g['conveyor_transport_us'],
+              },
+            },
           },
       ],
       'studies': out,
@@ -269,30 +298,40 @@ class BackupService {
         await txn.delete('study');
         await txn.delete('study_group');
       }
-      // Groups are reused by name when merging.
-      final groupIds = <Object?, int>{};
+      // Imported studies and areas keep their order behind the group's
+      // existing members (one shared offset per group, taken before the
+      // first import into it).
       final groupOffsets = <int, int>{};
-      for (final g in groups) {
-        final existing = await txn.query(
-          'study_group',
-          columns: ['id'],
-          where: 'name = ?',
-          whereArgs: [g['name']],
-          limit: 1,
-        );
-        groupIds[g['ref']] = existing.isNotEmpty
-            ? existing.first['id'] as int
-            : await txn.insert('study_group', {
-                'name': g['name'],
-                'description': g['description'] ?? '',
-                'created_at': g['createdAt'],
-              });
-      }
-      // Imported studies keep their order behind the group's existing ones.
       Future<int> position(int groupId, Object? backupPosition) async {
         final offset = groupOffsets[groupId] ??=
             await StudyRepository.nextGroupPosition(txn, groupId);
         return offset + ((backupPosition as int?) ?? 0);
+      }
+
+      // Groups are reused by name when merging (an area by name under its
+      // parent); parents come first, see [_parse].
+      final groupIds = <Object?, int>{};
+      for (final g in groups) {
+        final parent = g['parentRef'] == null
+            ? null
+            : groupIds[g['parentRef']]!;
+        final existing = await _matchingGroup(txn, g['name'] as String, parent);
+        groupIds[g['ref']] =
+            existing ??
+            await txn.insert('study_group', {
+              'name': g['name'],
+              'description': g['description'] ?? '',
+              'created_at': g['createdAt'],
+              if (parent != null) ...{
+                'parent_id': parent,
+                'parent_position': await position(parent, g['parentPosition']),
+                'buffer_capacity': g['bufferCapacity'] as int? ?? 0,
+                'buffer_store_us': g['bufferStore'] as int? ?? 0,
+                'buffer_retrieve_us': g['bufferRetrieve'] as int? ?? 0,
+                'conveyor_capacity': g['conveyorCapacity'] as int? ?? 0,
+                'conveyor_transport_us': g['conveyorTransport'] as int? ?? 0,
+              },
+            });
       }
 
       var imported = 0;
@@ -377,6 +416,10 @@ class BackupService {
         imported++;
         if (s['mode'] == 'video') videos++;
       }
+      // A study right behind an area is never parallel (nor a loader).
+      for (final id in {...groupIds.values}) {
+        await StudyRepository.tidyStations(txn, id);
+      }
       return ImportResult(
         imported: imported,
         skipped: skipped,
@@ -434,6 +477,28 @@ class BackupService {
     }
   }
 
+  /// The local group an imported group [name] merges into: with [parent]
+  /// the area of that name under it; without, the top-level group of that
+  /// name, else the only group of that name anywhere (an area a colleague
+  /// sends back that already lies in a plant here). Null: a new group.
+  static Future<int?> _matchingGroup(
+    Transaction txn,
+    String name,
+    int? parent,
+  ) async {
+    final rows = await txn.query(
+      'study_group',
+      columns: ['id', 'parent_id'],
+      where: parent == null ? 'name = ?' : 'name = ? AND parent_id = ?',
+      whereArgs: [name, ?parent],
+      orderBy: 'id',
+    );
+    if (parent != null) return rows.isEmpty ? null : rows.first['id'] as int;
+    final top = rows.where((r) => r['parent_id'] == null);
+    if (top.isNotEmpty) return top.first['id'] as int;
+    return rows.length == 1 ? rows.single['id'] as int : null;
+  }
+
   Future<bool> _exists(Transaction txn, Map s) async {
     final rows = await txn.query(
       'study',
@@ -474,6 +539,7 @@ class BackupService {
         )) {
       throw const BackupException(BackupError.invalid, 'malformed group');
     }
+    final orderedGroups = _parentsFirst(groups.cast<Map>());
     const modes = {'simple', 'timeStudy', 'stepTimer', 'video'};
     const kinds = {'normal', 'special'};
     bool time(Object? m) =>
@@ -529,6 +595,45 @@ class BackupService {
         throw const BackupException(BackupError.invalid, 'malformed study');
       }
     }
-    return (groups.cast<Map>(), studies.cast<Map>());
+    return (orderedGroups, studies.cast<Map>());
+  }
+
+  /// [groups] with every parent before its areas. Throws
+  /// [BackupError.invalid] for a `parentRef` that names no group of the
+  /// file, a cycle or a `parentPosition` that is no number.
+  static List<Map> _parentsFirst(List<Map> groups) {
+    const invalid = BackupException(BackupError.invalid, 'malformed group');
+    final byRef = {for (final g in groups) g['ref']: g};
+    for (final g in groups) {
+      final position = g['parentPosition'];
+      if (position != null && position is! int) throw invalid;
+      for (final key in const [
+        'bufferCapacity',
+        'bufferStore',
+        'bufferRetrieve',
+        'conveyorCapacity',
+        'conveyorTransport',
+      ]) {
+        final v = g[key];
+        if (v != null && (v is! int || v < 0)) throw invalid;
+      }
+      final parent = g['parentRef'];
+      if (parent != null && !byRef.containsKey(parent)) throw invalid;
+    }
+    final ordered = <Map>[];
+    final done = <Object?>{};
+    void visit(Map g, Set<Object?> path) {
+      if (done.contains(g['ref'])) return;
+      if (!path.add(g['ref'])) throw invalid;
+      final parent = g['parentRef'];
+      if (parent != null) visit(byRef[parent]!, path);
+      done.add(g['ref']);
+      ordered.add(g);
+    }
+
+    for (final g in groups) {
+      visit(g, {});
+    }
+    return ordered;
   }
 }

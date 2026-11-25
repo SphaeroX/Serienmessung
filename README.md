@@ -7,6 +7,7 @@ Time and motion study stopwatch for Android and iOS (Flutter): define work steps
 - **Studies**: time study (fixed step sequence), video study, simple stopwatch with laps and step timer (free order). Operation via the volume keys (Android), special times for unforeseen interruptions.
 - **Analysis**: sum, mean, median, min/max, spread per step and cycle; real cycle time by mean, median or IQR-filtered. Units HM, seconds, mm:ss.SSS and TMU.
 - **Groups**: collect studies in a fixed order (e.g. the machines of a production line), move or copy studies between groups. Deleting a group keeps its studies or, if you tick the option, deletes them with it. Machines can work **in parallel** (one station) – sharing the work, or each making a part of one unit so that the station **waits for its slowest machine** – and machines without a measurement get a **fixed average cycle time**.
+- **Areas (nested groups)**: a group can contain whole groups as **areas**, so a large plant is measured area by area (also on several devices, shared as files) and put together again. The line analysis, simulation and reports then cover the whole plant with an overview per area (cycle time alone, bottleneck area, utilization); buffers and conveyors can stand between areas. An existing group can be split into areas and an area dissolved again without changing the line.
 - **Revisions**: measure a study again later (e.g. a year later); earlier rounds are archived and the deviations per step and cycle time are shown. When the last measurement is older than a set number of days (default 10), the app offers a new measurement.
 - **Line analysis**: the group as a whole – sum of cycle times, lead time of one part, bottleneck (line cycle time), line balance, output per hour, stacked bar chart per station – plus the **failure risk** per machine (output while it is down, standstill for stations without a spare machine).
 - **Special cycles and planned stops** per machine: "every N parts extra time" (e.g. taking a measuring part) and "every X hours a stop" (e.g. a tool change); the line analysis uses the resulting effective cycle time.
@@ -29,7 +30,7 @@ flutter run
 ## Download
 
 - **iOS (iPhone & iPad)**: [App Store](https://apps.apple.com/us/app/cyclescope-time-study/id6835546516)
-- **Android**: signed APKs are on the [Releases page](https://github.com/SphaeroX/Serienmessung/releases). A release is built by pushing a version tag (`git tag v1.8.0 && git push origin v1.8.0`), see [release.yml](.github/workflows/release.yml).
+- **Android**: signed APKs are on the [Releases page](https://github.com/SphaeroX/Serienmessung/releases). A release is built by pushing a version tag (`git tag v1.9.0 && git push origin v1.9.0`), see [release.yml](.github/workflows/release.yml).
 
 ## Screenshots
 

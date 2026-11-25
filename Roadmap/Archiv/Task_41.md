@@ -45,13 +45,13 @@ Der Nutzer kann in der App eine Gruppe aus Studien **und Gruppen** zusammenstell
 
 ## Umsetzungsschritte
 
-1. [ ] Gemischte Mitgliederliste mit Bereichskarte und durchlaufenden Stationsnummern (Widget-Tests zuerst).
-2. [ ] Hinzufügen: bestehende Gruppe, neuer Bereich.
-3. [ ] Menü der Bereichskarte, Umsortieren per Ziehen und per Menü.
-4. [ ] Pfad in der Kopfzeile, „Aus Obergruppe lösen“, Löschdialog.
-5. [ ] Gruppenliste als Baum, Mehrfachauswahl.
-6. [ ] `pickGroup` mit Pfad und Sperren, Studienkarte mit Pfad.
-7. [ ] Texte, Doku, volle Suite, `flutter analyze`, `dart format`.
+1. [x] Gemischte Mitgliederliste mit Bereichskarte und durchlaufenden Stationsnummern (Widget-Tests zuerst).
+2. [x] Hinzufügen: bestehende Gruppe, neuer Bereich.
+3. [x] Menü der Bereichskarte, Umsortieren per Ziehen und per Menü.
+4. [x] Pfad in der Kopfzeile, „Aus Obergruppe lösen“, Löschdialog.
+5. [x] Gruppenliste als Baum, Mehrfachauswahl.
+6. [x] `pickGroup` mit Pfad und Sperren, Studienkarte mit Pfad.
+7. [x] Texte, Doku, volle Suite, `flutter analyze`, `dart format`.
 
 ## Tests
 
@@ -77,10 +77,10 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
-- [ ] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
-- [ ] Keine hartkodierten UI-Texte; `docs/architecture.md` und `Roadmap/README.md` aktuell.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
+- [x] Keine hartkodierten UI-Texte; `docs/architecture.md` und `Roadmap/README.md` aktuell.
 
 ## Offene Fragen / Annahmen
 
@@ -92,17 +92,24 @@ Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder ei
 
 Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergreifendes gehört in `Roadmap/README.md`.
 
+- Aus Task_38: Das Löschen „mit Studien“ ist in der UI noch auf direkte Studien ausgelegt. `GroupScreen` muss die Videos über `GroupRepository.subtreeStudies(id)` (vor dem Löschen) aufräumen, `GroupListScreen` statt `deleteStudies(direkte Studien)` + `deleteGroup(id)` den Teilbaum löschen (`deleteGroup(id, withStudies: true)`, Videos und laufende Aufnahmen wie im `GroupScreen` behandeln). Zählung im Dialog: `GroupSummary.totalStudyCount` bzw. `subtreeStudies().length`.
 - Der Pfad-Trenner „›“ ist kein Latin-1-Zeichen. In der App ist das unkritisch; in PDFs (Task_44) muss ein anderes Zeichen stehen.
 
 ## Abschluss-Checkliste
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-(Beim Abschluss ausfüllen.)
+- **Ladezeit des Gruppen-Bildschirms ist testkritisch:** Viele bestehende Widget-Tests warten nur mit `settle(tester)` (5 × 20 ms echte Zeit). `_load` fragt deshalb für eine Gruppe ohne Bereiche und ohne Obergruppe nur eine zusätzliche Abfrage ab (`descendants`); Pfad, gemischte Mitglieder, Teilbaum und `loadGroupReport` (für durchlaufende Nummern und Bereichs-Taktzeiten) kommen nur bei Bereichen bzw. Obergruppe dazu. Neue Abfragen im Gruppen-Bildschirm ebenfalls nur bei Bedarf.
+- **Löschdialog:** `deleteGroupInteractively` (in `group_dialogs.dart`) für Gruppe und Bereich. Der Gruppen-Bildschirm übergibt Teilbaum-Studien und Bereichsanzahl vorgeladen (`subtree:`, `areaCount:`), sonst öffnet sich der Dialog erst nach DB-Abfragen – die bestehenden Tests erwarten ihn direkt nach `pumpAndSettle`.
+- **Keys:** Bereichskarte `area_<id>` (Listen-Item `ValueKey('areaItem_<id>')`, nicht `area_…`, sonst doppelter Key), Menü `areaMenu_<id>` mit `areaMoveUp`, `areaMoveDown`, `areaMoveToGroup`, `detachArea`, `deleteArea`; Hinzufügen `addNewArea`, `addExistingGroup`, Auswahl `addGroupChoice_<id>`; Kopfzeile `groupPath`; Gruppenmenü `detachFromParent`.
+- **Hinzufügen-Blatt** hat jetzt fünf Einträge und ist `isScrollControlled` + scrollbar (lief auf Telefongröße sonst über).
+- **Pfad:** `groupPaths`/`groupTreeOrder`/`groupPathSeparator` in `lib/group/domain/group_paths.dart`. `StudySummary.groupName` ist bei Studien in Bereichen der Pfad („Werk › Halle“); für Gruppen der obersten Ebene unverändert der Name. Der Trenner „›“ ist kein Latin-1-Zeichen (PDF, Task_44).
+- **Verschieben eines Bereichs** über `pickGroup(excludeIds: {Bereich, aktuelle Gruppe, Nachfahren})`; „Keine Gruppe“ macht ihn zur Gruppe der obersten Ebene, „Neue Gruppe“ legt eine an und hängt ihn hinein.
+- Station-Labels der direkten Studien kommen bei Bereichen aus der abgeflachten Linie (`input.entries`, Zuordnung über die Studien-Id). Interne Helfer (`_stationHead`, Zellenrollen) arbeiten weiter nur über die direkten Studien; das ist korrekt, weil hinter einem Bereich nie `parallel = 1` steht.

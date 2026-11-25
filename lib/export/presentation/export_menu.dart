@@ -12,6 +12,9 @@ import '../../analysis/domain/statistics.dart';
 import '../../analysis/presentation/analysis_view.dart' show methodLabel;
 import '../../settings/presentation/settings_controller.dart';
 import '../../core/providers.dart';
+import '../../group/domain/group_tree.dart';
+import '../../group/domain/line_simulation.dart';
+import '../../group/domain/simulation_runner.dart';
 import '../../l10n/app_localizations.dart';
 import '../../recording/presentation/recording_controller.dart';
 import '../../study/domain/study.dart';
@@ -165,6 +168,15 @@ GroupReportLabels groupReportLabels(AppLocalizations l) => GroupReportLabels(
   cycles: l.exportCycles,
   previous: l.exportPreviousRevision,
   total: l.exportTotal,
+  area: l.areaLabel,
+);
+
+/// Texts of a plant's areas in the full group report.
+AreaReportLabels areaReportLabels(AppLocalizations l) => AreaReportLabels(
+  area: l.areaLabel,
+  title: l.lineAreas,
+  stations: l.lineStations,
+  bottleneck: l.lineAreaBottleneck,
 );
 
 /// PDF report texts in the current language.
@@ -298,8 +310,11 @@ class ExportButton extends ConsumerWidget {
 }
 
 /// Loads everything a group report or the line analysis needs: all studies
-/// of group [groupId] in group order with their latest revision, in the
-/// default unit (method per study, else the default method).
+/// of group [groupId] in line order with their latest revision, in the
+/// default unit (method per study, else the default method). The studies of
+/// the group's areas are flattened into the line (`flattenGroup`, with
+/// their effective line fields); the direct areas come as
+/// [GroupReportInput.areas].
 Future<GroupReportInput?> loadGroupReport(
   WidgetRef ref,
   AppLocalizations l,
@@ -313,9 +328,13 @@ Future<GroupReportInput?> loadGroupReport(
   final times = ref.read(measurementRepositoryProvider);
   final revisions = ref.read(revisionRepositoryProvider);
   final now = ref.read(wallClockProvider)();
+  final flat = flattenGroup(
+    groupId,
+    await ref.read(groupRepositoryProvider).loadTree(groupId),
+  );
   final entries = <ExportInput>[];
-  for (final m in await studies.listStudies(groupId: groupId)) {
-    final study = m.study;
+  for (final e in flat.entries) {
+    final study = e.study;
     final method = study.cycleTimeMethod == null
         ? settings.defaultMethod
         : CycleTimeMethod.parse(study.cycleTimeMethod!);
@@ -340,6 +359,7 @@ Future<GroupReportInput?> loadGroupReport(
     locale: locale,
     exportedAt: now,
     labels: groupReportLabels(l),
+    areas: flat.areas,
     specialCycles: await ref.read(specialCycleRepositoryProvider).listFor([
       for (final x in entries) x.study.id,
     ]),
@@ -358,6 +378,52 @@ Future<GroupReportInput?> loadGroupReport(
       '',
     ),
   );
+}
+
+/// [input] with its failure scenarios computed in a background isolate
+/// when the line is large (`runsOffThread`), with a progress dialog
+/// meanwhile; a small line is returned as it is (the report simulates it
+/// directly).
+Future<GroupReportInput> withLargeScenarios(
+  BuildContext context,
+  GroupReportInput input,
+) async {
+  final horizon = input.simulationHorizonMicros;
+  final failure = input.simulationFailureMicros;
+  final sim = LineSimulation.fromLine(input.line);
+  if (horizon == null ||
+      failure == null ||
+      !sim.hasBuffers ||
+      !runsOffThread(sim)) {
+    return input;
+  }
+  final l = AppLocalizations.of(context);
+  final navigator = Navigator.of(context, rootNavigator: true);
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => AlertDialog(
+      key: const Key('simCalculating'),
+      content: Row(
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(width: 16),
+          Expanded(child: Text(l.simCalculating)),
+        ],
+      ),
+    ),
+  );
+  try {
+    final scenarios = await failureScenariosOf(
+      sim,
+      horizonMicros: horizon,
+      durationMicros: failure,
+      startMicros: horizon ~/ 4,
+    );
+    return input.withFailureScenarios(scenarios);
+  } finally {
+    navigator.pop();
+  }
 }
 
 /// Share button of the group screen: PDF report or Excel workbook of all
@@ -379,21 +445,26 @@ class GroupExportButton extends ConsumerWidget {
     final lineOnly = lineReportLabels(l);
     final risk = riskReportLabels(l);
     try {
-      final input = await loadGroupReport(
+      final loaded = await loadGroupReport(
         ref,
         l,
         Localizations.localeOf(context).languageCode,
         groupId,
       );
-      if (input == null) return;
+      if (loaded == null || !context.mounted) return;
+      final input = await withLargeScenarios(context, loaded);
       // The failure risk chapter is added when the line has parallel
       // machines (otherwise every failure simply stops the line).
       // The failure risk chapter is added when the line has parallel
       // machines or buffers (otherwise every failure simply stops it).
-      final line =
+      final withRisk =
           input.line.stations.any((s) => s.isParallel || s.bufferBefore != null)
           ? lineOnly.withRisk(risk)
           : lineOnly;
+      // A plant: area columns, the areas section and contents by area.
+      final line = input.areas.isEmpty
+          ? withRisk
+          : withRisk.withAreas(areaReportLabels(l));
       final dir = await ref.read(exportDirectoryProvider)();
       final (List<int> bytes, ext, mime) = switch (format) {
         ExportFormat.pdf => (

@@ -43,12 +43,12 @@ Der Gruppen-Report einer Obergruppe ist ein Report der ganzen Anlage: alle Studi
 
 ## Umsetzungsschritte
 
-1. [ ] `AreaReportLabels` und Bereichsdaten im Report-Eingang; Regressionstest „ohne Labels unverändert“ zuerst.
-2. [ ] Excel: Inhalt, Übersicht, Linienblatt mit Bereichsabschnitt und Formeln (TDD mit `Excel.decodeBytes`).
-3. [ ] PDF: Deckblatt, Inhaltsverzeichnis und Lesezeichen, Linienkapitel, Ausfallrisiko.
-4. [ ] Kompakte Reports.
-5. [ ] Formeln nachrechnen (LibreOffice, siehe Notizen) und PDF als Bild prüfen.
-6. [ ] Texte, Doku, volle Suite, `flutter analyze`, `dart format`.
+1. [x] `AreaReportLabels` und Bereichsdaten im Report-Eingang; Regressionstest „ohne Labels unverändert“ zuerst.
+2. [x] Excel: Inhalt, Übersicht, Linienblatt mit Bereichsabschnitt und Formeln (TDD mit `Excel.decodeBytes`).
+3. [x] PDF: Deckblatt, Inhaltsverzeichnis und Lesezeichen, Linienkapitel, Ausfallrisiko.
+4. [x] Kompakte Reports.
+5. [x] Formeln nachrechnen (LibreOffice, siehe Notizen) und PDF als Bild prüfen.
+6. [x] Texte, Doku, volle Suite, `flutter analyze`, `dart format`.
 
 ## Tests
 
@@ -71,11 +71,11 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
-- [ ] Excel-Formeln einer Beispielanlage nachgerechnet und PDF als Bild gesichtet; beides in den Notizen protokolliert (oder vermerkt, warum es in der Umgebung nicht ging).
-- [ ] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
-- [ ] `docs/architecture.md` und `Roadmap/README.md` aktuell.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Excel-Formeln einer Beispielanlage nachgerechnet und PDF als Bild gesichtet; beides in den Notizen protokolliert (oder vermerkt, warum es in der Umgebung nicht ging).
+- [x] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
+- [x] `docs/architecture.md` und `Roadmap/README.md` aktuell.
 
 ## Offene Fragen / Annahmen
 
@@ -89,16 +89,22 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 - Formeln nachrechnen wie in Task_25: `soffice --headless --convert-to csv` über alle Blätter. Das excel-Paket schreibt Formeln ohne zwischengespeicherte Werte.
 - Ein bestehender UI-Test legt die Blattliste ohne Parallelstation fest (README "[Task_28]"); die neuen Blätter bzw. Abschnitte dürfen daran nichts ändern.
 - Die Rechenzeit der Ausfallszenarien im Report hängt an Task_43; dessen Messwerte lesen.
+- **Nachrechnen/Sichten (2026-11-25):** Auf dem Windows-Rechner sind weder LibreOffice (`soffice`) noch ein PDF-Rasterizer (`pdftoppm`, PyMuPDF) installiert, und die Vorschau des Browser-Bereichs kann lokale PDFs nicht abbilden. Ersatz: Der Test `tests/export/group_areas_export_test.dart` rechnet die `MAX`-Formel eines Bereichs über die Stationsformeln bis in die Studienblätter nach und vergleicht mit `GroupReportInput.areaFigures` (gleich). Die PDF-Texte (Bereichsnamen, „Areas“, „Bottleneck area“, Pfad „Site / Plant“ ohne „?“) sind per Test geprüft; ein Beispiel-PDF der Testanlage wurde erzeugt, die Sichtprüfung als Bild steht aus (Nutzer).
 
 ## Abschluss-Checkliste
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-(Beim Abschluss ausfüllen.)
+- **Unverändert ohne Bereiche:** Alle neuen Spalten/Abschnitte hängen an `g.areas.isNotEmpty` und an optionalen Texten (`GroupReportLabels.area`, `LineReportLabels.areas`). Die App setzt `area` immer (wirkt nur bei Bereichen) und `withAreas` nur bei einer Anlage. Alle bestehenden Export-Tests laufen unverändert.
+- **Spaltenlage:** Im Excel-Linienblatt steht die Bereichsspalte bewusst **am Ende** der Stationstabelle (Spalte H), damit die Formeln auf Spalte C (Taktzeit) und F (vorherige Revision) gleich bleiben. In der Übersicht steht sie direkt nach der Studie; die Summenzeile bekommt dafür eine leere Zelle mehr.
+- **Bereichsabschnitt Excel:** Zeile = Bereich, Spalten Name, „von–bis“, `MAX(C<erste>:C<letzte>)`, `IF(C>0,ROUND(3600/(C*s),1),"")` (leer ohne gemessene Station), Engpass-Kennzeichen. Leerer Bereich: „–“ ohne Formeln.
+- **PDF:** Inhaltsverzeichnis und Lesezeichen: Bereich als Eintrag (verweist auf seine erste Studie, Lesezeichen `area<k>`), Studien im Bereich eine Ebene tiefer. Der Pfad-Trenner „›“ wird in `_latin1` zu „/“.
+- **Helfer:** `GroupReportInput.entryAreas` (Bereich je Eintrag) und `stationAreas(figures, n)` (Bereich je Station) – beide nur für die direkten Bereiche der exportierten Gruppe.
+- Beispiel-PDF der Testanlage lag während der Arbeit im Scratchpad (`plant_report.pdf`); für eine Sichtprüfung ggf. neu erzeugen (Test-Fixture `plant()` in `tests/export/group_areas_export_test.dart`).

@@ -1,7 +1,9 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/database.dart';
+import '../../group/domain/group_paths.dart';
 import '../../group/domain/stations.dart';
+import '../../group/domain/study_group.dart';
 import '../domain/step_text_sync.dart';
 import '../domain/study.dart';
 
@@ -70,6 +72,17 @@ class StudyRepository {
       for (final r in await _db.db.query('run_state', columns: ['study_id']))
         r['study_id'] as int,
     };
+    // The group is named by its path when it is an area ("Plant › Press").
+    final paths = groupPaths([
+      for (final g in await _db.db.query('study_group'))
+        StudyGroup(
+          id: g['id'] as int,
+          name: g['name'] as String,
+          description: '',
+          createdAt: DateTime(0),
+          parentId: g['parent_id'] as int?,
+        ),
+    ]);
     final result = <StudySummary>[];
     for (final row in rows) {
       final study = studyFromRow(row);
@@ -78,7 +91,10 @@ class StudyRepository {
           study: study,
           cycleCount: await countCycles(study),
           isRecording: running.contains(study.id),
-          groupName: row['group_name'] as String?,
+          groupName: study.groupId == null
+              ? null
+              : paths[study.groupId]?.join(groupPathSeparator) ??
+                    row['group_name'] as String?,
         ),
       );
     }
@@ -126,17 +142,24 @@ class StudyRepository {
   /// loader cells (a station with a loader). So a station never starts
   /// waiting again because of a forgotten flag.
   static Future<void> tidyStations(DatabaseExecutor db, int groupId) async {
-    final members = await db.query(
-      'study',
-      columns: ['id', 'parallel', 'cell_loader', waitColumn],
-      where: 'group_id = ?',
-      whereArgs: [groupId],
-      orderBy: 'group_position, id',
-    );
-    final stations = stationGroups([
-      for (final m in members) m['parallel'] == 1,
-    ]);
-    for (final station in stations) {
+    final members = await memberRows(db, groupId);
+    final flags = memberStationFlags(members);
+    for (var i = 0; i < members.length; i++) {
+      // An area is a station boundary: nobody is parallel to it.
+      if (members[i]['area'] == 0 &&
+          members[i]['parallel'] == 1 &&
+          i > 0 &&
+          members[i - 1]['area'] == 1) {
+        await db.update(
+          'study',
+          {'parallel': 0, 'cell_loader': 0},
+          where: 'id = ?',
+          whereArgs: [members[i]['id']],
+        );
+      }
+    }
+    for (final station in stationGroups(flags)) {
+      if (members[station.first]['area'] == 1) continue;
       final isCell = station.skip(1).any((k) => members[k]['cell_loader'] == 1);
       for (final k in station) {
         final keep = k == station.first && station.length > 1 && !isCell;
@@ -151,6 +174,41 @@ class StudyRepository {
       }
     }
   }
+
+  /// The members of group [groupId] in group order: its studies and its
+  /// areas (groups inside it), which share one position space. Each row
+  /// has `area` (1 for an area), `id`, `pos` and the station columns of a
+  /// study (`parallel`, `cell_loader`, [waitColumn] and
+  /// [stationLinkColumns]; 0 for an area).
+  static Future<List<Map<String, Object?>>> memberRows(
+    DatabaseExecutor db,
+    int groupId,
+  ) {
+    const columns = [
+      'parallel',
+      'cell_loader',
+      waitColumn,
+      ...stationLinkColumns,
+    ];
+    return db.rawQuery(
+      'SELECT 0 AS area, id, group_position AS pos, ${columns.join(', ')} '
+      'FROM study WHERE group_id = ? '
+      'UNION ALL '
+      'SELECT 1 AS area, id, parent_position AS pos, '
+      '${[for (final c in columns) '0 AS $c'].join(', ')} '
+      'FROM study_group WHERE parent_id = ? '
+      'ORDER BY pos, area, id',
+      [groupId, groupId],
+    );
+  }
+
+  /// Parallel flags of [memberRows] as they count for the stations, see
+  /// [stationFlags].
+  static List<bool> memberStationFlags(List<Map<String, Object?>> members) =>
+      stationFlags(
+        [for (final m in members) m['parallel'] == 1],
+        [for (final m in members) m['area'] == 1],
+      );
 
   /// Columns of what stands before a station (stored on its first member).
   static const stationLinkColumns = [
@@ -173,30 +231,23 @@ class StudyRepository {
   static Future<int?> handOverStation(DatabaseExecutor db, int studyId) async {
     final groupId = await groupOf(db, studyId);
     if (groupId == null) return null;
-    final members = await db.query(
-      'study',
-      columns: ['id', 'parallel', waitColumn, ...stationLinkColumns],
-      where: 'group_id = ?',
-      whereArgs: [groupId],
-      orderBy: 'group_position, id',
-    );
-    final i = members.indexWhere((m) => m['id'] == studyId);
-    final isHead = i == 0 || members[i]['parallel'] != 1;
-    if (!isHead || i + 1 >= members.length) return groupId;
-    final next = members[i + 1];
-    if (next['parallel'] != 1) return groupId;
+    final members = await memberRows(db, groupId);
+    final flags = memberStationFlags(members);
+    final i = members.indexWhere((m) => m['area'] == 0 && m['id'] == studyId);
+    final isHead = !flags[i];
+    if (!isHead || i + 1 >= members.length || !flags[i + 1]) return groupId;
     await db.update(
       'study',
       {
         'parallel': 0,
         'cell_loader': 0,
         waitColumn: members[i][waitColumn],
-        // Nothing stands before the first station of a line.
+        // Nothing stands before the first member of a group.
         if (i > 0)
           for (final c in stationLinkColumns) c: members[i][c],
       },
       where: 'id = ?',
-      whereArgs: [next['id']],
+      whereArgs: [members[i + 1]['id']],
     );
     return groupId;
   }
@@ -492,12 +543,15 @@ class StudyRepository {
     }
   }
 
-  /// Position behind the last study of group [groupId].
+  /// Position behind the last member (study or area) of group [groupId].
   static Future<int> nextGroupPosition(DatabaseExecutor db, int groupId) async {
     final r = await db.rawQuery(
-      'SELECT COALESCE(MAX(group_position), -1) + 1 AS p FROM study '
-      'WHERE group_id = ?',
-      [groupId],
+      'SELECT MAX('
+      '(SELECT COALESCE(MAX(group_position), -1) FROM study '
+      'WHERE group_id = ?), '
+      '(SELECT COALESCE(MAX(parent_position), -1) FROM study_group '
+      'WHERE parent_id = ?)) + 1 AS p',
+      [groupId, groupId],
     );
     return r.first['p'] as int;
   }

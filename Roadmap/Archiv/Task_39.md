@@ -39,11 +39,11 @@ Die Verschachtelung aus Task_38 geht bei Backup, Wiederherstellen, Teilen und Im
 
 ## Umsetzungsschritte
 
-1. [ ] Export mit `parentRef`/`parentPosition`, Auswahl mit Teilbaum (TDD).
-2. [ ] Validierung (unbekannter Verweis, Kreis).
-3. [ ] Import: Anlegen in Eltern-vor-Kind-Reihenfolge, Zusammenführen nach den Regeln oben, Positionen.
-4. [ ] Rundreise-Tests und alte Dateien.
-5. [ ] Doku, volle Suite, `flutter analyze`, `dart format`.
+1. [x] Export mit `parentRef`/`parentPosition`, Auswahl mit Teilbaum (TDD).
+2. [x] Validierung (unbekannter Verweis, Kreis).
+3. [x] Import: Anlegen in Eltern-vor-Kind-Reihenfolge, Zusammenführen nach den Regeln oben, Positionen.
+4. [x] Rundreise-Tests und alte Dateien.
+5. [x] Doku, volle Suite, `flutter analyze`, `dart format`.
 
 ## Tests
 
@@ -66,10 +66,10 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
-- [ ] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
-- [ ] `docs/architecture.md` und `Roadmap/README.md` aktuell.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
+- [x] `docs/architecture.md` und `Roadmap/README.md` aktuell.
 
 ## Offene Fragen / Annahmen
 
@@ -84,11 +84,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-(Beim Abschluss ausfüllen.)
+- **Format:** Version bleibt 2. Neue optionale Gruppenfelder `parentRef` (nur gesetzt, wenn die Obergruppe in der Datei steht) und `parentPosition`. Eine ältere App liest eine neue Datei und legt alle Gruppen flach nebeneinander an (Annahme aus der Planung bestätigt sich im Code: unbekannte Felder werden ignoriert, nichts geht verloren).
+- **Auswahl:** `exportJson(selection:)` erweitert `groupIds` um den ganzen Teilbaum (Schleife über `parent_id`, kein Repository nötig). Ein einzeln geteilter Bereich bekommt kein `parentRef`.
+- **Import:** `_parse` gibt die Gruppen über `_parentsFirst` in Eltern-vor-Kind-Reihenfolge zurück und lehnt unbekannte Verweise, Kreise (auch Selbstverweis) und nicht-numerische `parentPosition` ab. Zusammenführen über `_matchingGroup` (Regeln wie im Task). Der Versatz je Gruppe (`groupOffsets`) wird vor dem ersten Einfügen ermittelt und von Bereichen und Studien gemeinsam benutzt – dadurch bleibt die gemischte Reihenfolge erhalten. Nach dem Import läuft `tidyStations` für jede berührte Gruppe (setzt `parallel`/`cellLoader` hinter Bereichen zurück).
+- **Verbindungsfelder (Task_42):** Wenn Puffer/Band am Bereich gespeichert werden, müssen sie in `exportJson` (Gruppen-Map) und im Gruppen-Insert von `importJson` ergänzt werden; beim Wiederverwenden einer vorhandenen Gruppe werden sie (wie Gruppenname/Beschreibung) nicht überschrieben.
+- Die Tests in `tests/backup/nested_groups_backup_test.dart` scheitern auf dem alten `backup_service.dart` (geprüft), auf dem neuen sind sie grün.

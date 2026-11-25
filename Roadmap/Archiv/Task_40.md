@@ -50,12 +50,12 @@ Eine Obergruppe wird als **eine durchgehende Linie** betrachtet: Die Stationen i
 
 ## Umsetzungsschritte
 
-1. [ ] Abflachen als reine Funktion mit allen Regeln (TDD).
-2. [ ] `Study.copyWith`, Baum laden, `loadGroupReport` mit abgeflachten Einträgen und Bereichen.
-3. [ ] Bereichsauswertung (TDD), inklusive der Invariante unten.
-4. [ ] `LineScreen`: Bereichskarte, Diagramm, Stationsliste (Widget-Tests).
-5. [ ] Ausfallrisiko und Simulationsbildschirm mit Obergruppe gegenprüfen.
-6. [ ] Texte, Doku, volle Suite, `flutter analyze`, `dart format`.
+1. [x] Abflachen als reine Funktion mit allen Regeln (TDD).
+2. [x] `Study.copyWith`, Baum laden, `loadGroupReport` mit abgeflachten Einträgen und Bereichen.
+3. [x] Bereichsauswertung (TDD), inklusive der Invariante unten.
+4. [x] `LineScreen`: Bereichskarte, Diagramm, Stationsliste (Widget-Tests).
+5. [x] Ausfallrisiko und Simulationsbildschirm mit Obergruppe gegenprüfen.
+6. [x] Texte, Doku, volle Suite, `flutter analyze`, `dart format`.
 
 ## Tests
 
@@ -79,10 +79,10 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt.
-- [ ] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
-- [ ] `docs/architecture.md` und `Roadmap/README.md` aktuell.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt.
+- [x] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
+- [x] `docs/architecture.md` und `Roadmap/README.md` aktuell.
 
 ## Offene Fragen / Annahmen
 
@@ -100,11 +100,17 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-(Beim Abschluss ausfüllen.)
+- **Bausteine:** `GroupRepository.loadTree(id)` → `Map<int, List<GroupMember>>`; `flattenGroup(id, tree)` → `FlatLine(entries: [FlatEntry(study, path)], areas: [LineArea(group, start, end)])` in `lib/group/domain/group_tree.dart`; `analyseAreas(line, parallel, areas)` → `AreaFigures` in `lib/group/domain/area_analysis.dart`; `GroupReportInput.areas` / `.areaFigures`. Stationen eines Bereichs = Stationen, deren erster Eintrag in `[start, end)` liegt (ein Bereich ist immer Stationsgrenze, daher eindeutig).
+- **`loadGroupReport` liefert die abgeflachten Studien** – auch die Gruppen-Reports (PDF/Excel) einer Anlage enthalten damit schon jetzt alle Studien aller Bereiche als Einträge, nur noch ohne Bereichs-Zwischenüberschriften (Task_44).
+- **Wirksame Studien:** Die erste Studie eines Bereichs und die erste hinter einem Bereich bekommen in der flachen Liste `parallel = false`, `cellLoader = false`. Puffer und Bänder bleiben, wie sie gespeichert sind (Task_42 legt die Verbindung zwischen Bereichen auf die erste Station des Bereichs; dafür `Study.copyWith(bufferCapacity: …)` usw. nutzen).
+- **Yamazumi:** waagerechtes Scrollen nur, wenn `Stationen × YamazumiPainter.minSlot (28 px)` breiter ist als der Platz. Bewusst so: Ein zweiter `Scrollable` würde `scrollUntilVisible` ohne `scrollable:` in bestehenden Widget-Tests mehrdeutig machen. Neue Tests mit vielen Stationen müssen beim Scrollen den senkrechten Scrollable angeben (siehe `line_areas_screen_test.dart`).
+- **Ladezeit:** Anlage mit 10 Bereichen × 10 Studien (100 Studien) öffnete die Linienanalyse im Widget-Test (sqflite ffi, Windows-Desktop) in rund 0,6 s inklusive Wartezyklen der Test-Hilfen. Auf dem Gerät nicht gemessen.
+- **Screenshot-Szene** mit 40 Stationen ist nicht angelegt; das passt zu Task_46 (Screenshots). Der Widget-Test mit 40 Stationen prüft Breite und Scrollbarkeit.
+- `lib/` und `lib/l10n` trugen wieder das ReadOnly-Attribut; `attrib -R lib\l10n /S /D` (PowerShell) vor `flutter gen-l10n`.

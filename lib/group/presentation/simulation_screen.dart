@@ -6,7 +6,10 @@ import '../../export/domain/group_report.dart';
 import '../../export/presentation/export_menu.dart';
 import '../../l10n/app_localizations.dart';
 import '../../settings/presentation/settings_controller.dart';
+import '../domain/area_analysis.dart';
+import '../domain/area_simulation.dart';
 import '../domain/line_simulation.dart';
+import '../domain/simulation_runner.dart';
 
 enum _Horizon { shift, day, custom }
 
@@ -48,6 +51,12 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
   /// Number of every simulated station in the line (stations without
   /// times are not simulated but keep their number).
   List<int> _numbers = const [];
+
+  /// The direct areas of a plant with their station ranges.
+  List<AreaFigures> _areas = const [];
+
+  /// A large line is being simulated in the background.
+  bool _busy = false;
   _Horizon _horizon = _Horizon.shift;
   final _hours = TextEditingController(text: '8');
 
@@ -98,8 +107,28 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
         for (final st in input.line.stations)
           if (st.measured) st.position + 1,
       ];
+      _areas = input.areaFigures;
     });
     _simulate();
+  }
+
+  /// The area simulated station [si] lies in, null for a direct station.
+  AreaFigures? _areaOf(int si) {
+    final position = _numbers[si] - 1;
+    for (final a in _areas) {
+      final first = a.firstStation;
+      if (first != null && position >= first && position <= a.lastStation!) {
+        return a;
+      }
+    }
+    return null;
+  }
+
+  /// "3. Tester", in a plant "3. Back · Tester".
+  String _machineLabel(AppLocalizations l, int si, String machine) {
+    final area = _areaOf(si);
+    return '${_numbers[si]}. '
+        '${area == null ? machine : l.areaMachine(area.area.group.name, machine)}';
   }
 
   double? _number(String text) =>
@@ -144,25 +173,24 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
         ),
       );
     }
-    final base = sim.run(horizonMicros: h);
-    final failed = failures.isEmpty
-        ? null
-        : sim.run(horizonMicros: h, failures: failures);
-    int? plainLost;
-    if (failures.isNotEmpty && sim.hasBuffers) {
-      final plain = sim.withoutBuffers();
-      plainLost =
-          plain.run(horizonMicros: h).output -
-          plain.run(horizonMicros: h, failures: failures).output;
-    }
-    setState(() {
+    void show(SimulationRun r) => setState(() {
       _error = null;
+      _busy = false;
       _run = _Run(
-        base: base,
-        failed: failed,
-        plainLost: plainLost,
+        base: r.base,
+        failed: r.failed,
+        plainLost: r.plainLost,
         failures: failures,
       );
+    });
+    if (!runsOffThread(sim)) {
+      show(simulateRun(sim, horizonMicros: h, failures: failures));
+      return;
+    }
+    // A large plant: keep the screen responsive meanwhile.
+    setState(() => _busy = true);
+    runSimulation(sim, horizonMicros: h, failures: failures).then((r) {
+      if (mounted) show(r);
     });
   }
 
@@ -236,7 +264,7 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
                 const SizedBox(height: 12),
                 FilledButton.icon(
                   key: const Key('runSimulation'),
-                  onPressed: _simulate,
+                  onPressed: _busy ? null : _simulate,
                   icon: const Icon(Icons.play_arrow),
                   label: Text(l.runSimulation),
                 ),
@@ -248,7 +276,20 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
                       style: TextStyle(color: theme.colorScheme.error),
                     ),
                   ),
-                if (_run != null) ..._results(_run!, sim, input, l, theme),
+                if (_busy)
+                  Padding(
+                    key: const Key('simBusy'),
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Column(
+                      children: [
+                        const LinearProgressIndicator(),
+                        const SizedBox(height: 6),
+                        Text(l.simCalculating),
+                      ],
+                    ),
+                  )
+                else if (_run != null)
+                  ..._results(_run!, sim, input, l, theme),
               ],
             ),
     );
@@ -271,7 +312,7 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
             DropdownMenuItem(
               value: (si, mi),
               child: Text(
-                '${_numbers[si]}. ${sim.stations[si].machines[mi].name}',
+                _machineLabel(l, si, sim.stations[si].machines[mi].name),
               ),
             ),
       ],
@@ -395,6 +436,18 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
       ],
     ];
     final shown = run.shown;
+    // A buffer or conveyor before the first station of an area stands
+    // between areas.
+    String linkTarget(int si) {
+      final area = _areaOf(si);
+      return area != null && area.firstStation == _numbers[si] - 1
+          ? l.beforeArea(area.area.group.name)
+          : '${_numbers[si]}. ${sim.stations[si].name}';
+    }
+
+    final areaFigures = areaSimulation(shown, [
+      for (final n in _numbers) n - 1,
+    ], _areas);
     return [
       const SizedBox(height: 16),
       LayoutBuilder(
@@ -414,6 +467,33 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
             ),
           ),
         ),
+      if (areaFigures.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        Text(l.lineAreas, style: theme.textTheme.titleMedium),
+        Card(
+          key: const Key('simAreas'),
+          child: Column(
+            children: [
+              for (final a in areaFigures)
+                ListTile(
+                  key: Key('simArea_${a.area.group.id}'),
+                  dense: true,
+                  leading: const Icon(Icons.account_tree_outlined),
+                  title: Text(a.area.group.name),
+                  subtitle: Text(
+                    [
+                      l.simUtilization(pct(a.utilization)),
+                      if (a.blockedMicros > 0)
+                        l.simBlocked(formatDuration(a.blockedMicros)),
+                      if (a.downMicros > 0)
+                        l.simDown(formatDuration(a.downMicros)),
+                    ].join(' · '),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
       for (var si = 0; si < sim.stations.length; si++) ...[
         if (shown.conveyors.length > si && shown.conveyors[si] != null)
           Card(
@@ -422,7 +502,7 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
               leading: const Icon(Icons.linear_scale),
               title: Text(
                 '${l.conveyorCard(shown.conveyors[si]!.capacity)} · '
-                '${_numbers[si]}. ${sim.stations[si].name}',
+                '${linkTarget(si)}',
               ),
               subtitle: Text(l.conveyorMaxLevel(shown.conveyors[si]!.maxLevel)),
             ),
@@ -435,7 +515,7 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
               leading: const Icon(Icons.inventory_2_outlined),
               title: Text(
                 '${l.bufferPlaces(shown.buffers[si]!.capacity)} · '
-                '${_numbers[si]}. ${sim.stations[si].name}',
+                '${linkTarget(si)}',
               ),
               subtitle: Text(
                 [
@@ -457,7 +537,18 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
       ],
       const SizedBox(height: 12),
       Text(l.lineStations, style: theme.textTheme.titleMedium),
-      for (var si = 0; si < sim.stations.length; si++)
+      for (var si = 0; si < sim.stations.length; si++) ...[
+        if (_areaOf(si) case final a? when si == 0 || _areaOf(si - 1) != a)
+          Padding(
+            key: Key('simAreaHeading_${a.area.group.id}'),
+            padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
+            child: Text(
+              a.area.group.name,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ),
         Card(
           margin: const EdgeInsets.symmetric(vertical: 3),
           child: ListTile(
@@ -476,6 +567,7 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
             ),
           ),
         ),
+      ],
     ];
   }
 }

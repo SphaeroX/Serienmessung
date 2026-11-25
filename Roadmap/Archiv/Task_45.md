@@ -40,11 +40,11 @@ Wer schon eine große Gruppe hat, kann sie nachträglich in Bereiche aufteilen, 
 
 ## Umsetzungsschritte
 
-1. [ ] Auswahlregeln als reine Funktion: Erweitern auf ganze Stationen, Prüfung auf Zusammenhang (TDD).
-2. [ ] Repository: Zusammenfassen und Auflösen, jeweils transaktional, mit Invarianten-Test.
-3. [ ] Gruppen-Bildschirm: Auswahlmodus, Aktion mit Namensdialog, Hinweis bei Lücke.
-4. [ ] Menüpunkt „Bereich auflösen“ mit Rückfrage.
-5. [ ] Texte, Doku, volle Suite, `flutter analyze`, `dart format`.
+1. [x] Auswahlregeln als reine Funktion: Erweitern auf ganze Stationen, Prüfung auf Zusammenhang (TDD).
+2. [x] Repository: Zusammenfassen und Auflösen, jeweils transaktional, mit Invarianten-Test.
+3. [x] Gruppen-Bildschirm: Auswahlmodus, Aktion mit Namensdialog, Hinweis bei Lücke.
+4. [x] Menüpunkt „Bereich auflösen“ mit Rückfrage.
+5. [x] Texte, Doku, volle Suite, `flutter analyze`, `dart format`.
 
 ## Tests
 
@@ -68,10 +68,10 @@ Alle Tests laufen mit `flutter test tests/`.
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
-- [ ] Verhalten wie unter "Tests" beschrieben belegt, insbesondere die Invariante „Linie unverändert“.
-- [ ] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
-- [ ] `docs/architecture.md` und `Roadmap/README.md` aktuell.
+- [x] Tests grün, `flutter analyze` ohne Befunde, `dart format --output=none --set-exit-if-changed .` sauber.
+- [x] Verhalten wie unter "Tests" beschrieben belegt, insbesondere die Invariante „Linie unverändert“.
+- [x] Kein bestehender Test geändert, gelöscht oder abgeschwächt.
+- [x] `docs/architecture.md` und `Roadmap/README.md` aktuell.
 
 ## Offene Fragen / Annahmen
 
@@ -82,15 +82,20 @@ Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder ei
 
 Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergreifendes gehört in `Roadmap/README.md`.
 
+- Aus Task_42: `GroupRepository.setParent` setzt die Verbindung (Puffer/Band vor dem Bereich) immer zurück. Wer beim Zusammenfassen eine neue Gruppe per `setParent` einhängt oder beim Auflösen Bereiche umhängt, muss die Verbindung danach selbst setzen (`setAreaBuffer`/`setAreaConveyor`) bzw. auf die erste Studie übertragen (`setBuffer`/`setConveyor`), damit die abgeflachte Linie gleich bleibt.
+
 ## Abschluss-Checkliste
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent in `tests/` und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks und `Roadmap/README.md` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-(Beim Abschluss ausfüllen.)
+- **Annahme geprüft:** Der lange Druck im Gruppen-Bildschirm war frei (`ReorderableListView` mit `buildDefaultDragHandles: false`, Ziehen nur über den Griff). Während der Auswahl öffnet Antippen nicht, sondern wählt (ganze Station) an/ab; die FAB ist ausgeblendet.
+- **Verbindungen:** `groupIntoArea` und `dissolveArea` setzen Gruppen-/Studienzeilen direkt per SQL (`_place`, `_setLink`), nicht über `setParent`, weil `setParent` die Verbindung zurücksetzt (Task_42). Beim Zusammenfassen wandert die Verbindung des ersten Mitglieds an den neuen Bereich, außer die Auswahl beginnt die Gruppe (dann bleibt alles, wie es ist – das erhält die abgeflachte Linie auch in verschachtelten Anlagen). Beim Auflösen bekommt das erste Mitglied die Verbindung des Bereichs nur, wenn der Bereich eine hat; sonst behält es seine eigenen Werte (so rechnet auch `flattenGroup`).
+- **Invariante belegt** in `tests/group/data/group_into_area_test.dart` über die abgeflachten Felder (Name, parallel, Lader, Warten, Puffer, Band) und über Linienanalyse/Simulation; die Demo-Linie in zwei Bereiche geteilt liefert weiter 1000 Teile in 24 h.
+- Positionen: Der neue Bereich übernimmt die Position des ersten Mitglieds; Lücken im Positionsraum sind erlaubt (Sortierung nur relativ). `dissolveArea` nummeriert die Obergruppe neu 0…n.

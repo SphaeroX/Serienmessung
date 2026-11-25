@@ -85,11 +85,12 @@ void main() {
   test('creates the demo line as a group with its stations in order', () async {
     final groupId = await demo.load(t);
 
+    // The plant with its two areas: the housing line and shipping.
     final groups = await GroupRepository(db).listGroups();
-    expect(groups, hasLength(1));
-    expect(groups.single.group.id, groupId);
-    expect(groups.single.group.name, t.groupName);
-    expect(groups.single.group.description, t.groupDescription);
+    expect(groups, hasLength(3));
+    final housing = groups.firstWhere((g) => g.group.id == groupId);
+    expect(housing.group.name, t.groupName);
+    expect(housing.group.description, t.groupDescription);
 
     final line = await members(groupId);
     expect(
@@ -358,10 +359,11 @@ void main() {
     await demo.load(t);
 
     expect(await StudyRepository(db).getStudy(own), isNotNull);
-    expect(await GroupRepository(db).listGroups(), hasLength(2));
-    // 15 line members (4 of them the loader cell) + 1 changeover study per
-    // load.
-    expect(await StudyRepository(db).listStudies(), hasLength(1 + 2 * 16));
+    // Plant, housing line and shipping per load.
+    expect(await GroupRepository(db).listGroups(), hasLength(2 * 3));
+    // 15 line members (4 of them the loader cell), 2 shipping machines and
+    // 1 changeover study per load.
+    expect(await StudyRepository(db).listStudies(), hasLength(1 + 2 * 18));
   });
 
   group('loader cell', () {
