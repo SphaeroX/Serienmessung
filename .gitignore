@@ -66,3 +66,6 @@ desktop.ini
 # Copied in by the Pages workflow (local preview only)
 /site/icon.png
 /site/screenshots/
+
+# Generated launch video output (brag skill)
+/brag-output/
