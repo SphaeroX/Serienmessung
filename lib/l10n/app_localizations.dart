@@ -1556,12 +1556,6 @@ abstract class AppLocalizations {
   /// **'{areas, plural, =1{1 area} other{{areas} areas}} · {studies, plural, =1{1 study} other{{studies} studies}}'**
   String groupAreaCount(int areas, int studies);
 
-  /// No description provided for @detachArea.
-  ///
-  /// In en, this message translates to:
-  /// **'Take out of this group'**
-  String get detachArea;
-
   /// No description provided for @detachFromParent.
   ///
   /// In en, this message translates to:

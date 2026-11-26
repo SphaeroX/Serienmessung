@@ -268,6 +268,30 @@ void main() {
     expect(find.byKey(Key('area_$x')), findsNothing);
   });
 
+  testWidgets('the area menu removes the area from the group but never '
+      'deletes the group itself', (tester) async {
+    late int plant;
+    late int x;
+    await tester.runAsync(() async {
+      plant = await newGroup('Plant');
+      x = await newGroup('X', parent: plant);
+      await study('X1', x);
+    });
+    await open(tester, plant);
+    await tester.tap(find.byKey(Key('areaMenu_$x')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('deleteArea')), findsNothing);
+    expect(find.text('Delete group'), findsNothing);
+    await tester.tap(find.text('Remove from group'));
+    await settle(tester);
+    await settle(tester);
+    final area = await tester.runAsync(() => groups.getGroup(x));
+    expect(area, isNotNull);
+    expect(area!.parentId, isNull);
+    expect(await tester.runAsync(() => members(x)), 'X1');
+    expect(await tester.runAsync(() => members(plant)), '');
+  });
+
   testWidgets('moving an area offers neither itself nor its areas', (
     tester,
   ) async {

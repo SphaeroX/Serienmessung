@@ -65,7 +65,6 @@ enum _AreaAction {
   moveToGroup,
   detach,
   dissolve,
-  delete,
 }
 
 /// What a group member is within a loader cell.
@@ -391,10 +390,6 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
       case _AreaAction.detach:
         await groups.setParent(area.id, null);
         await _changed();
-      case _AreaAction.delete:
-        if (await deleteGroupInteractively(context, ref, area)) {
-          await _changed();
-        }
     }
   }
 
@@ -1138,17 +1133,12 @@ class _AreaTile extends StatelessWidget {
             PopupMenuItem(
               key: const Key('detachArea'),
               value: _AreaAction.detach,
-              child: Text(l.detachArea),
+              child: Text(l.removeFromGroup),
             ),
             PopupMenuItem(
               key: const Key('dissolveArea'),
               value: _AreaAction.dissolve,
               child: Text(l.dissolveArea),
-            ),
-            PopupMenuItem(
-              key: const Key('deleteArea'),
-              value: _AreaAction.delete,
-              child: Text(l.deleteGroup),
             ),
           ],
         ),

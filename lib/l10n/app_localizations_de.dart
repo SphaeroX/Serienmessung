@@ -877,9 +877,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get detachArea => 'Aus der Gruppe lösen';
-
-  @override
   String get detachFromParent => 'Aus Obergruppe lösen';
 
   @override

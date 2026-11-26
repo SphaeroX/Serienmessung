@@ -243,7 +243,6 @@
   "areaLabel": "Bereich",
   "areaCycleTime": "Taktzeit {time}",
   "groupAreaCount": "{areas, plural, =1{1 Bereich} other{{areas} Bereiche}} · {studies, plural, =1{1 Studie} other{{studies} Studien}}",
-  "detachArea": "Aus der Gruppe lösen",
   "detachFromParent": "Aus Obergruppe lösen",
   "deleteGroupStudiesAndAreasOption": "Auch {studies, plural, =0{} =1{die Studie und } other{die {studies} Studien und }}{areas, plural, =1{den Bereich} other{die {areas} Bereiche}} dieser Gruppe löschen",
   "deleteGroupWithAreasConfirm": "Gruppe \"{name}\" mit {areas, plural, =1{ihrem Bereich} other{ihren {areas} Bereichen}} und {studies, plural, =0{ohne Studien} =1{einer Studie} other{{studies} Studien}} inklusive aller Messungen löschen? Das lässt sich nicht rückgängig machen.",

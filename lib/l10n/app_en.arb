@@ -429,7 +429,6 @@
       }
     }
   },
-  "detachArea": "Take out of this group",
   "detachFromParent": "Take out of the parent group",
   "deleteGroupStudiesAndAreasOption": "Also delete the {studies, plural, =0{} =1{1 study and } other{{studies} studies and }}{areas, plural, =1{1 area} other{{areas} areas}} of this group",
   "@deleteGroupStudiesAndAreasOption": {

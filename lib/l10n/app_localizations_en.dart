@@ -870,9 +870,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get detachArea => 'Take out of this group';
-
-  @override
   String get detachFromParent => 'Take out of the parent group';
 
   @override
