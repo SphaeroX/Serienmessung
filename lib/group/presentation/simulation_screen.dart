@@ -17,6 +17,15 @@ enum _Horizon { shift, day, custom }
 /// optionally with one or more machine failures: parts with and without
 /// the failures and with and without the buffers, buffer and station
 /// figures.
+/// Runs the simulations of the screen (replaced in tests).
+final simulationRunnerProvider = Provider<SimulationRunner>(
+  (ref) => const SimulationRunner(),
+);
+
+/// Longest free horizon (30 days). A small line simulates on the UI thread;
+/// far longer horizons would freeze the app.
+const maxHorizonHours = 720;
+
 class SimulationScreen extends ConsumerStatefulWidget {
   const SimulationScreen({super.key, required this.groupId});
 
@@ -143,6 +152,10 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
     },
   };
 
+  bool get _horizonTooLong =>
+      _horizon == _Horizon.custom &&
+      (_number(_hours.text) ?? 0) > maxHorizonHours;
+
   void _simulate() {
     final sim = _sim;
     final l = AppLocalizations.of(context);
@@ -150,6 +163,10 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
     final h = _horizonMicros;
     if (h == null) {
       setState(() => _error = l.invalidTime);
+      return;
+    }
+    if (_horizonTooLong) {
+      setState(() => _error = l.simHorizonTooLong(maxHorizonHours));
       return;
     }
     final failures = <SimFailure>[];
@@ -183,15 +200,37 @@ class _SimulationScreenState extends ConsumerState<SimulationScreen> {
         failures: failures,
       );
     });
-    if (!runsOffThread(sim)) {
-      show(simulateRun(sim, horizonMicros: h, failures: failures));
+    // A failed calculation ends the progress bar and shows an error
+    // instead of results; the next run can start again.
+    void fail() => setState(() {
+      _busy = false;
+      _run = null;
+      _error = l.simFailed;
+    });
+    final runner = ref.read(simulationRunnerProvider);
+    if (!runner.offThread(sim)) {
+      final SimulationRun r;
+      try {
+        r = runner.run(sim, horizonMicros: h, failures: failures);
+      } on Object {
+        fail();
+        return;
+      }
+      show(r);
       return;
     }
     // A large plant: keep the screen responsive meanwhile.
     setState(() => _busy = true);
-    runSimulation(sim, horizonMicros: h, failures: failures).then((r) {
-      if (mounted) show(r);
-    });
+    runner
+        .runInBackground(sim, horizonMicros: h, failures: failures)
+        .then(
+          (r) {
+            if (mounted) show(r);
+          },
+          onError: (Object _) {
+            if (mounted) fail();
+          },
+        );
   }
 
   @override

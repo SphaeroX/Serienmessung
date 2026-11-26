@@ -19,6 +19,7 @@ import 'clock.dart';
 import 'database.dart';
 import 'platform.dart';
 import 'platform_features.dart';
+import 'platform_time.dart';
 import 'url_opener.dart';
 
 /// The opened app database. Overridden in `main()` and in tests.
@@ -79,6 +80,12 @@ final wallClockProvider = Provider<DateTime Function()>((ref) => DateTime.now);
 /// with a fake clock in tests.
 final clockProvider = Provider<Clock>((ref) => MonotonicClock());
 
+/// The platform time that keeps counting during sleep; the clock is synced
+/// with it when the app returns to the foreground (`ClockResumeSync`).
+final platformTimeProvider = Provider<PlatformTime>(
+  (ref) => const ChannelPlatformTime(),
+);
+
 /// Haptics and wake lock.
 final deviceFeedbackProvider = Provider<DeviceFeedback>((ref) {
   final s = ref.watch(settingsProvider);
@@ -120,6 +127,6 @@ final recordingNotifierProvider = Provider<RecordingNotifier>(
   (ref) =>
       ref.watch(platformFeaturesProvider).recordingNotification &&
           ref.watch(settingsProvider).notifications
-      ? AndroidRecordingNotifier()
+      ? AndroidRecordingNotifier(ref.watch(clockProvider))
       : const SilentRecordingNotifier(),
 );

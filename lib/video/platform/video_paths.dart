@@ -26,7 +26,12 @@ class VideoPaths {
   /// file name in the current videos folder.
   Future<String> resolve(String storedPath) async {
     if (storedPath.startsWith('$_folder/')) {
-      return p.join((await documentsDirectory()).path, storedPath);
+      // Stored paths always use '/'; build the file path with the
+      // platform's separators.
+      return p.joinAll([
+        (await documentsDirectory()).path,
+        ...storedPath.split('/'),
+      ]);
     }
     if (!p.isAbsolute(storedPath) ||
         p.basename(p.dirname(storedPath)) != _folder ||

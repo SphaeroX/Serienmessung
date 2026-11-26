@@ -555,6 +555,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'This position is before the last marker. Move the video forward first.';
 
   @override
+  String get markerAtLast =>
+      'There is already a marker here. Move the video forward first.';
+
+  @override
+  String get videoNotPlayable =>
+      'This video could not be opened. Nothing was changed.';
+
+  @override
   String get markerCannotMove =>
       'A marker cannot be moved past its neighbours.';
 
@@ -1134,6 +1142,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get simCalculating => 'Calculating the simulation…';
+
+  @override
+  String get simFailed => 'The simulation could not be calculated.';
+
+  @override
+  String simHorizonTooLong(int hours) {
+    return 'At most $hours hours can be simulated.';
+  }
 
   @override
   String beforeArea(String name) {

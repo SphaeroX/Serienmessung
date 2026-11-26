@@ -61,3 +61,26 @@ Future<List<FailureScenario>> failureScenariosOf(
   );
   return runsOffThread(sim) ? Isolate.run(compute) : Future.value(compute());
 }
+
+/// How the simulation screen runs a simulation: directly for a small line,
+/// in a background isolate for a large one. Replaceable in tests.
+class SimulationRunner {
+  const SimulationRunner();
+
+  /// Whether [sim] runs in the background ([runInBackground]).
+  bool offThread(LineSimulation sim) => runsOffThread(sim);
+
+  /// [simulateRun] on the calling thread.
+  SimulationRun run(
+    LineSimulation sim, {
+    required int horizonMicros,
+    List<SimFailure> failures = const [],
+  }) => simulateRun(sim, horizonMicros: horizonMicros, failures: failures);
+
+  /// [runSimulation] in a background isolate.
+  Future<SimulationRun> runInBackground(
+    LineSimulation sim, {
+    required int horizonMicros,
+    List<SimFailure> failures = const [],
+  }) => runSimulation(sim, horizonMicros: horizonMicros, failures: failures);
+}

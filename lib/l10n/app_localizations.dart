@@ -1022,6 +1022,18 @@ abstract class AppLocalizations {
   /// **'This position is before the last marker. Move the video forward first.'**
   String get markerBeforeLast;
 
+  /// No description provided for @markerAtLast.
+  ///
+  /// In en, this message translates to:
+  /// **'There is already a marker here. Move the video forward first.'**
+  String get markerAtLast;
+
+  /// No description provided for @videoNotPlayable.
+  ///
+  /// In en, this message translates to:
+  /// **'This video could not be opened. Nothing was changed.'**
+  String get videoNotPlayable;
+
   /// No description provided for @markerCannotMove.
   ///
   /// In en, this message translates to:
@@ -1945,6 +1957,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Calculating the simulation…'**
   String get simCalculating;
+
+  /// No description provided for @simFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The simulation could not be calculated.'**
+  String get simFailed;
+
+  /// No description provided for @simHorizonTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'At most {hours} hours can be simulated.'**
+  String simHorizonTooLong(int hours);
 
   /// No description provided for @beforeArea.
   ///

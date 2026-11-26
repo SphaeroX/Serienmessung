@@ -532,10 +532,28 @@ class BackupService {
     if (studies is! List) {
       throw const BackupException(BackupError.invalid, 'missing studies');
     }
+    // Every value the import reads is checked for its type here, so a
+    // broken file can neither stop the import half-way nor store a value
+    // that makes the study list unreadable later. Optional fields may be
+    // missing (v1 and early v2 files).
+    bool optInt(Object? v) => v == null || v is int;
+    bool optText(Object? v) => v == null || v is String;
+    bool optAmount(Object? v) => v == null || (v is int && v >= 0);
+    const lineFields = [
+      'bufferCapacity',
+      'bufferStore',
+      'bufferRetrieve',
+      'conveyorCapacity',
+      'conveyorTransport',
+    ];
     final groups = root['groups'] ?? const [];
     if (groups is! List ||
         !groups.every(
-          (g) => g is Map && g['name'] is String && g['createdAt'] is int,
+          (g) =>
+              g is Map &&
+              g['name'] is String &&
+              g['createdAt'] is int &&
+              optText(g['description']),
         )) {
       throw const BackupException(BackupError.invalid, 'malformed group');
     }
@@ -549,11 +567,17 @@ class BackupService {
         m['start'] is int &&
         m['end'] is int &&
         m['duration'] is int &&
-        (m['recordedAt'] == null || m['recordedAt'] is int);
+        optInt(m['recordedAt']) &&
+        optInt(m['stepRef']) &&
+        optText(m['note']);
     bool revision(Object? r) =>
         r is Map &&
         r['number'] is int &&
         r['closedAt'] is int &&
+        optInt(r['firstRecordedAt']) &&
+        optInt(r['lastRecordedAt']) &&
+        optText(r['cycleTimeMethod']) &&
+        optText(r['notes']) &&
         r['steps'] is List &&
         r['measurements'] is List &&
         (r['steps'] as List).every(
@@ -573,6 +597,15 @@ class BackupService {
           s['name'] is String &&
           modes.contains(s['mode']) &&
           s['createdAt'] is int &&
+          optInt(s['lastActiveAt']) &&
+          optInt(s['groupPosition']) &&
+          (s['revision'] == null ||
+              (s['revision'] is int && (s['revision'] as int) >= 1)) &&
+          optText(s['description']) &&
+          optText(s['notes']) &&
+          optText(s['cycleTimeMethod']) &&
+          optText(s['videoPath']) &&
+          lineFields.every((k) => optAmount(s[k])) &&
           s['steps'] is List &&
           s['measurements'] is List &&
           (s['steps'] as List).every(
@@ -587,6 +620,7 @@ class BackupService {
                   (s['specialCycles'] as List).every(
                     (c) =>
                         c is Map &&
+                        optText(c['name']) &&
                         const {'parts', 'time'}.contains(c['kind']) &&
                         c['interval'] is int &&
                         c['duration'] is int,

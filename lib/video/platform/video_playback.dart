@@ -26,12 +26,25 @@ abstract class VideoPlayback extends ChangeNotifier {
 class PluginVideoPlayback extends VideoPlayback {
   VideoPlayerController? _c;
 
+  /// Opens [path]. The previous controller is released once the new one is
+  /// initialized; if opening fails, the new one is released and the previous
+  /// video stays open (a failed replace keeps playing the old video).
   @override
   Future<void> open(String path) async {
     final c = VideoPlayerController.file(File(path));
+    try {
+      await c.initialize();
+    } on Object {
+      await c.dispose();
+      rethrow;
+    }
+    final old = _c;
     _c = c;
     c.addListener(notifyListeners);
-    await c.initialize();
+    if (old != null) {
+      old.removeListener(notifyListeners);
+      await old.dispose();
+    }
     notifyListeners();
   }
 

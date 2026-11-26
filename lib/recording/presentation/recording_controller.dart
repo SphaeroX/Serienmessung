@@ -145,6 +145,21 @@ class RecordingController extends ChangeNotifier {
       ? steps.map<int?>((s) => s.id).toList()
       : <int?>[null];
 
+  /// How far the time passed since saving may differ between the monotonic
+  /// clock and the wall clock before the saved run counts as interrupted by
+  /// a device reboot. Wide enough for a manual change of the device clock.
+  static const rebootTolerance = Duration(minutes: 5);
+
+  /// A reboot restarts the monotonic clock near zero: either it is now below
+  /// the saved value, or (when the device has been up longer since) far less
+  /// time passed on it than on the wall clock.
+  bool _rebootSince(RunState saved) {
+    final monotonic = clock.nowMicros() - saved.savedClockMicros;
+    if (monotonic < 0) return true;
+    final wall = wallClock().difference(saved.savedAt).inMicroseconds;
+    return (wall - monotonic).abs() > rebootTolerance.inMicroseconds;
+  }
+
   Future<void> load() async {
     study = await studies.getStudy(studyId);
     notes = study?.notes ?? '';
@@ -159,7 +174,7 @@ class RecordingController extends ChangeNotifier {
     final saved = await runStates.load(studyId);
     EngineSnapshot? restore;
     if (saved != null) {
-      if (detectReboot && clock.nowMicros() < saved.savedClockMicros) {
+      if (detectReboot && _rebootSince(saved)) {
         // Device reboot: timestamps are no longer comparable. Completed
         // measurements are already stored; the unfinished step is dropped.
         interruptedByReboot = true;
@@ -284,11 +299,11 @@ class RecordingController extends ChangeNotifier {
   /// Position of the last marker (video studies).
   int get markerPosition => loaded ? engine.segmentStartMicros : 0;
 
-  /// Whether a marker may be set at [at]: never before the last marker and
-  /// not during a special time.
+  /// Whether a marker may be set at [at]: only after the last marker (the
+  /// same position would store a time of 0) and not during a special time.
   bool canMarkAt(int at) => switch (status) {
     EngineStatus.idle => true,
-    EngineStatus.running => at >= engine.segmentStartMicros,
+    EngineStatus.running => at > engine.segmentStartMicros,
     _ => false,
   };
 
@@ -364,7 +379,40 @@ class RecordingController extends ChangeNotifier {
 
   /// Removes the last marker: the last step time is deleted and its step is
   /// timed again from its start. Undoing the start marker returns to idle.
-  Future<void> undoLastMarker() => _run(() async {
+  ///
+  /// While [stepsOpen], the step the undone marker created goes too (steps
+  /// behind the current one without times), so the previous step is the
+  /// last again and [closeCycle] works.
+  Future<void> undoLastMarker() async {
+    await _undoLastMarker();
+    if (stepsOpen) await _dropUnusedTrailingSteps();
+  }
+
+  Future<void> _dropUnusedTrailingSteps() => _run(() async {
+    final current = status == EngineStatus.idle ? -1 : engine.stepIndex;
+    final used = {for (final m in measurements) m.stepId};
+    final unused = [
+      for (final (i, st) in steps.indexed)
+        if (i > current && !used.contains(st.id)) st,
+    ];
+    if (unused.isEmpty) return;
+    for (final st in unused) {
+      await studies.deleteStep(st.id);
+    }
+    steps = await studies.getSteps(studyId);
+    final running = engine.status != EngineStatus.idle;
+    _session = RecordingSession(
+      studyId: studyId,
+      engine: RecordingEngine(
+        clock: clock,
+        sequence: _sequence,
+        restore: running ? engine.snapshot() : null,
+      ),
+      measurements: measurementRepo,
+    );
+  });
+
+  Future<void> _undoLastMarker() => _run(() async {
     if (status == EngineStatus.special) return;
     final normals = measurements
         .where((m) => m.kind == MeasurementKind.normal)

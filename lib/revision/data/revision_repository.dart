@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../../core/database.dart';
+import '../../recording/data/measurement_repository.dart' show measurementOrder;
 import '../../recording/domain/measurement.dart';
 import '../../study/domain/study.dart';
 import '../domain/revision.dart';
@@ -27,7 +28,7 @@ class RevisionRepository {
           'measurement',
           where: 'study_id = ?',
           whereArgs: [studyId],
-          orderBy: 'cycle, end_us, id',
+          orderBy: measurementOrder,
         );
         if (times.isEmpty) return null;
         final number = study['revision'] as int;
@@ -151,7 +152,7 @@ class RevisionRepository {
       'revision_measurement',
       where: 'revision_id = ?',
       whereArgs: [id],
-      orderBy: 'cycle, end_us, id',
+      orderBy: measurementOrder,
     );
     return Revision(
       id: id,

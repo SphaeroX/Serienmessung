@@ -82,19 +82,24 @@ Future<void> importSharedJson(
         ),
       ),
     );
-  } on BackupException catch (e) {
+  } on Object catch (e) {
+    // Anything else (an unexpected error in the transaction, which rolls
+    // back) also changed nothing.
+    final tooNew = e is BackupException && e.error == BackupError.tooNew;
     messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          e.error == BackupError.tooNew ? l.importTooNew : l.importInvalid,
-        ),
-      ),
+      SnackBar(content: Text(tooNew ? l.importTooNew : l.importInvalid)),
     );
   }
 }
 
 /// Deletes the studies [ids] and video files no other study uses.
+///
+/// The recording notification shows the recording that was saved last; if
+/// that study is deleted, the notification goes too (it is ongoing and
+/// cannot be swiped away). Recordings of other studies keep it.
 Future<void> deleteStudies(WidgetRef ref, Iterable<int> ids) async {
+  final runs = await ref.read(runStateRepositoryProvider).activeRuns();
+  final shown = runs.isEmpty ? null : runs.first.studyId;
   final studies = ref.read(studyRepositoryProvider);
   for (final id in ids) {
     final study = await studies.getStudy(id);
@@ -105,6 +110,9 @@ Future<void> deleteStudies(WidgetRef ref, Iterable<int> ids) async {
       ref.read(videoFilesProvider),
       study.videoPath,
     );
+  }
+  if (shown != null && ids.contains(shown)) {
+    await ref.read(recordingNotifierProvider).hide();
   }
 }
 

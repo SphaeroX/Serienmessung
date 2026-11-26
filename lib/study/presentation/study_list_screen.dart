@@ -9,7 +9,6 @@ import '../../backup/presentation/share_actions.dart';
 import '../../core/providers.dart';
 import '../../group/presentation/group_dialogs.dart';
 import '../../l10n/app_localizations.dart';
-import '../../video/data/video_cleanup.dart';
 import '../domain/study.dart';
 import 'create_study_screen.dart';
 import 'github_logo.dart';
@@ -180,13 +179,8 @@ class _StudyListScreenState extends ConsumerState<StudyListScreen> {
       ),
     );
     if (ok == true) {
-      final studies = ref.read(studyRepositoryProvider);
-      await studies.deleteStudy(study.id);
-      await deleteUnusedVideo(
-        studies,
-        ref.read(videoFilesProvider),
-        study.videoPath,
-      );
+      // Also removes an unused video and the notification of its recording.
+      await deleteStudies(ref, [study.id]);
       ref.invalidate(studyListProvider);
     }
   }

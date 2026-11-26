@@ -46,7 +46,10 @@ List<CycleGroup> groupCycles(
     for (final c in cycles)
       CycleGroup(
         cycle: c,
-        items: byCycle[c]!..sort((a, b) => a.endMicros.compareTo(b.endMicros)),
+        // Step timer times (cycle 0) keep the order they come in.
+        items: c == 0
+            ? byCycle[c]!
+            : (byCycle[c]!..sort((a, b) => a.endMicros.compareTo(b.endMicros))),
         isComplete: _complete(byCycle[c]!, stepIds),
       ),
   ];

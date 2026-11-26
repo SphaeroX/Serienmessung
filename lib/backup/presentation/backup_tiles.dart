@@ -94,9 +94,17 @@ class BackupTiles extends ConsumerWidget {
     }
 
     try {
+      final replace = mode == _RestoreMode.replace;
+      // Replacing removes every run state: a recording cannot go on.
+      final recording =
+          replace &&
+          (await ref.read(runStateRepositoryProvider).activeRuns()).isNotEmpty;
       final r = await BackupService(ref.read(databaseProvider))
-          .importJson(json, replace: mode == _RestoreMode.replace);
-      ref.invalidate(studyListProvider);
+          .importJson(json, replace: replace);
+      if (recording) await ref.read(recordingNotifierProvider).hide();
+      ref
+        ..invalidate(studyListProvider)
+        ..invalidate(groupListProvider);
       messenger.showSnackBar(
         SnackBar(
           content: Text(
@@ -107,13 +115,12 @@ class BackupTiles extends ConsumerWidget {
           ),
         ),
       );
-    } on BackupException catch (e) {
+    } on Object catch (e) {
+      // Anything else (an unexpected error in the transaction, which rolls
+      // back) also changed nothing.
+      final tooNew = e is BackupException && e.error == BackupError.tooNew;
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            e.error == BackupError.tooNew ? l.restoreTooNew : l.restoreInvalid,
-          ),
-        ),
+        SnackBar(content: Text(tooNew ? l.restoreTooNew : l.restoreInvalid)),
       );
     }
   }

@@ -46,7 +46,7 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
   StreamSubscription<KeyEventData>? _keySub;
   bool _keysEnabled = true;
   late final RecordingNotifier _notifier;
-  StreamSubscription<String>? _actionSub;
+  StreamSubscription<NotificationAction>? _actionSub;
   bool _rebootShown = false;
 
   @override
@@ -88,9 +88,11 @@ class _RecordingScreenState extends ConsumerState<RecordingScreen>
       _keys.setCapture(true);
     }
     _notifier = ref.read(recordingNotifierProvider);
-    _actionSub = _notifier.actions.listen((a) {
-      if (a == 'next') controller.next();
-      if (a == 'toggle') controller.startStop();
+    // A press carries its platform time (it may come right after device
+    // sleep, before anything else synced the clock).
+    _actionSub = notificationActionsOf(_notifier).listen((a) {
+      if (a.name == 'next') controller.next(at: a.atMicros);
+      if (a.name == 'toggle') controller.startStop(at: a.atMicros);
     });
   }
 

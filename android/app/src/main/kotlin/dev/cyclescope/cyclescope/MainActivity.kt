@@ -33,10 +33,19 @@ class MainActivity : FlutterActivity() {
 
     private val actionReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            when (intent?.action) {
-                ACTION_NEXT -> actionSink?.success("next")
-                ACTION_TOGGLE -> actionSink?.success("toggle")
+            val name = when (intent?.action) {
+                ACTION_NEXT -> "next"
+                ACTION_TOGGLE -> "toggle"
+                else -> return
             }
+            // The platform time keeps counting during sleep; Dart syncs its
+            // clock with it and uses it as the time of the press.
+            actionSink?.success(
+                mapOf(
+                    "action" to name,
+                    "realtimeMicros" to SystemClock.elapsedRealtimeNanos() / 1000,
+                )
+            )
         }
     }
 
@@ -175,13 +184,15 @@ class MainActivity : FlutterActivity() {
             val isDown = event.action == KeyEvent.ACTION_DOWN
             val isUp = event.action == KeyEvent.ACTION_UP
             if ((isDown && event.repeatCount == 0) || isUp) {
-                // eventTime is in the uptimeMillis base; send the event's age.
+                // eventTime is in the uptimeMillis base; send the event's age
+                // and the sleep-proof platform time it was sent at.
                 val ageMicros = (SystemClock.uptimeMillis() - event.eventTime) * 1000
                 sink.success(
                     mapOf(
                         "key" to if (code == KeyEvent.KEYCODE_VOLUME_UP) "up" else "down",
                         "action" to if (isDown) "down" else "up",
                         "ageMicros" to ageMicros,
+                        "realtimeMicros" to SystemClock.elapsedRealtimeNanos() / 1000,
                     )
                 )
             }

@@ -1,5 +1,9 @@
 import 'package:flutter/services.dart';
 
+import '../../core/clock.dart';
+
+export '../../core/platform_time.dart' show readElapsedRealtimeMicros;
+
 /// Content of the ongoing "recording" notification.
 class RecordingNotice {
   const RecordingNotice({
@@ -21,6 +25,29 @@ class RecordingNotice {
   final String nextLabel;
   final String toggleLabel;
 }
+
+/// A notification button press (`next` or `toggle`).
+class NotificationAction {
+  const NotificationAction(this.name, {this.atMicros});
+
+  final String name;
+
+  /// When the button was pressed, on the monotonic clock; null when the
+  /// platform did not tell (then "now" applies).
+  final int? atMicros;
+}
+
+/// Implemented by notifiers that know when a button was pressed.
+abstract interface class TimedNotificationActions {
+  Stream<NotificationAction> get timedActions;
+}
+
+/// The notification button presses of [notifier], with their time where it
+/// is known.
+Stream<NotificationAction> notificationActionsOf(RecordingNotifier notifier) =>
+    notifier is TimedNotificationActions
+    ? (notifier as TimedNotificationActions).timedActions
+    : notifier.actions.map(NotificationAction.new);
 
 /// Ongoing notification while a recording is in progress.
 abstract class RecordingNotifier {
@@ -47,15 +74,37 @@ class SilentRecordingNotifier implements RecordingNotifier {
 }
 
 /// Android implementation (see `MainActivity.kt`).
-class AndroidRecordingNotifier implements RecordingNotifier {
+///
+/// Native code sends the platform time of each button press (it keeps
+/// counting during device sleep); the notifier syncs [clock] with it, so a
+/// step that ran while the device slept gets its full time.
+class AndroidRecordingNotifier
+    implements RecordingNotifier, TimedNotificationActions {
+  AndroidRecordingNotifier([this.clock]);
+
+  final Clock? clock;
+
   static const _methods = MethodChannel('dev.cyclescope/platform');
   static const _events = EventChannel('dev.cyclescope/notification_actions');
 
   @override
-  late final Stream<String> actions = _events
+  late final Stream<NotificationAction> timedActions = _events
       .receiveBroadcastStream()
-      .map((e) => e as String)
+      .map(_parse)
       .handleError((Object _) {});
+
+  NotificationAction _parse(Object? raw) {
+    if (raw is! Map) return NotificationAction(raw as String);
+    final name = raw['action'] as String;
+    final at = (raw['realtimeMicros'] as num?)?.toInt();
+    final c = clock;
+    if (at == null || c == null) return NotificationAction(name);
+    syncClockTo(c, at);
+    return NotificationAction(name, atMicros: at);
+  }
+
+  @override
+  late final Stream<String> actions = timedActions.map((a) => a.name);
 
   @override
   Future<void> show(RecordingNotice n) async {
@@ -80,19 +129,5 @@ class AndroidRecordingNotifier implements RecordingNotifier {
     } on MissingPluginException {
       // Not on Android.
     }
-  }
-}
-
-/// Reads the platform time that keeps counting during sleep (µs;
-/// `SystemClock.elapsedRealtime` on Android, `CLOCK_MONOTONIC_RAW` on iOS)
-/// so the monotonic clock survives app restarts. Returns null where
-/// unavailable.
-Future<int?> readElapsedRealtimeMicros() async {
-  try {
-    final v = await const MethodChannel('dev.cyclescope/platform')
-        .invokeMethod<int>('elapsedRealtimeMicros');
-    return v;
-  } on Object {
-    return null;
   }
 }

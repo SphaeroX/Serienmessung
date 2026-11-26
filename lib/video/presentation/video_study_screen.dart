@@ -188,6 +188,11 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
       if (mounted) setState(() => _videoMissing = true);
       return;
     }
+    await _showOpened(path);
+  }
+
+  /// Frames, position and screen state once the player opened [path].
+  Future<void> _showOpened(String path) async {
     await _openFrames(path);
     // Continue where the last marker was set.
     _report();
@@ -245,6 +250,7 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
     final studies = ref.read(studyRepositoryProvider);
     final files = ref.read(videoFilesProvider);
     final old = controller.study?.videoPath;
+    var deleteTimes = false;
     if (controller.measurements.isNotEmpty) {
       final l = AppLocalizations.of(context);
       final delete = await showDialog<bool>(
@@ -271,13 +277,33 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
         await deleteUnusedVideo(studies, files, path);
         return;
       }
-      if (delete) await controller.deleteAllMeasurements();
+      deleteTimes = delete;
     }
+    // Nothing changes before the new video is open: an unplayable file must
+    // not cost the old video or its times. The player keeps the old video
+    // when opening fails.
+    final String resolved;
+    try {
+      resolved = await ref.read(videoPathsProvider).resolve(path);
+      await playback.open(resolved);
+    } on Object {
+      await deleteUnusedVideo(studies, files, path);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).videoNotPlayable),
+          ),
+        );
+      return;
+    }
+    if (deleteTimes) await controller.deleteAllMeasurements();
     // Markers of the old video must not block positions in the new one.
     await controller.resetMarkers();
     await studies.setVideoPath(widget.studyId, path);
     await controller.load();
-    await _open(path);
+    await _showOpened(resolved);
     // The player has let go of the old file by now.
     if (old != path) await deleteUnusedVideo(studies, files, old);
   }
@@ -316,12 +342,16 @@ class _VideoStudyScreenState extends ConsumerState<VideoStudyScreen>
   }
 
   Future<void> _mark({int? at}) async {
-    final ok = await controller.mark(at: at ?? position);
+    final pos = at ?? position;
+    final ok = await controller.mark(at: pos);
     if (!ok && mounted && controller.status == EngineStatus.running) {
       final l = AppLocalizations.of(context);
+      final reason = pos == controller.markerPosition
+          ? l.markerAtLast
+          : l.markerBeforeLast;
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l.markerBeforeLast)));
+        ..showSnackBar(SnackBar(content: Text(reason)));
     }
   }
 
@@ -798,6 +828,11 @@ class _MarkBar extends StatelessWidget {
                 key: const Key('specialButton'),
                 onPointerDown: running ? (_) => onSpecialDown() : null,
                 onPointerUp: (running || special) ? (_) => onSpecialUp() : null,
+                // A gesture taken over by the system ends the special time
+                // like lifting the finger.
+                onPointerCancel: (running || special)
+                    ? (_) => onSpecialUp()
+                    : null,
                 child: Container(
                   height: _height,
                   alignment: Alignment.center,

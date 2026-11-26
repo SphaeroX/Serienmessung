@@ -25,8 +25,9 @@ class SilentHardwareKeys implements HardwareKeys {
 
 /// Android implementation (see `MainActivity.kt`).
 ///
-/// Native code reports how long ago each key event happened, so the Dart side
-/// can compute the exact press time on its own monotonic clock.
+/// Native code reports how long ago each key event happened and the platform
+/// time when it sent the event (it keeps counting during device sleep). The
+/// Dart side syncs [clock] with that time and computes the exact press time.
 class AndroidHardwareKeys implements HardwareKeys {
   AndroidHardwareKeys(this.clock);
 
@@ -40,10 +41,12 @@ class AndroidHardwareKeys implements HardwareKeys {
     (raw) {
       final m = Map<String, Object?>.from(raw as Map);
       final age = (m['ageMicros'] as num?)?.toInt() ?? 0;
+      final sentAt = (m['realtimeMicros'] as num?)?.toInt();
+      if (sentAt != null) syncClockTo(clock, sentAt);
       return KeyEventData(
         key: m['key'] == 'up' ? VolumeKey.up : VolumeKey.down,
         down: m['action'] == 'down',
-        atMicros: clock.nowMicros() - age,
+        atMicros: (sentAt ?? clock.nowMicros()) - age,
       );
     },
   );

@@ -1,6 +1,13 @@
 import '../../core/database.dart';
 import '../domain/measurement.dart';
 
+/// SQL order of the times of a study: by cycle, within a cycle by end. Step
+/// timer times (cycle 0) keep the order they were recorded in (their id;
+/// undo re-inserts the old id): a device reboot restarts the clock, so a
+/// later time can end "before" an earlier one.
+const measurementOrder =
+    'cycle, CASE WHEN cycle = 0 THEN id ELSE end_us END, id';
+
 /// Persistence of measurements.
 class MeasurementRepository {
   MeasurementRepository(this._db, {this.now});
@@ -113,7 +120,7 @@ class MeasurementRepository {
       'measurement',
       where: 'study_id = ?',
       whereArgs: [studyId],
-      orderBy: 'cycle, end_us, id',
+      orderBy: measurementOrder,
     );
     return rows.map(fromRow).toList();
   }

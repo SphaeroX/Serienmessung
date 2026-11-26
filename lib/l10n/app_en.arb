@@ -268,6 +268,8 @@
   "markStart": "START",
   "mark": "STEP",
   "markerBeforeLast": "This position is before the last marker. Move the video forward first.",
+  "markerAtLast": "There is already a marker here. Move the video forward first.",
+  "videoNotPlayable": "This video could not be opened. Nothing was changed.",
   "markerCannotMove": "A marker cannot be moved past its neighbours.",
   "tabTimes": "Times",
   "export": "Export",
@@ -662,6 +664,13 @@
   },
   "lineAreaBottleneck": "Bottleneck area",
   "simCalculating": "Calculating the simulation…",
+  "simFailed": "The simulation could not be calculated.",
+  "simHorizonTooLong": "At most {hours} hours can be simulated.",
+  "@simHorizonTooLong": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
   "beforeArea": "before area {name}",
   "@beforeArea": {
     "placeholders": {
