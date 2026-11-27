@@ -7,9 +7,11 @@ import '../../core/providers.dart';
 import '../../export/presentation/export_menu.dart';
 import '../../l10n/app_localizations.dart';
 import '../../study/domain/study.dart';
+import '../../study/presentation/change_mode_dialog.dart';
 import '../../study/presentation/create_study_screen.dart';
 import '../../study/presentation/mode_texts.dart';
 import '../../study/presentation/study_list_screen.dart' show OpenStudy;
+import '../../video/data/video_cleanup.dart';
 import '../domain/area_selection.dart';
 import '../domain/group_member.dart';
 import '../domain/group_paths.dart';
@@ -50,6 +52,7 @@ enum _StudyAction {
   buffer,
   conveyor,
   specialCycles,
+  changeMode,
   moveToGroup,
   copyToGroup,
   remove,
@@ -201,8 +204,25 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     await _changed();
   }
 
+  /// Moves the whole station whose first machine is dragged from [from] to
+  /// [to] out of it (see [stationMoveOrder]); false when this is no
+  /// station move.
+  Future<bool> _moveStation(int from, int to) async {
+    final indices = stationMoveOrder(_flags, from, to);
+    if (indices == null) return false;
+    final order = [for (final i in indices) _order[i]];
+    setState(() => _order = order);
+    // The stations keep their members: only the positions change.
+    await ref
+        .read(groupRepositoryProvider)
+        .reorderMembers(widget.groupId, order);
+    await _changed();
+    return true;
+  }
+
   /// Drag reorder; [to] is already adjusted for the removed item.
   Future<void> _onReorder(int from, int to) async {
+    if (await _moveStation(from, to)) return;
     final moved = _order[from];
     setState(() {
       _order = [..._order]
@@ -212,10 +232,17 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
     await _reorder(_order, moved);
   }
 
-  /// Moves member [key] one place up ([by] = -1) or down (+1).
+  /// Moves member [key] one place up ([by] = -1) or down (+1); the first
+  /// machine of a station moves its whole station past the neighbour.
   Future<void> _step(MemberKey key, int by) async {
     final k = _order.indexOf(key);
     if (k + by < 0 || k + by >= _order.length) return;
+    final station = stationGroups(_flags).firstWhere((s) => s.contains(k));
+    if (station.first == k && station.length > 1) {
+      final to = by < 0 ? k - 1 : station.last + 1;
+      if (to < _order.length) await _moveStation(k, to);
+      return;
+    }
     final order = [..._order];
     order.insert(k + by, order.removeAt(k));
     await _reorder(order, key);
@@ -286,6 +313,8 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
           ),
         );
         await _load();
+      case _StudyAction.changeMode:
+        await _changeMode(study);
       case _StudyAction.moveToGroup:
         if (await moveStudyToGroup(context, ref, study)) await _changed();
       case _StudyAction.copyToGroup:
@@ -296,6 +325,34 @@ class _GroupScreenState extends ConsumerState<GroupScreen> {
         await ref.read(groupRepositoryProvider).moveToGroup(study.id, null);
         await _changed();
     }
+  }
+
+  /// Turns [study] into another kind of study in its place (see
+  /// `StudyRepository.changeMode`).
+  Future<void> _changeMode(Study study) async {
+    final studies = ref.read(studyRepositoryProvider);
+    final steps = await studies.getSteps(study.id);
+    final times = await ref
+        .read(measurementRepositoryProvider)
+        .listForStudy(study.id);
+    final revisions = await ref
+        .read(revisionRepositoryProvider)
+        .listRevisions(study.id);
+    if (!mounted) return;
+    final fields = await showChangeModeDialog(
+      context,
+      current: study.mode,
+      steps: [for (final s in steps) s.name],
+      hasTimes: times.isNotEmpty || revisions.isNotEmpty,
+    );
+    if (fields == null) return;
+    await studies.changeMode(study.id, fields.mode, steps: fields.steps);
+    await deleteUnusedVideo(
+      studies,
+      ref.read(videoFilesProvider),
+      study.videoPath,
+    );
+    await _changed();
   }
 
   Future<void> _groupAction(_GroupAction action) async {
@@ -1400,6 +1457,12 @@ class _MemberTile extends StatelessWidget {
               value: _StudyAction.specialCycles,
               child: Text(l.specialCyclesMenu),
             ),
+            if (!summary.isRecording)
+              PopupMenuItem(
+                key: const Key('changeMode'),
+                value: _StudyAction.changeMode,
+                child: Text(l.changeMode),
+              ),
             PopupMenuItem(
               key: const Key('moveToGroup'),
               value: _StudyAction.moveToGroup,

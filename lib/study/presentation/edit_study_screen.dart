@@ -225,6 +225,59 @@ class _EditStudyScreenState extends ConsumerState<EditStudyScreen> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final study = _study;
+    final nameFields = study == null
+        ? null
+        : Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Column(
+              children: [
+                TextField(
+                  key: const Key('studyNameField'),
+                  controller: _name,
+                  maxLength: 100,
+                  decoration: InputDecoration(
+                    labelText: l.nameLabel,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                TextField(
+                  controller: _description,
+                  maxLength: 500,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    labelText: l.descriptionLabel,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          );
+    final stepsHeader = ListTile(
+      title: Text(
+        l.stepsSection,
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      subtitle: Text(_textMode ? l.stepsTextHint : l.stepsEditHint),
+      trailing: SegmentedButton<bool>(
+        showSelectedIcon: false,
+        segments: [
+          ButtonSegment(
+            value: false,
+            icon: const Icon(Icons.list),
+            tooltip: l.stepsEditList,
+            label: Text(l.stepsEditList, key: const Key('stepsListMode')),
+          ),
+          ButtonSegment(
+            value: true,
+            icon: const Icon(Icons.notes),
+            tooltip: l.stepsEditText,
+            label: Text(l.stepsEditText, key: const Key('stepsTextMode')),
+          ),
+        ],
+        selected: {_textMode},
+        onSelectionChanged: (v) => _setTextMode(v.first),
+      ),
+    );
     return Scaffold(
       appBar: AppBar(
         title: Text(l.editStudy),
@@ -238,96 +291,43 @@ class _EditStudyScreenState extends ConsumerState<EditStudyScreen> {
       ),
       body: study == null
           ? const Center(child: CircularProgressIndicator())
-          : Column(
+          : _textMode && study.mode.usesSteps
+          // Scrolls as a whole so the focused steps field moves above the
+          // keyboard; nothing depends on the keyboard height.
+          ? ListView(
               children: [
+                nameFields!,
+                stepsHeader,
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  child: Column(
-                    children: [
-                      TextField(
-                        key: const Key('studyNameField'),
-                        controller: _name,
-                        maxLength: 100,
-                        decoration: InputDecoration(
-                          labelText: l.nameLabel,
-                          border: const OutlineInputBorder(),
-                        ),
-                      ),
-                      TextField(
-                        controller: _description,
-                        maxLength: 500,
-                        maxLines: 2,
-                        decoration: InputDecoration(
-                          labelText: l.descriptionLabel,
-                          border: const OutlineInputBorder(),
-                        ),
-                      ),
-                    ],
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextField(
+                    key: const Key('stepsField'),
+                    controller: _stepsText,
+                    minLines: 8,
+                    maxLines: null,
+                    keyboardType: TextInputType.multiline,
+                    decoration: InputDecoration(
+                      labelText: l.stepsLabel,
+                      alignLabelWithHint: true,
+                      border: const OutlineInputBorder(),
+                    ),
                   ),
                 ),
-                if (study.mode.usesSteps) ...[
-                  ListTile(
-                    title: Text(
-                      l.stepsSection,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    subtitle: Text(
-                      _textMode ? l.stepsTextHint : l.stepsEditHint,
-                    ),
-                    trailing: SegmentedButton<bool>(
-                      showSelectedIcon: false,
-                      segments: [
-                        ButtonSegment(
-                          value: false,
-                          icon: const Icon(Icons.list),
-                          tooltip: l.stepsEditList,
-                          label: Text(
-                            l.stepsEditList,
-                            key: const Key('stepsListMode'),
-                          ),
-                        ),
-                        ButtonSegment(
-                          value: true,
-                          icon: const Icon(Icons.notes),
-                          tooltip: l.stepsEditText,
-                          label: Text(
-                            l.stepsEditText,
-                            key: const Key('stepsTextMode'),
-                          ),
-                        ),
-                      ],
-                      selected: {_textMode},
-                      onSelectionChanged: (v) => _setTextMode(v.first),
-                    ),
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: DictationButton(controller: _stepsText),
                   ),
-                  if (_textMode) ...[
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: TextField(
-                          key: const Key('stepsField'),
-                          controller: _stepsText,
-                          expands: true,
-                          minLines: null,
-                          maxLines: null,
-                          keyboardType: TextInputType.multiline,
-                          textAlignVertical: TextAlignVertical.top,
-                          decoration: InputDecoration(
-                            labelText: l.stepsLabel,
-                            alignLabelWithHint: true,
-                            border: const OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SafeArea(
-                      top: false,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                        child: DictationButton(controller: _stepsText),
-                      ),
-                    ),
-                  ] else ...[
+                ),
+              ],
+            )
+          : Column(
+              children: [
+                nameFields!,
+                if (study.mode.usesSteps) ...[
+                  stepsHeader,
+                  if (!_textMode) ...[
                     Expanded(
                       child: ReorderableListView.builder(
                         buildDefaultDragHandles: false,

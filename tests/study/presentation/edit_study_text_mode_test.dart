@@ -139,4 +139,24 @@ void main() {
     expect((await steps(tester)).length, 2);
     expect(find.byKey(const Key('stepsField')), findsOneWidget);
   });
+
+  testWidgets('with the keyboard open the steps field stays visible', (
+    tester,
+  ) async {
+    await pump(tester);
+    await toText(tester);
+    await tester.tap(find.byKey(const Key('stepsField')));
+    // A phone keyboard covers about 300 logical pixels.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300 * 2.75);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpAndSettle();
+
+    // The focused field is scrolled above the keyboard.
+    final field = tester.getRect(find.byKey(const Key('stepsField')));
+    final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+    expect(field.top, lessThan(screen.height - 300 - 48));
+    expect(field.top, greaterThan(0));
+    // Room for several lines, not squeezed by the fixed fields above.
+    expect(field.height, greaterThan(150));
+  });
 }

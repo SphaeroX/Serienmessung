@@ -51,8 +51,8 @@ void main() {
     return (group: g, saw: ids[0], mill1: ids[1], mill2: ids[2]);
   }
 
-  testWidgets('moving the first machine of a station up keeps the other '
-      'machine out of the station before', (tester) async {
+  testWidgets('moving the first machine of a station up moves the whole '
+      'station', (tester) async {
     final x = (await tester.runAsync(line))!;
     await tester.pumpWidget(app(GroupScreen(groupId: x.group)));
     await settle(tester);
@@ -64,9 +64,29 @@ void main() {
     await tester.tap(find.byKey(const Key('moveUp')));
     await settle(tester);
 
-    expect(find.text('1. Mill 1'), findsOneWidget);
+    expect(find.text('1a. Mill 1'), findsOneWidget);
+    expect(find.text('1b. Mill 2'), findsOneWidget);
     expect(find.text('2. Saw'), findsOneWidget);
-    expect(find.text('3. Mill 2'), findsOneWidget);
+  });
+
+  testWidgets('moving the first machine of a station down moves the whole '
+      'station past the next one', (tester) async {
+    final x = (await tester.runAsync(line))!;
+    await tester.runAsync(
+      () => groups.reorder(x.group, [x.mill1, x.mill2, x.saw]),
+    );
+    await tester.pumpWidget(app(GroupScreen(groupId: x.group)));
+    await settle(tester);
+    expect(find.text('1a. Mill 1'), findsOneWidget);
+
+    await tester.tap(find.byKey(Key('groupStudyMenu_${x.mill1}')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('moveDown')));
+    await settle(tester);
+
+    expect(find.text('1. Saw'), findsOneWidget);
+    expect(find.text('2a. Mill 1'), findsOneWidget);
+    expect(find.text('2b. Mill 2'), findsOneWidget);
   });
 
   testWidgets('moving a machine down into a station makes it part of it', (
@@ -86,7 +106,8 @@ void main() {
     expect(find.text('1c. Mill 2'), findsOneWidget);
   });
 
-  testWidgets('dragging the first machine of a station away', (tester) async {
+  testWidgets('dragging the first machine of a station takes the station '
+      'along', (tester) async {
     final x = (await tester.runAsync(line))!;
     await tester.pumpWidget(app(GroupScreen(groupId: x.group)));
     await settle(tester);
@@ -103,8 +124,31 @@ void main() {
     await tester.pumpAndSettle();
     await settle(tester);
 
-    expect(find.text('1. Mill 1'), findsOneWidget);
+    expect(find.text('1a. Mill 1'), findsOneWidget);
+    expect(find.text('1b. Mill 2'), findsOneWidget);
     expect(find.text('2. Saw'), findsOneWidget);
-    expect(find.text('3. Mill 2'), findsOneWidget);
+  });
+
+  testWidgets('dragging the first machine to the end of its own station '
+      'only moves that machine out of it', (tester) async {
+    final x = (await tester.runAsync(line))!;
+    await tester.pumpWidget(app(GroupScreen(groupId: x.group)));
+    await settle(tester);
+
+    // Drag "Mill 1" below "Mill 2".
+    final handle = find.byIcon(Icons.drag_handle).at(1);
+    final gesture = await tester.startGesture(tester.getCenter(handle));
+    await tester.pump(const Duration(milliseconds: 100));
+    for (var i = 0; i < 10; i++) {
+      await gesture.moveBy(const Offset(0, 20));
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    await gesture.up();
+    await tester.pumpAndSettle();
+    await settle(tester);
+
+    expect(find.text('1. Saw'), findsOneWidget);
+    expect(find.text('2. Mill 2'), findsOneWidget);
+    expect(find.text('3. Mill 1'), findsOneWidget);
   });
 }

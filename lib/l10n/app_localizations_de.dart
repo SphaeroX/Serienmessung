@@ -1252,6 +1252,20 @@ class AppLocalizationsDe extends AppLocalizations {
       'Ersetzt die Zeiten dieser Studie. Die bisherigen Zeiten bleiben als Revision erhalten.';
 
   @override
+  String get changeMode => 'Studientyp ändern';
+
+  @override
+  String get changeModeHint =>
+      'Die Studie behält ihren Namen und ihren Platz in der Gruppe.';
+
+  @override
+  String get changeModeTimesWarning =>
+      'Alle Zeiten und archivierten Revisionen dieser Studie werden gelöscht.';
+
+  @override
+  String get changeModeConfirm => 'Typ ändern';
+
+  @override
   String get lineLeadLabel => 'Durchlaufzeit eines Teils';
 
   @override

@@ -387,6 +387,43 @@ class StudyRepository {
         }
       });
 
+  /// Turns study [id] into a study of [mode] in place: it keeps its name,
+  /// notes and place in its group (station, buffer, conveyor), but all its
+  /// times, archived revisions and its run state are deleted – they belong
+  /// to the old kind of study. Its steps are replaced by [steps] (none for
+  /// a simple study) and a video study loses its video (the caller deletes
+  /// the file if no other study uses it, see `deleteUnusedVideo`).
+  Future<void> changeMode(
+    int id,
+    StudyMode mode, {
+    List<String> steps = const [],
+  }) => _db.db.transaction((txn) async {
+    for (final table in ['measurement', 'run_state', 'revision']) {
+      await txn.delete(table, where: 'study_id = ?', whereArgs: [id]);
+    }
+    await txn.delete('step_definition', where: 'study_id = ?', whereArgs: [id]);
+    if (mode.usesSteps) {
+      for (var i = 0; i < steps.length; i++) {
+        await txn.insert('step_definition', {
+          'study_id': id,
+          'position': i,
+          'name': steps[i],
+        });
+      }
+    }
+    await txn.update(
+      'study',
+      {
+        'mode': mode.name,
+        'revision': 1,
+        'steps_open': mode == StudyMode.video && steps.isEmpty ? 1 : 0,
+        if (mode != StudyMode.video) 'video_path': null,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  });
+
   /// Ends the step definition of a video study (first cycle closed).
   Future<void> closeSteps(int id) => _db.db.update(
     'study',

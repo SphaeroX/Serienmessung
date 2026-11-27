@@ -2126,6 +2126,30 @@ abstract class AppLocalizations {
   /// **'Replaces the times of this study. The previous times are kept as a revision.'**
   String get setCycleTimeHint;
 
+  /// Menu entry and dialog title: turn a study or machine into another kind of study in place.
+  ///
+  /// In en, this message translates to:
+  /// **'Change study type'**
+  String get changeMode;
+
+  /// No description provided for @changeModeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The study keeps its name and its place in the group.'**
+  String get changeModeHint;
+
+  /// No description provided for @changeModeTimesWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'All times and archived revisions of this study will be deleted.'**
+  String get changeModeTimesWarning;
+
+  /// No description provided for @changeModeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Change type'**
+  String get changeModeConfirm;
+
   /// No description provided for @lineLeadLabel.
   ///
   /// In en, this message translates to:

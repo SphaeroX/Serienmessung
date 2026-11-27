@@ -735,6 +735,11 @@
   "parallelToPrevious": "Parallel to the one above",
   "setCycleTime": "Enter cycle time…",
   "setCycleTimeHint": "Replaces the times of this study. The previous times are kept as a revision.",
+  "changeMode": "Change study type",
+  "@changeMode": {"description": "Menu entry and dialog title: turn a study or machine into another kind of study in place."},
+  "changeModeHint": "The study keeps its name and its place in the group.",
+  "changeModeTimesWarning": "All times and archived revisions of this study will be deleted.",
+  "changeModeConfirm": "Change type",
   "lineLeadLabel": "Lead time of one part",
   "lineParallelMachines": "{count} machines in parallel",
   "@lineParallelMachines": {

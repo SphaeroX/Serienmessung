@@ -1245,6 +1245,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Replaces the times of this study. The previous times are kept as a revision.';
 
   @override
+  String get changeMode => 'Change study type';
+
+  @override
+  String get changeModeHint =>
+      'The study keeps its name and its place in the group.';
+
+  @override
+  String get changeModeTimesWarning =>
+      'All times and archived revisions of this study will be deleted.';
+
+  @override
+  String get changeModeConfirm => 'Change type';
+
+  @override
   String get lineLeadLabel => 'Lead time of one part';
 
   @override
