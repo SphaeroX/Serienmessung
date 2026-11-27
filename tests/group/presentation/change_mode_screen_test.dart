@@ -78,8 +78,11 @@ void main() {
       'Load\nMill',
     );
     await tester.tap(find.byKey(const Key('changeModeConfirm')));
-    await settle(tester);
-    await settle(tester);
+    // Saw and Mill are both time studies once the change is stored.
+    await settleUntil(
+      tester,
+      () => find.textContaining('Time study').evaluate().length == 2,
+    );
 
     expect(find.text('1b. Mill'), findsOneWidget);
     final study = (await tester.runAsync(() => studies.getStudy(x.mill)))!;

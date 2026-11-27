@@ -62,7 +62,10 @@ void main() {
     await tester.tap(find.byKey(Key('groupStudyMenu_${x.mill1}')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('moveUp')));
-    await settle(tester);
+    await settleUntil(
+      tester,
+      () => find.text('1a. Mill 1').evaluate().isNotEmpty,
+    );
 
     expect(find.text('1a. Mill 1'), findsOneWidget);
     expect(find.text('1b. Mill 2'), findsOneWidget);
@@ -82,7 +85,7 @@ void main() {
     await tester.tap(find.byKey(Key('groupStudyMenu_${x.mill1}')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('moveDown')));
-    await settle(tester);
+    await settleUntil(tester, () => find.text('1. Saw').evaluate().isNotEmpty);
 
     expect(find.text('1. Saw'), findsOneWidget);
     expect(find.text('2a. Mill 1'), findsOneWidget);
@@ -122,7 +125,10 @@ void main() {
     }
     await gesture.up();
     await tester.pumpAndSettle();
-    await settle(tester);
+    await settleUntil(
+      tester,
+      () => find.text('1a. Mill 1').evaluate().isNotEmpty,
+    );
 
     expect(find.text('1a. Mill 1'), findsOneWidget);
     expect(find.text('1b. Mill 2'), findsOneWidget);
@@ -145,7 +151,10 @@ void main() {
     }
     await gesture.up();
     await tester.pumpAndSettle();
-    await settle(tester);
+    await settleUntil(
+      tester,
+      () => find.text('3. Mill 1').evaluate().isNotEmpty,
+    );
 
     expect(find.text('1. Saw'), findsOneWidget);
     expect(find.text('2. Mill 2'), findsOneWidget);
